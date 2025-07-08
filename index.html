@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Contratos e Lembretes</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Estilos personalizados para a fonte Inter */
@@ -93,260 +94,21 @@
         }
 
     </style>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-
-    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-[1001] hidden">
-        <div class="loading-spinner"></div>
-    </div>
-
-    <div id="customAlertModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <p id="customAlertMessage" class="text-gray-700 text-lg"></p>
-            <div class="modal-buttons">
-                <button id="customAlertOkButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="customConfirmModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <p id="customConfirmMessage" class="text-gray-700 text-lg"></p>
-            <div class="modal-buttons">
-                <button id="customConfirmCancelButton" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Cancelar</button>
-                <button id="customConfirmOkButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="auth-screen" class="flex-grow flex items-center justify-center bg-gradient-to-br from-purple-700 to-indigo-800 p-4">
-        <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-            <h2 id="auth-mode-title" class="text-2xl font-bold text-center mb-6 text-gray-800">Gestão de Contratos</h2>
-            <div class="mb-4">
-                <input type="email" id="auth-email" class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="E-mail" autocomplete="username">
-            </div>
-            <div class="mb-6">
-                <input type="password" id="auth-password" class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Palavra-passe" autocomplete="current-password">
-            </div>
-
-            <div id="register-fields" class="hidden">
-                <div class="mb-4">
-                    <input
-                        id="auth-fullName"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Nome Completo"
-                        type="text"
-                    />
-                </div>
-                <div class="mb-4">
-                    <input
-                        id="auth-cpf"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="CPF"
-                        type="text"
-                    />
-                </div>
-                <div class="mb-4">
-                    <input
-                        id="auth-phone"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Telefone de Contacto (ex: +5511999998888)"
-                        type="tel"
-                    />
-                </div>
-                <div class="mb-4">
-                    <input
-                        id="auth-address"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Endereço Completo"
-                        type="text"
-                    />
-                </div>
-                <div class="mb-6">
-                    <input
-                        id="auth-confirmPassword"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Confirmar Palavra-passe"
-                        type="password"
-                        autocomplete="new-password"
-                    />
-                </div>
-            </div>
-
-            <button id="auth-button" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200">
-                Entrar
-            </button>
-            <p class="text-center text-gray-600 text-sm mt-4">
-                <button id="toggle-auth-mode" class="text-purple-600 hover:text-purple-800 font-semibold">
-                    Criar uma conta
-                </button>
-            </p>
-        </div>
-    </div>
-
-    <div id="main-app-content" class="flex-grow flex flex-col hidden bg-purple-100">
-        <header class="bg-gray-800 text-white p-4 shadow-md flex justify-between items-center flex-wrap gap-2">
-            <div class="flex items-center">
-                <h1 class="text-2xl font-bold mr-4">Gestão de Contratos e Lembretes</h1>
-                <nav>
-                    <button id="contracts-nav-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Contratos</button>
-                    <button id="reminders-nav-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Lembretes</button>
-                </nav>
-            </div>
-            <div class="text-right flex items-center flex-wrap gap-2">
-                <span class="text-sm font-semibold hidden md:inline" id="user-email-display"></span>
-                <span class="text-sm text-gray-400 hidden md:inline" id="user-role-display"></span>
-                <span class="text-xs text-gray-500 hidden" id="user-id-display"></span>
-                <button id="logout-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm ml-2">Sair</button>
-            </div>
-        </header>
-
-        <div id="global-alerts" class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 hidden" role="alert">
-            <p class="font-bold">Avisos Importantes:</p>
-            <ul id="global-alert-list" class="mt-2 list-disc list-inside"></ul>
-        </div>
-
-        <main id="contracts-section" class="flex-grow p-6 bg-purple-100"> <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Adicionar/Editar Contrato</h2>
-                <form id="contract-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="contract-client" class="block text-gray-700 text-sm font-bold mb-2">Cliente:</label>
-                        <input type="text" id="contract-client" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nome do Cliente" required>
-                    </div>
-                    <div>
-                        <label for="contract-type" class="block text-gray-700 text-sm font-bold mb-2">Tipo de Contrato:</label>
-                        <input type="text" id="contract-type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: Manutenção, Serviço, Locação" required>
-                    </div>
-                    <div>
-                        <label for="contract-sei-process" class="block text-gray-700 text-sm font-bold mb-2">Processo SEI:</label>
-                        <input type="text" id="contract-sei-process" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Número do Processo SEI" required>
-                    </div>
-                    <div>
-                        <label for="contract-start-date" class="block text-gray-700 text-sm font-bold mb-2">Data de Início:</label>
-                        <input type="date" id="contract-start-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    </div>
-                    <div>
-                        <label for="contract-end-date" class="block text-gray-700 text-sm font-bold mb-2">Data de Término:</label>
-                        <input type="date" id="contract-end-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="contract-value" class="block text-gray-700 text-sm font-bold mb-2">Valor (R$):</label>
-                        <input type="number" id="contract-value" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00" step="0.01" required>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="contract-notes" class="block text-gray-700 text-sm font-bold mb-2">Observações:</label>
-                        <textarea id="contract-notes" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Detalhes adicionais..."></textarea>
-                    </div>
-                    <div class="md:col-span-2 flex justify-end">
-                        <button type="submit" id="contract-submit-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Adicionar Contrato</button>
-                        <button type="button" id="contract-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar Edição</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Contratos Existentes</h2>
-                <div class="mb-4 flex flex-wrap gap-2 justify-between items-center">
-                    <input type="text" id="contracts-search" placeholder="Pesquisar contratos..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex-grow">
-                    <select id="contracts-sort" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="endDateAsc">Data de Término (Crescente)</option>
-                        <option value="endDateDesc">Data de Término (Decrescente)</option>
-                        <option value="clientAsc">Cliente (A-Z)</option>
-                        <option value="clientDesc">Cliente (Z-A)</option>
-                        <option value="seiProcessAsc">Processo SEI (Crescente)</option>
-                        <option value="seiProcessDesc">Processo SEI (Decrescente)</option>
-                    </select>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
-                        <thead>
-                            <tr class="w-full bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">Cliente</th>
-                                <th class="py-3 px-6 text-left">Tipo</th>
-                                <th class="py-3 px-6 text-left">Processo SEI</th>
-                                <th class="py-3 px-6 text-left">Início</th>
-                                <th class="py-3 px-6 text-left">Término</th>
-                                <th class="py-3 px-6 text-left">Valor</th>
-                                <th class="py-3 px-6 text-left">Observações</th>
-                                <th class="py-3 px-6 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="contracts-table-body" class="text-gray-600 text-sm font-light">
-                            </tbody>
-                    </table>
-                    <p id="no-contracts-message" class="text-center text-gray-500 mt-4 hidden">Nenhum contrato encontrado.</p>
-                </div>
-            </div>
-        </main>
-
-        <main id="reminders-section" class="flex-grow p-6 bg-purple-100"> <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Adicionar/Editar Lembrete</h2>
-                <form id="reminder-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="reminder-title" class="block text-gray-700 text-sm font-bold mb-2">Título:</label>
-                        <input type="text" id="reminder-title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Título do Lembrete" required>
-                    </div>
-                    <div>
-                        <label for="reminder-date" class="block text-gray-700 text-sm font-bold mb-2">Data:</label>
-                        <input type="date" id="reminder-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="reminder-notes" class="block text-gray-700 text-sm font-bold mb-2">Observações:</label>
-                        <textarea id="reminder-notes" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Detalhes do lembrete..."></textarea>
-                    </div>
-                    <div class="md:col-span-2 flex justify-end">
-                        <button type="submit" id="reminder-submit-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Adicionar Lembrete</button>
-                        <button type="button" id="reminder-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar Edição</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Lembretes Existentes</h2>
-                <div class="mb-4 flex flex-wrap gap-2 justify-between items-center">
-                    <input type="text" id="reminders-search" placeholder="Pesquisar lembretes..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex-grow">
-                    <select id="reminders-sort" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="dateAsc">Data (Crescente)</option>
-                        <option value="dateDesc">Data (Decrescente)</option>
-                        <option value="titleAsc">Título (A-Z)</option>
-                        <option value="titleDesc">Título (Z-A)</option>
-                    </select>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
-                        <thead>
-                            <tr class="w-full bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">Título</th>
-                                <th class="py-3 px-6 text-left">Data</th>
-                                <th class="py-3 px-6 text-left">Observações</th>
-                                <th class="py-3 px-6 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reminders-table-body" class="text-gray-600 text-sm font-light">
-                            </tbody>
-                    </table>
-                    <p id="no-reminders-message" class="text-center text-gray-500 mt-4 hidden">Nenhum lembrete encontrado.</p>
-                </div>
-            </div>
-        </main>
-    </div>
-
+    <!-- Importa os módulos necessários do Firebase a partir de CDNs -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js';
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js';
-        import { getFirestore, collection, addDoc, getDoc, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDoc, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // Firebase Configuration (coloque suas credenciais AQUI)
+        // SUAS CREDENCIAIS FIREBASE - COPIADAS DIRETAMENTE DO SEU CONSOLE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw",
             authDomain: "gcc-contratos.firebaseapp.com",
             projectId: "gcc-contratos",
-            storageBucket: "cc-contratos.firebasestorage.app",
+            storageBucket: "gcc-contratos.firebasestorage.app",
             messagingSenderId: "405415511927",
-            appId: "1:405415511927:web:4612190119302726820372"
+            appId: "1:405415511927:web:4612190119302726820372",
+            measurementId: "G-T1T4N9WD5T" // Este é para Analytics, não é usado no app mas mantido se você o usa
         };
 
         // Inicialize o Firebase
@@ -355,7 +117,7 @@
         const db = getFirestore(app);
         const contractsCollection = collection(db, 'contracts');
         const remindersCollection = collection(db, 'reminders');
-        const usersCollection = collection(db, 'users'); // Nova coleção para dados de usuários
+        const usersCollection = collection(db, 'users'); // Coleção para dados adicionais de usuários
 
         // Variáveis globais
         let isLoggedIn = false;
@@ -363,6 +125,7 @@
         let userEmail = '';
         let isAdmin = false;
         // SUBSTITUA ESTE UID PELO UID DA SUA CONTA DE ADMINISTRADOR NO FIREBASE
+        // Você pode encontrar seu UID no Console do Firebase > Authentication > Users
         const ADMIN_UID = 'txHwdn3rwubSff4PvekjO4PM7wb2';
 
         let contractsData = [];
@@ -401,12 +164,12 @@
         const globalAlerts = document.getElementById('global-alerts');
         const globalAlertList = document.getElementById('global-alert-list');
 
-        // Novos campos de registro
+        // Campos de registro adicionais
         const registerFields = document.getElementById('register-fields');
         const authFullNameInput = document.getElementById('auth-fullName');
         const authCpfInput = document.getElementById('auth-cpf');
         const authPhoneInput = document.getElementById('auth-phone');
-        const authAddressInput = document.getElementById('auth-address'); // NOVO CAMPO
+        const authAddressInput = document.getElementById('auth-address'); // NOVO CAMPO: Endereço
         const authConfirmPasswordInput = document.getElementById('auth-confirmPassword');
 
         // Contract Elements
