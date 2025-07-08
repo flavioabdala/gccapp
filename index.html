@@ -58,7 +58,7 @@
     <div id="customAlertModal" class="modal-overlay hidden">
         <div class="modal-content border border-yellow-400">
             <div class="flex items-center justify-center mb-4">
-                <span class="text-yellow-500 text-4xl mr-3">??</span>
+                <span class="text-yellow-500 text-4xl mr-3">⚠️</span>
                 <h5 class="text-2xl font-bold text-gray-800">Atenção!</h5>
             </div>
             <div id="alertMessages" class="mb-6"></div>
@@ -72,7 +72,7 @@ transition duration-300 ease-in-out">
     <div id="customConfirmModal" class="modal-overlay hidden">
         <div class="modal-content border border-red-500">
             <div class="flex items-center justify-center mb-4">
-                <span class="text-red-500 text-4xl mr-3">?</span>
+                <span class="text-red-500 text-4xl mr-3">❓</span>
                 <h5 class="text-2xl font-bold text-gray-800">Confirmação</h5>
             </div>
             <p id="confirmMessage" class="text-gray-700 text-base mb-8"></p>
@@ -300,7 +300,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
             apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw", // Ex: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw"
             authDomain: "gcc-contratos.firebaseapp.com", // Ex: "gcc-contratos.firebaseapp.com"
             projectId: "gcc-contratos", // Ex: "gcc-contratos"
-            storageBucket: "gcc-contratos.firebasestorage.app", // <<<< CORRIGIDO AQUI!
+            storageBucket: "gcc-contratos.appspot.com", // <<<< CORRIGIDO AQUI!
             messagingSenderId: "405415511927", // Ex: "405415511927"
             appId: "1:405415511927:web:4612190119302726820372", // Ex: "1:405415511927:web:4612190119302726820372"
         };
@@ -344,8 +344,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
         } else {
             console.error("ERRO: Firebase ou autenticação NÃO inicializados. Verifique suas credenciais e a conexão.");
         }
-        // >>>>>>> REMOVIDO BLOCO 'else' DUPLICADO AQUI <<<<<<<
-
+        
         // =============================================================================
         // IMPORTANTE: VOCÊ DEVE SUBSTITUIR "txHwdn3rwubSff4PvekjO4PM7wb2" PELO SEU UID DE UTILIZADOR REAL.
         // Após registar e fazer login pela primeira vez, o seu UID será exibido na tela principal.
@@ -474,8 +473,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
          * @param {Function} onConfirmAction - The function to execute if confirmed.
          */
         function displayConfirm(message, onConfirmAction) {
-            confirmMessageP.innerHTML = message;
-            // Use innerHTML to allow for HTML in message
+            confirmMessageP.innerHTML = message; // Use innerHTML to allow for HTML in message
             currentConfirmAction = onConfirmAction;
             customConfirmModal.classList.remove('hidden');
         }
@@ -544,11 +542,9 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
 
             let monthsToAddTotal = 0;
             if (contractLawType === 'Lei 8.666/93 (60 meses)') {
-                monthsToAddTotal = 60;
-            // 5 anos
+                monthsToAddTotal = 60; // 5 anos
             } else if (contractLawType === 'Lei 14.133/21 (10 anos)') {
-                monthsToAddTotal = 120;
-            // 10 anos
+                monthsToAddTotal = 120; // 10 anos
             } else {
                 return 'Tipo de lei inválido';
             }
@@ -557,8 +553,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
             endDate.setMonth(endDate.getMonth() + monthsToAddTotal);
             // Adjust day if it overflows (e.g., Jan 31 + 1 month = Feb 28/29, not Mar 3)
             if (endDate.getDate() !== day) {
-                endDate.setDate(0);
-            // Set to last day of previous month
+                endDate.setDate(0); // Set to last day of previous month
             }
 
             const formattedDay = String(endDate.getDate()).padStart(2, '0');
@@ -576,8 +571,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
             if (numValue === null || numValue === undefined || isNaN(numValue)) {
                 return '';
             }
-            const number = typeof numValue === 'string' ?
-parseFloat(numValue) : numValue;
+            const number = typeof numValue === 'string' ? parseFloat(numValue) : numValue;
             if (isNaN(number)) return '';
             return number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
         }
@@ -650,6 +644,7 @@ parseFloat(numValue) : numValue;
 
             navRemindersButton.classList.remove('bg-purple-600', 'text-white', 'shadow-md');
             navRemindersButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+
             if (page === 'list') {
                 contractsListSection.classList.remove('hidden');
                 navListButton.classList.add('bg-purple-600', 'text-white', 'shadow-md');
@@ -670,12 +665,10 @@ parseFloat(numValue) : numValue;
          * @param {Array<Object>} contracts - Array of contract objects.
          */
         function renderContracts(contracts) {
-            contractsGrid.innerHTML = '';
-            // Clear existing contracts
+            contractsGrid.innerHTML = ''; // Clear existing contracts
 
             if (contracts.length === 0) {
-                contractsGrid.innerHTML = '<p class="col-span-full text-center text-gray-600 text-lg">Nenhum contrato encontrado.
-' + (isAdmin ? 'Clique em "Registrar Contrato" para adicionar um novo.' : '') + '</p>';
+                contractsGrid.innerHTML = '<p class="col-span-full text-center text-gray-600 text-lg">Nenhum contrato encontrado. ' + (isAdmin ? 'Clique em "Registrar Contrato" para adicionar um novo.' : '') + '</p>';
                 return;
             }
 
@@ -689,6 +682,7 @@ parseFloat(numValue) : numValue;
 
                 return (a.processoSCEI || '').localeCompare(b.processoSCEI || '');
             });
+
             sortedContracts.forEach(contract => {
                 // Assign a color to each unique Processo SEI
                 if (!processColors[contract.processoSCEI]) {
@@ -704,25 +698,257 @@ parseFloat(numValue) : numValue;
                     const [day, month, year] = contract.terminoAtualContrato.split('/').map(Number);
                     const endDate = new Date(year, month - 1, day);
                     const today = new Date();
-                    today.setHours(0,0,0,0);
+                    today.setHours(0,0,0,0); // Normalize today's date to start of day
                     const diffTime = endDate.getTime() - today.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
                     expiringSoonTag = `
                         <span class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                            ? VENCENDO EM ${diffDays} DIAS!
+                            ⚠️ VENCENDO EM ${diffDays} DIAS!
                         </span>
                     `;
                 }
+
+                const unidadesHtml = (contract.unidadesParticipantes && contract.unidadesParticipantes.length > 0)
+                    ? contract.unidadesParticipantes.map(unidade => `<span class="inline-block bg-purple-200 text-purple-800 text-xs px-2 py-1 rounded-full">${unidade}</span>`).join(' ')
+                    : 'N/A';
+                
+                const valorContratoFormatted = formatNumberFromFirebaseForDisplay(contract.valorContrato);
 
                 contractCard.innerHTML = `
                     ${expiringSoonTag}
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${contract.nomeEmpresa || 'N/A'}</h3>
                     <p class="text-gray-600 text-sm mb-1">Processo SEI: <span class="font-semibold">${contract.processoSCEI || 'N/A'}</span></p>
-                    <p class="text-gray-600 text-sm mb-1">
+                    <p class="text-gray-600 text-sm mb-1">Número Contrato: <span class="font-semibold">${contract.numeroContrato || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Objeto: <span class="font-semibold">${contract.objetoContratacao || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Início Vigência: <span class="font-semibold">${contract.inicioVigenciaTotal || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Término Atual: <span class="font-semibold">${contract.terminoAtualContrato || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Momento Atual: <span class="font-semibold">${contract.momentoAtual || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Tipo de Lei: <span class="font-semibold">${contract.lawType || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Valor: <span class="font-semibold">R$ ${valorContratoFormatted}</span></p>
+                    <p class="text-gray-600 text-sm mb-1">Últimas Movimentações: <span class="font-semibold">${contract.ultimasMovimentacoes || 'N/A'}</span></p>
+                    <p class="text-gray-600 text-sm mb-4">Unidades: ${unidadesHtml}</p>
+                    ${isAdmin ? `
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button class="edit-contract-button bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg" data-id="${contract.id}">
+                            Editar
+                        </button>
+                        <button class="delete-contract-button bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg" data-id="${contract.id}">
+                            Excluir
+                        </button>
+                    </div>
+                    ` : ''}
                 `;
-                // ... (restante do código para renderizar o cartão do contrato)
+                contractsGrid.appendChild(contractCard);
+            });
+
+            // Add event listeners for edit and delete buttons after rendering
+            if (isAdmin) {
+                document.querySelectorAll('.edit-contract-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const contractId = e.target.dataset.id;
+                        editContract(contractId);
+                    });
+                });
+                document.querySelectorAll('.delete-contract-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const contractId = e.target.dataset.id;
+                        confirmDeleteContract(contractId);
+                    });
+                });
+            }
+        }
+
+        /**
+         * Renders the list of reminders.
+         * @param {Array<Object>} reminders - Array of reminder objects.
+         */
+        function renderReminders(reminders) {
+            remindersList.innerHTML = '';
+            if (reminders.length === 0) {
+                remindersList.innerHTML = '<p class="text-center text-gray-600 text-lg mt-4">Nenhum lembrete adicionado ainda.</p>';
+                return;
+            }
+
+            const now = new Date();
+            now.setHours(0,0,0,0);
+
+            // Sort reminders by date, overdue first
+            const sortedReminders = [...reminders].sort((a, b) => {
+                const dateA = new Date(formatDateForInput(a.reminderDate));
+                const dateB = new Date(formatDateForInput(b.reminderDate));
+
+                const isOverdueA = dateA < now;
+                const isOverdueB = dateB < now;
+
+                if (isOverdueA && !isOverdueB) return -1;
+                if (!isOverdueA && isOverdueB) return 1;
+
+                return dateA - dateB; // Sort by date if not overdue/both overdue
+            });
+
+
+            sortedReminders.forEach(reminder => {
+                const reminderDate = new Date(formatDateForInput(reminder.reminderDate));
+                const isOverdue = reminderDate < now;
+                const listItem = document.createElement('li');
+                listItem.className = `flex justify-between items-center p-4 rounded-lg shadow-sm border ${isOverdue ? 'bg-red-100 border-red-400' : 'bg-blue-50 border-blue-200'}`;
+                listItem.innerHTML = `
+                    <div>
+                        <p class="text-lg font-semibold ${isOverdue ? 'text-red-800' : 'text-blue-800'}">${reminder.reminderText}</p>
+                        <p class="text-sm ${isOverdue ? 'text-red-600' : 'text-blue-600'}">Data: ${reminder.reminderDate} ${isOverdue ? '(VENCIDO)' : ''}</p>
+                    </div>
+                    <button class="delete-reminder-button bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200" data-id="${reminder.id}">
+                        Excluir
+                    </button>
+                `;
+                remindersList.appendChild(listItem);
+            });
+
+            document.querySelectorAll('.delete-reminder-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const reminderId = e.target.dataset.id;
+                    confirmDeleteReminder(reminderId);
+                });
             });
         }
-    </script>
-</body>
-</html>
+
+        // --- Firebase Data Operations ---
+
+        /**
+         * Fetches contracts from Firestore for the current user (admin gets all, others get their own).
+         */
+        async function fetchContracts() {
+            showLoading();
+            try {
+                let contractsRef = collection(db, 'contracts');
+                const snapshot = await getDocs(contractsRef);
+                contractsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderContracts(contractsData);
+                updateGlobalAlerts(contractsData, 'contract');
+            } catch (error) {
+                console.error("Erro ao carregar contratos:", error);
+                displayAlert(["Erro ao carregar contratos. Por favor, tente novamente."]);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Sets up real-time listeners for contracts and reminders.
+         */
+        function setupFirebaseListeners() {
+            if (!auth || !db) return; // Ensure Firebase is initialized
+
+            // Contracts Listener
+            let contractsCollectionRef = collection(db, 'contracts');
+            onSnapshot(contractsCollectionRef, (snapshot) => {
+                contractsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderContracts(contractsData);
+                updateGlobalAlerts(contractsData, 'contract');
+            }, (error) => {
+                console.error("Erro ao configurar listener de contratos:", error);
+                displayAlert(["Erro ao carregar dados de contratos em tempo real."]);
+            });
+
+            // Reminders Listener (user-specific)
+            let remindersCollectionRef = collection(db, 'reminders');
+            let userRemindersQuery = query(remindersCollectionRef, where("userId", "==", userId));
+            onSnapshot(userRemindersQuery, (snapshot) => {
+                remindersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderReminders(remindersData);
+                updateGlobalAlerts(remindersData, 'reminder');
+            }, (error) => {
+                console.error("Erro ao configurar listener de lembretes:", error);
+                displayAlert(["Erro ao carregar seus lembretes em tempo real."]);
+            });
+        }
+
+
+        /**
+         * Adds a new contract or updates an existing one in Firestore.
+         */
+        async function addUpdateContract() {
+            showLoading();
+            const validationErrors = [];
+
+            if (!inputProcessoSCEI.value) validationErrors.push("Processo SEI é obrigatório.");
+            if (!inputNomeEmpresa.value) validationErrors.push("Nome da Empresa é obrigatório.");
+            if (!inputObjetoContratacao.value) validationErrors.push("Objeto da Contratação é obrigatório.");
+            if (!inputNumeroContrato.value) validationErrors.push("Número do Contrato é obrigatório.");
+            if (!inputInicioVigenciaTotal.value) validationErrors.push("Início da Vigência é obrigatório.");
+            if (!selectMomentoAtual.value) validationErrors.push("Momento Atual é obrigatório.");
+            if (!inputTerminoAtualContrato.value) validationErrors.push("Término Atual é obrigatório.");
+            if (!selectLawType.value) validationErrors.push("Tipo de Lei é obrigatório.");
+
+            const selectedUnidades = Array.from(unidadesCheckboxes.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+            if (selectedUnidades.length === 0) validationErrors.push("Selecione ao menos uma Unidade Participante.");
+
+            const valorContratoParsed = parseValorContratoForSave(inputValorContrato.value);
+            if (valorContratoParsed === null && inputValorContrato.value !== '') {
+                validationErrors.push("Valor do Contrato inválido.");
+            }
+
+            if (validationErrors.length > 0) {
+                displayAlert(validationErrors);
+                hideLoading();
+                return;
+            }
+
+            const contractData = {
+                processoSCEI: inputProcessoSCEI.value,
+                nomeEmpresa: inputNomeEmpresa.value,
+                objetoContratacao: inputObjetoContratacao.value,
+                numeroContrato: inputNumeroContrato.value,
+                inicioVigenciaTotal: formatDateFromInput(inputInicioVigenciaTotal.value),
+                momentoAtual: selectMomentoAtual.value,
+                terminoAtualContrato: formatDateFromInput(inputTerminoAtualContrato.value),
+                lawType: selectLawType.value,
+                valorContrato: valorContratoParsed, // Saved as number
+                unidadesParticipantes: selectedUnidades,
+                ultimasMovimentacoes: inputUltimasMovimentacoes.value,
+                lastUpdated: Timestamp.now(),
+                // Store the UID of the user who added/updated
+                addedBy: userId,
+                // Additional fields for calculations or tracking
+                terminoLegalCalculado: calcularTerminoLegal(formatDateFromInput(inputInicioVigenciaTotal.value), selectLawType.value)
+            };
+
+            try {
+                if (currentEditingContract) {
+                    const contractRef = doc(db, 'contracts', currentEditingContract.id);
+                    await updateDoc(contractRef, contractData);
+                    displayAlert(["Contrato atualizado com sucesso!"]);
+                    currentEditingContract = null;
+                } else {
+                    await addDoc(collection(db, 'contracts'), contractData);
+                    displayAlert(["Contrato adicionado com sucesso!"]);
+                }
+                resetContractForm();
+                setPage('list'); // Go back to list view
+            } catch (error) {
+                console.error("Erro ao salvar contrato:", error);
+                displayAlert(["Erro ao salvar contrato. Por favor, tente novamente."]);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Fills the form with contract data for editing.
+         * @param {string} contractId - The ID of the contract to edit.
+         */
+        async function editContract(contractId) {
+            showLoading();
+            try {
+                const contractRef = doc(db, 'contracts', contractId);
+                const docSnap = await getDoc(contractRef);
+
+                if (docSnap.exists()) {
+                    const contract = { id: docSnap.id, ...docSnap.data() };
+                    currentEditingContract = contract;
+                    registerContractTitle.textContent = "Editar Contrato";
+                    addUpdateContractButton.textContent = "Atualizar Contrato";
+                    cancelEditButton.classList.remove('hidden');
+
+                    inputProcessoSCEI.
