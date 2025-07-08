@@ -1,9 +1,9 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gest√£o de Contratos e Lembretes</title>
+    <title>Gest„o de Contratos e Lembretes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Estilos personalizados para a fonte Inter */
@@ -13,7 +13,7 @@
             padding: 0;
         }
 
-        /* Anima√ß√£o de piscar para contratos vencendo */
+        /* AnimaÁ„o de piscar para contratos vencendo */
         @keyframes pulse-red {
             0%, 100% { border-color: #ef4444; } /* red-500 */
             50% { border-color: #f87171; } /* red-400 */
@@ -22,7 +22,7 @@
             animation: pulse-red 1.5s infinite;
         }
 
-        /* Estilos para o modal de alerta e confirma√ß√£o */
+        /* Estilos para o modal de alerta e confirmaÁ„o */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -124,7 +124,7 @@
 
     <div id="auth-screen" class="flex-grow flex items-center justify-center bg-gradient-to-br from-purple-700 to-indigo-800 p-4">
         <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-            <h2 id="auth-mode-title" class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+            <h2 id="auth-mode-title" class="text-2xl font-bold text-center mb-6 text-gray-800">Gest„o de Contratos</h2>
             <div class="mb-4">
                 <input type="email" id="auth-email" class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="E-mail" autocomplete="username">
             </div>
@@ -157,6 +157,14 @@
                         type="tel"
                     />
                 </div>
+                <div class="mb-4">
+                    <input
+                        id="auth-address"
+                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="EndereÁo Completo"
+                        type="text"
+                    />
+                </div>
                 <div class="mb-6">
                     <input
                         id="auth-confirmPassword"
@@ -179,10 +187,10 @@
         </div>
     </div>
 
-    <div id="main-app-content" class="flex-grow flex flex-col hidden">
+    <div id="main-app-content" class="flex-grow flex flex-col hidden bg-purple-100">
         <header class="bg-gray-800 text-white p-4 shadow-md flex justify-between items-center flex-wrap gap-2">
             <div class="flex items-center">
-                <h1 class="text-2xl font-bold mr-4">Gest√£o de Contratos e Lembretes</h1>
+                <h1 class="text-2xl font-bold mr-4">Gest„o de Contratos e Lembretes</h1>
                 <nav>
                     <button id="contracts-nav-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Contratos</button>
                     <button id="reminders-nav-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Lembretes</button>
@@ -201,8 +209,7 @@
             <ul id="global-alert-list" class="mt-2 list-disc list-inside"></ul>
         </div>
 
-        <main id="contracts-section" class="flex-grow p-6 bg-gray-50 hidden">
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <main id="contracts-section" class="flex-grow p-6 bg-purple-100"> <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Adicionar/Editar Contrato</h2>
                 <form id="contract-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -211,18 +218,18 @@
                     </div>
                     <div>
                         <label for="contract-type" class="block text-gray-700 text-sm font-bold mb-2">Tipo de Contrato:</label>
-                        <input type="text" id="contract-type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: Manuten√ß√£o, Servi√ßo, Loca√ß√£o" required>
+                        <input type="text" id="contract-type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: ManutenÁ„o, ServiÁo, LocaÁ„o" required>
                     </div>
                     <div>
                         <label for="contract-sei-process" class="block text-gray-700 text-sm font-bold mb-2">Processo SEI:</label>
-                        <input type="text" id="contract-sei-process" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="N√∫mero do Processo SEI" required>
+                        <input type="text" id="contract-sei-process" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="N˙mero do Processo SEI" required>
                     </div>
                     <div>
-                        <label for="contract-start-date" class="block text-gray-700 text-sm font-bold mb-2">Data de In√≠cio:</label>
+                        <label for="contract-start-date" class="block text-gray-700 text-sm font-bold mb-2">Data de InÌcio:</label>
                         <input type="date" id="contract-start-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div>
-                        <label for="contract-end-date" class="block text-gray-700 text-sm font-bold mb-2">Data de T√©rmino:</label>
+                        <label for="contract-end-date" class="block text-gray-700 text-sm font-bold mb-2">Data de TÈrmino:</label>
                         <input type="date" id="contract-end-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div class="md:col-span-2">
@@ -230,12 +237,12 @@
                         <input type="number" id="contract-value" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00" step="0.01" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label for="contract-notes" class="block text-gray-700 text-sm font-bold mb-2">Observa√ß√µes:</label>
+                        <label for="contract-notes" class="block text-gray-700 text-sm font-bold mb-2">ObservaÁıes:</label>
                         <textarea id="contract-notes" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Detalhes adicionais..."></textarea>
                     </div>
                     <div class="md:col-span-2 flex justify-end">
                         <button type="submit" id="contract-submit-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Adicionar Contrato</button>
-                        <button type="button" id="contract-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar Edi√ß√£o</button>
+                        <button type="button" id="contract-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar EdiÁ„o</button>
                     </div>
                 </form>
             </div>
@@ -245,8 +252,8 @@
                 <div class="mb-4 flex flex-wrap gap-2 justify-between items-center">
                     <input type="text" id="contracts-search" placeholder="Pesquisar contratos..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex-grow">
                     <select id="contracts-sort" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="endDateAsc">Data de T√©rmino (Crescente)</option>
-                        <option value="endDateDesc">Data de T√©rmino (Decrescente)</option>
+                        <option value="endDateAsc">Data de TÈrmino (Crescente)</option>
+                        <option value="endDateDesc">Data de TÈrmino (Decrescente)</option>
                         <option value="clientAsc">Cliente (A-Z)</option>
                         <option value="clientDesc">Cliente (Z-A)</option>
                         <option value="seiProcessAsc">Processo SEI (Crescente)</option>
@@ -260,11 +267,11 @@
                                 <th class="py-3 px-6 text-left">Cliente</th>
                                 <th class="py-3 px-6 text-left">Tipo</th>
                                 <th class="py-3 px-6 text-left">Processo SEI</th>
-                                <th class="py-3 px-6 text-left">In√≠cio</th>
-                                <th class="py-3 px-6 text-left">T√©rmino</th>
+                                <th class="py-3 px-6 text-left">InÌcio</th>
+                                <th class="py-3 px-6 text-left">TÈrmino</th>
                                 <th class="py-3 px-6 text-left">Valor</th>
-                                <th class="py-3 px-6 text-left">Observa√ß√µes</th>
-                                <th class="py-3 px-6 text-center">A√ß√µes</th>
+                                <th class="py-3 px-6 text-left">ObservaÁıes</th>
+                                <th class="py-3 px-6 text-center">AÁıes</th>
                             </tr>
                         </thead>
                         <tbody id="contracts-table-body" class="text-gray-600 text-sm font-light">
@@ -275,25 +282,24 @@
             </div>
         </main>
 
-        <main id="reminders-section" class="flex-grow p-6 bg-gray-50 hidden">
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <main id="reminders-section" class="flex-grow p-6 bg-purple-100"> <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Adicionar/Editar Lembrete</h2>
                 <form id="reminder-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="reminder-title" class="block text-gray-700 text-sm font-bold mb-2">T√≠tulo:</label>
-                        <input type="text" id="reminder-title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="T√≠tulo do Lembrete" required>
+                        <label for="reminder-title" class="block text-gray-700 text-sm font-bold mb-2">TÌtulo:</label>
+                        <input type="text" id="reminder-title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="TÌtulo do Lembrete" required>
                     </div>
                     <div>
                         <label for="reminder-date" class="block text-gray-700 text-sm font-bold mb-2">Data:</label>
                         <input type="date" id="reminder-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label for="reminder-notes" class="block text-gray-700 text-sm font-bold mb-2">Observa√ß√µes:</label>
+                        <label for="reminder-notes" class="block text-gray-700 text-sm font-bold mb-2">ObservaÁıes:</label>
                         <textarea id="reminder-notes" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Detalhes do lembrete..."></textarea>
                     </div>
                     <div class="md:col-span-2 flex justify-end">
                         <button type="submit" id="reminder-submit-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Adicionar Lembrete</button>
-                        <button type="button" id="reminder-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar Edi√ß√£o</button>
+                        <button type="button" id="reminder-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar EdiÁ„o</button>
                     </div>
                 </form>
             </div>
@@ -305,18 +311,18 @@
                     <select id="reminders-sort" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="dateAsc">Data (Crescente)</option>
                         <option value="dateDesc">Data (Decrescente)</option>
-                        <option value="titleAsc">T√≠tulo (A-Z)</option>
-                        <option value="titleDesc">T√≠tulo (Z-A)</option>
+                        <option value="titleAsc">TÌtulo (A-Z)</option>
+                        <option value="titleDesc">TÌtulo (Z-A)</option>
                     </select>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full bg-white">
                         <thead>
                             <tr class="w-full bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">T√≠tulo</th>
+                                <th class="py-3 px-6 text-left">TÌtulo</th>
                                 <th class="py-3 px-6 text-left">Data</th>
-                                <th class="py-3 px-6 text-left">Observa√ß√µes</th>
-                                <th class="py-3 px-6 text-center">A√ß√µes</th>
+                                <th class="py-3 px-6 text-left">ObservaÁıes</th>
+                                <th class="py-3 px-6 text-center">AÁıes</th>
                             </tr>
                         </thead>
                         <tbody id="reminders-table-body" class="text-gray-600 text-sm font-light">
@@ -349,9 +355,9 @@
         const db = getFirestore(app);
         const contractsCollection = collection(db, 'contracts');
         const remindersCollection = collection(db, 'reminders');
-        const usersCollection = collection(db, 'users'); // Nova cole√ß√£o para dados de usu√°rios
+        const usersCollection = collection(db, 'users'); // Nova coleÁ„o para dados de usu·rios
 
-        // Vari√°veis globais
+        // Vari·veis globais
         let isLoggedIn = false;
         let userId = '';
         let userEmail = '';
@@ -400,7 +406,8 @@
         const authFullNameInput = document.getElementById('auth-fullName');
         const authCpfInput = document.getElementById('auth-cpf');
         const authPhoneInput = document.getElementById('auth-phone');
-        const authConfirmPasswordInput = document.getElementById('auth-confirmPassword'); // NOVO CAMPO
+        const authAddressInput = document.getElementById('auth-address'); // NOVO CAMPO
+        const authConfirmPasswordInput = document.getElementById('auth-confirmPassword');
 
         // Contract Elements
         const contractForm = document.getElementById('contract-form');
@@ -430,7 +437,7 @@
         const remindersSortSelect = document.getElementById('reminders-sort');
         const noRemindersMessage = document.getElementById('no-reminders-message');
 
-        // Fun√ß√µes de Utilit√°rio
+        // FunÁıes de Utilit·rio
         function showLoading() {
             loadingOverlay.classList.remove('hidden');
         }
@@ -572,7 +579,7 @@
         }
 
 
-        // Fun√ß√µes de Contratos
+        // FunÁıes de Contratos
         async function saveContract(event) {
             event.preventDefault();
             showLoading();
@@ -648,7 +655,7 @@
                 contractsTableBody.appendChild(row);
             });
 
-            // Adiciona listeners para os bot√µes de editar e excluir
+            // Adiciona listeners para os botıes de editar e excluir
             document.querySelectorAll('.edit-contract-btn').forEach(button => {
                 button.addEventListener('click', editContract);
             });
@@ -700,7 +707,7 @@
                 showLoading();
                 try {
                     await deleteDoc(doc(db, 'contracts', id));
-                    displayAlert(["Contrato exclu√≠do com sucesso!"]);
+                    displayAlert(["Contrato excluÌdo com sucesso!"]);
                 } catch (e) {
                     console.error("Erro ao excluir contrato: ", e);
                     displayAlert(["Erro ao excluir contrato. Tente novamente."]);
@@ -719,7 +726,7 @@
             const contract = contractsData.find(c => c.id === id);
 
             if (contract) {
-                const confirm = await displayConfirm(`Tem certeza que deseja renovar o contrato com ${contract.client} (${contract.type})? A data de t√©rmino ser√° estendida por 1 ano.`);
+                const confirm = await displayConfirm(`Tem certeza que deseja renovar o contrato com ${contract.client} (${contract.type})? A data de tÈrmino ser· estendida por 1 ano.`);
                 if (confirm) {
                     showLoading();
                     try {
@@ -771,7 +778,7 @@
             renderContracts(filteredContracts);
         }
 
-        // Fun√ß√µes de Lembretes
+        // FunÁıes de Lembretes
         async function saveReminder(event) {
             event.preventDefault();
             showLoading();
@@ -837,7 +844,7 @@
                 remindersTableBody.appendChild(row);
             });
 
-            // Adiciona listeners para os bot√µes de editar e excluir
+            // Adiciona listeners para os botıes de editar e excluir
             document.querySelectorAll('.edit-reminder-btn').forEach(button => {
                 button.addEventListener('click', editReminder);
             });
@@ -878,7 +885,7 @@
                 showLoading();
                 try {
                     await deleteDoc(doc(db, 'reminders', id));
-                    displayAlert(["Lembrete exclu√≠do com sucesso!"]);
+                    displayAlert(["Lembrete excluÌdo com sucesso!"]);
                 } catch (e) {
                     console.error("Erro ao excluir lembrete: ", e);
                     displayAlert(["Erro ao excluir lembrete. Tente novamente."]);
@@ -911,7 +918,7 @@
             renderReminders(filteredReminders);
         }
 
-        // Configura√ß√£o de Listeners Firebase
+        // ConfiguraÁ„o de Listeners Firebase
         function setupFirebaseListeners() {
             if (contractsUnsubscribe) {
                 contractsUnsubscribe();
@@ -943,7 +950,7 @@
             });
         }
 
-        // Autentica√ß√£o
+        // AutenticaÁ„o
         let isAuthRegistering = false; // false for login, true for register
 
         async function handleAuthAction() {
@@ -952,7 +959,8 @@
             const fullName = authFullNameInput.value.trim();
             const cpf = authCpfInput.value.trim();
             const phone = authPhoneInput.value.trim();
-            const confirmPassword = authConfirmPasswordInput.value.trim(); // NOVO CAMPO
+            const address = authAddressInput.value.trim(); // NOVO CAMPO: EndereÁo
+            const confirmPassword = authConfirmPasswordInput.value.trim();
 
             if (!email || !password) {
                 displayAlert(['Por favor, preencha o E-mail e a Palavra-passe.']);
@@ -963,40 +971,41 @@
             try {
                 let userCredential;
                 if (isAuthRegistering) {
-                    if (!fullName || !phone) {
-                        displayAlert(['Por favor, preencha o Nome Completo e o Telefone para registo.']);
+                    if (!fullName || !phone || !address) { // ValidaÁ„o de endereÁo adicionada
+                        displayAlert(['Por favor, preencha o Nome Completo, Telefone e EndereÁo para registo.']);
                         hideLoading();
                         return;
                     }
-                    if (password !== confirmPassword) { // NOVO CHECK
-                        displayAlert(['As palavras-passe n√£o coincidem. Por favor, digite a mesma palavra-passe em ambos os campos.']);
+                    if (password !== confirmPassword) {
+                        displayAlert(['As palavras-passe n„o coincidem. Por favor, digite a mesma palavra-passe em ambos os campos.']);
                         hideLoading();
                         return;
                     }
 
                     try {
                         userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                        // Salva dados adicionais do usu√°rio no Firestore
+                        // Salva dados adicionais do usu·rio no Firestore
                         await setDoc(doc(db, 'users', userCredential.user.uid), {
                             name: fullName,
                             email: email,
                             cpf: cpf,
                             phone: phone,
+                            address: address, // Salva o novo campo de endereÁo
                             createdAt: serverTimestamp(),
-                            isAdmin: false // Novas contas n√£o s√£o administradores por padr√£o
+                            isAdmin: false // Novas contas n„o s„o administradores por padr„o
                         });
-                        displayAlert(['Conta registrada com sucesso! Voc√™ pode agora iniciar sess√£o.']);
-                        // Alternar de volta para o modo de login ap√≥s o registro bem-sucedido
+                        displayAlert(['Conta registrada com sucesso! VocÍ pode agora iniciar sess„o.']);
+                        // Alternar de volta para o modo de login apÛs o registro bem-sucedido
                         isAuthRegistering = false;
                         updateAuthUI();
                     } catch (authError) {
                         let errorMessage = "Erro ao registar conta. Tente novamente.";
                         if (authError.code === 'auth/email-already-in-use') {
-                            errorMessage = "Este email j√° est√° em uso.";
+                            errorMessage = "Este email j· est· em uso.";
                         } else if (authError.code === 'auth/weak-password') {
                             errorMessage = "A palavra-passe deve ter pelo menos 6 caracteres.";
                         } else if (authError.code === 'auth/invalid-email') {
-                            errorMessage = "Endere√ßo de email inv√°lido.";
+                            errorMessage = "EndereÁo de email inv·lido.";
                         }
                         displayAlert([errorMessage]);
                     }
@@ -1004,17 +1013,17 @@
                     try {
                         userCredential = await signInWithEmailAndPassword(auth, email, password);
                     } catch (authError) {
-                        let errorMessage = "Erro de autentica√ß√£o. Tente novamente.";
+                        let errorMessage = "Erro de autenticaÁ„o. Tente novamente.";
                         if (authError.code === 'auth/invalid-email' || authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
                             errorMessage = "E-mail ou palavra-passe incorretos.";
                         } else if (authError.code === 'auth/user-disabled') {
-                            errorMessage = "Esta conta de usu√°rio foi desativada.";
+                            errorMessage = "Esta conta de usu·rio foi desativada.";
                         }
                         displayAlert([errorMessage]);
                     }
                 }
             } catch (error) {
-                console.error("Erro geral de autentica√ß√£o:", error);
+                console.error("Erro geral de autenticaÁ„o:", error);
                 displayAlert(["Ocorreu um erro inesperado. Tente novamente."]);
             } finally {
                 hideLoading();
@@ -1025,19 +1034,21 @@
             if (isAuthRegistering) {
                 authModeTitle.textContent = 'Registrar';
                 authButton.textContent = 'Registrar';
-                toggleAuthModeButton.textContent = 'J√° tenho uma conta';
+                toggleAuthModeButton.textContent = 'J· tenho uma conta';
                 registerFields.classList.remove('hidden');
-                authConfirmPasswordInput.setAttribute('required', 'true'); // Torna o campo obrigat√≥rio
+                authConfirmPasswordInput.setAttribute('required', 'true');
                 authFullNameInput.setAttribute('required', 'true');
                 authPhoneInput.setAttribute('required', 'true');
+                authAddressInput.setAttribute('required', 'true'); // Define endereÁo como obrigatÛrio
             } else {
-                authModeTitle.textContent = 'Login';
+                authModeTitle.textContent = 'Gest„o de Contratos'; // Volta para o tÌtulo da tela de login
                 authButton.textContent = 'Entrar';
                 toggleAuthModeButton.textContent = 'Criar uma conta';
                 registerFields.classList.add('hidden');
-                authConfirmPasswordInput.removeAttribute('required'); // Remove obrigat√≥rio
+                authConfirmPasswordInput.removeAttribute('required');
                 authFullNameInput.removeAttribute('required');
                 authPhoneInput.removeAttribute('required');
+                authAddressInput.removeAttribute('required'); // Remove obrigatÛrio
             }
             // Limpa os campos quando o modo muda
             authEmailInput.value = '';
@@ -1045,7 +1056,8 @@
             authFullNameInput.value = '';
             authCpfInput.value = '';
             authPhoneInput.value = '';
-            authConfirmPasswordInput.value = ''; // Limpa o novo campo
+            authAddressInput.value = ''; // Limpa o novo campo de endereÁo
+            authConfirmPasswordInput.value = '';
         }
 
         function toggleAuthMode() {
@@ -1059,7 +1071,7 @@
                 showLoading();
                 try {
                     await signOut(auth);
-                    displayAlert(["Voc√™ foi desconectado."]);
+                    displayAlert(["VocÍ foi desconectado."]);
                 } catch (error) {
                     console.error("Erro ao sair:", error);
                     displayAlert(["Erro ao fazer logout. Tente novamente."]);
@@ -1087,11 +1099,11 @@
         remindersSearchInput.addEventListener('input', filterAndSortReminders);
         remindersSortSelect.addEventListener('change', filterAndSortReminders);
 
-        // Inicializa√ß√£o do aplicativo
+        // InicializaÁ„o do aplicativo
         window.onload = () => {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    // Tenta buscar os dados adicionais do usu√°rio
+                    // Tenta buscar os dados adicionais do usu·rio
                     const userDocRef = doc(db, 'users', user.uid);
                     const userDocSnap = await getDoc(userDocRef);
 
@@ -1100,7 +1112,7 @@
                         isLoggedIn = true;
                         userId = user.uid;
                         userEmail = user.email;
-                        isAdmin = (user.uid === ADMIN_UID || (userData && userData.isAdmin === true)); // Verifica se o usu√°rio √© admin via UID ou dado no Firestore
+                        isAdmin = (user.uid === ADMIN_UID || (userData && userData.isAdmin === true)); // Verifica se o usu·rio È admin via UID ou dado no Firestore
 
                         userEmailDisplay.textContent = userEmail;
                         userRoleDisplay.textContent = isAdmin ? 'Administrador' : 'Visualizador';
@@ -1111,11 +1123,11 @@
                         setPage('list'); // Default to contracts list after login
                         setupFirebaseListeners(); // Start listening for data
                     } else {
-                        // Caso o documento do usu√°rio n√£o exista no Firestore (ex: usu√°rio antigo ou erro no registro)
-                        // Poderia for√ßar o logout ou redirecionar para a tela de preenchimento de perfil.
+                        // Caso o documento do usu·rio n„o exista no Firestore (ex: usu·rio antigo ou erro no registro)
+                        // Poderia forÁar o logout ou redirecionar para a tela de preenchimento de perfil.
                         // Por enquanto, apenas desloga para evitar estado inconsistente.
-                        console.warn("Documento de usu√°rio n√£o encontrado no Firestore para UID:", user.uid);
-                        signOut(auth); // For√ßa o logout se o perfil no Firestore n√£o for encontrado
+                        console.warn("Documento de usu·rio n„o encontrado no Firestore para UID:", user.uid);
+                        signOut(auth); // ForÁa o logout se o perfil no Firestore n„o for encontrado
                     }
                 } else {
                     isLoggedIn = false;
