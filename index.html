@@ -281,7 +281,7 @@
     <script type="module">
         // Importa os módulos necessários do Firebase a partir de CDNs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-       import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration Variables ---
@@ -319,9 +319,9 @@
 
                 // Configura a persistência para 'inMemoryPersistence' para não persistir o login entre sessões.
                 // Se quiser que o login persista enquanto o navegador estiver aberto (sessão), use 'browserSessionPersistence'.
-                setPersistence(auth, inMemoryPersistence) //
-                    .then(() => console.log("Persistência de autenticação definida para 'inMemoryPersistence'.")) //
-                    .catch((error) => console.error("Erro ao definir persistência de autenticação:", error)); //
+            setPersistence(auth, inMemoryPersistence)
+    .then(() => console.log("Persistência de autenticação definida para 'inMemoryPersistence'."))
+    .catch((error) => console.error("Erro ao definir persistência de autenticação:", error));
 
             } catch (error) {
                 console.error('Erro ao inicializar Firebase. Verifique suas credenciais:', error);
