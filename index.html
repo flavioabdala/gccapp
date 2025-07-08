@@ -281,7 +281,7 @@
     <script type="module">
         // Importa os módulos necessários do Firebase a partir de CDNs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+       import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration Variables ---
@@ -292,7 +292,7 @@
             apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw", // Ex: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw"
             authDomain: "gcc-contratos.firebaseapp.com", // Ex: "gcc-contratos.firebaseapp.com"
             projectId: "gcc-contratos", // Ex: "gcc-contratos"
-            storageBucket: "cc-contratos.firebasestorage.app", // Ex: "gcc-contratos.appspot.com"
+            storageBucket: "gcc-contratos.appspot.com", // Ex: "gcc-contratos.appspot.com"
             messagingSenderId: "405415511927", // Ex: "405415511927"
             appId: "1:405415511927:web:4612190119302726820372", // Ex: "1:405415511927:web:4612190119302726820372"
         };
@@ -311,20 +311,33 @@
 
         // Inicializa o Firebase apenas se as credenciais forem válidas
         if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw") {
-            try {
+          try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                if (app && db && auth)
                 console.log("Firebase inicializado com sucesso.");
-                // Configura a persistência para 'NONE' para evitar login automático
-                auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
-                    .then(() => console.log("Persistência de autenticação definida para 'NONE'."))
-                    .catch((error) => console.error("Erro ao definir persistência de autenticação:", error));
+
+                // Configura a persistência para 'inMemoryPersistence' para não persistir o login entre sessões.
+                // Se quiser que o login persista enquanto o navegador estiver aberto (sessão), use 'browserSessionPersistence'.
+                setPersistence(auth, inMemoryPersistence) //
+                    .then(() => console.log("Persistência de autenticação definida para 'inMemoryPersistence'.")) //
+                    .catch((error) => console.error("Erro ao definir persistência de autenticação:", error)); //
+
             } catch (error) {
                 console.error('Erro ao inicializar Firebase. Verifique suas credenciais:', error);
                 displayAlert(["Erro: O sistema de base de dados não foi inicializado. Por favor, forneça suas credenciais Firebase e recarregue a página."]);
             }
+        } else {
+            console.warn("firebaseConfig está vazio ou contém placeholders. O Firebase não será inicializado até que as credenciais sejam fornecidas.");
+            displayAlert(["Aviso: As credenciais do Firebase não foram configuradas. O aplicativo não funcionará corretamente. Por favor, edite o código para adicionar suas credenciais."]);
+        }
+
+        // Estas são as mensagens de depuração que pedimos para adicionar
+        if (app && db && auth) {
+            console.log("Firebase e autenticação inicializados com sucesso e acessíveis.");
+        } else {
+            console.error("ERRO: Firebase ou autenticação NÃO inicializados. Verifique suas credenciais e a conexão.");
+        }
         } else {
             console.warn("firebaseConfig está vazio ou contém placeholders. O Firebase não será inicializado até que as credenciais sejam fornecidas.");
             displayAlert(["Aviso: As credenciais do Firebase não foram configuradas. O aplicativo não funcionará corretamente. Por favor, edite o código para adicionar suas credenciais."]);
