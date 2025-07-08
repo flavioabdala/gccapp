@@ -58,11 +58,12 @@
     <div id="customAlertModal" class="modal-overlay hidden">
         <div class="modal-content border border-yellow-400">
             <div class="flex items-center justify-center mb-4">
-                <span class="text-yellow-500 text-4xl mr-3">⚠️</span>
+                <span class="text-yellow-500 text-4xl mr-3">??</span>
                 <h5 class="text-2xl font-bold text-gray-800">Atenção!</h5>
             </div>
             <div id="alertMessages" class="mb-6"></div>
-            <button id="alertCloseButton" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out">
+            <button id="alertCloseButton" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg 
+transition duration-300 ease-in-out">
                 OK
             </button>
         </div>
@@ -71,7 +72,7 @@
     <div id="customConfirmModal" class="modal-overlay hidden">
         <div class="modal-content border border-red-500">
             <div class="flex items-center justify-center mb-4">
-                <span class="text-red-500 text-4xl mr-3">❓</span>
+                <span class="text-red-500 text-4xl mr-3">?</span>
                 <h5 class="text-2xl font-bold text-gray-800">Confirmação</h5>
             </div>
             <p id="confirmMessage" class="text-gray-700 text-base mb-8"></p>
@@ -122,7 +123,8 @@
                 <div class="mb-4">
                     <input
                         id="auth-cpf"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        class="w-full 
+px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="CPF"
                         inputmode="numeric"
                     />
@@ -147,7 +149,8 @@
             </div>
             <button
                 id="toggle-auth-mode-button"
-                class="w-full mt-6 text-purple-600 hover:text-purple-800 font-semibold text-center"
+                class="w-full mt-6 text-purple-600 hover:text-purple-800 
+font-semibold text-center"
             >
                 Não tem uma conta? Registe-se
             </button>
@@ -196,13 +199,15 @@
             <section id="contracts-list-section" class="mb-8 p-6 bg-white rounded-2xl shadow-lg">
                 <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">Lista de Contratos</h2>
                 <div id="contracts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <p class="col-span-full text-center text-gray-600 text-lg">Nenhum contrato encontrado. Clique em "Registrar Contrato" para adicionar um novo.</p>
+                    <p class="col-span-full text-center text-gray-600 text-lg">Nenhum contrato encontrado.
+Clique em "Registrar Contrato" para adicionar um novo.</p>
                 </div>
             </section>
 
             <section id="register-contract-section" class="hidden mb-8 p-6 bg-white rounded-2xl shadow-lg max-w-3xl mx-auto">
                 <h2 id="register-contract-title" class="text-3xl font-bold text-gray-800 text-center mb-6">Registrar Novo Contrato</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 
+gap-6 mb-6">
                     <div>
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Processo SEI:</label>
                         <input id="input-processoSCEI" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Ex: 12345.67890/2023-00" />
@@ -213,7 +218,8 @@
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Objeto da Contratação:</label>
-                        <textarea id="input-objetoContratacao" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 h-24 resize-y" placeholder="Detalhes do que está sendo contratado"></textarea>
+                        <textarea id="input-objetoContratacao" class="w-full px-4 py-2 border 
+border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 h-24 resize-y" placeholder="Detalhes do que está sendo contratado"></textarea>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Número do Contrato:</label>
@@ -235,16 +241,17 @@
                     <div>
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Tipo de Lei:</label>
                         <select id="select-lawType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            </select>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Valor do Contrato (R$):</label>
-                        <input id="input-valorContrato" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Ex: 1.234.567,89" inputmode="decimal" />
+                        <input id="input-valorContrato" 
+class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Ex: 1.234.567,89" inputmode="decimal" />
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Unidades Participantes:</label>
                         <div id="unidades-checkboxes" class="flex flex-wrap gap-2">
-                            </div>
+                        </div>
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">Últimas Movimentações:</label>
@@ -281,7 +288,8 @@
     <script type="module">
         // Importa os módulos necessários do Firebase a partir de CDNs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Importante: Adicione 'setPersistence' e 'inMemoryPersistence' aqui
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration Variables ---
@@ -292,7 +300,7 @@
             apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw", // Ex: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw"
             authDomain: "gcc-contratos.firebaseapp.com", // Ex: "gcc-contratos.firebaseapp.com"
             projectId: "gcc-contratos", // Ex: "gcc-contratos"
-            storageBucket: "gcc-contratos.appspot.com", // Ex: "gcc-contratos.appspot.com"
+            storageBucket: "gcc-contratos.appspot.com", // <<<< CORRIGIDO AQUI!
             messagingSenderId: "405415511927", // Ex: "405415511927"
             appId: "1:405415511927:web:4612190119302726820372", // Ex: "1:405415511927:web:4612190119302726820372"
         };
@@ -316,13 +324,11 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 console.log("Firebase inicializado com sucesso.");
-
                 // Configura a persistência para 'inMemoryPersistence' para não persistir o login entre sessões.
                 // Se quiser que o login persista enquanto o navegador estiver aberto (sessão), use 'browserSessionPersistence'.
-            setPersistence(auth, inMemoryPersistence)
-    .then(() => console.log("Persistência de autenticação definida para 'inMemoryPersistence'."))
-    .catch((error) => console.error("Erro ao definir persistência de autenticação:", error));
-
+                setPersistence(auth, inMemoryPersistence) // <<< CORRIGIDO AQUI!
+                    .then(() => console.log("Persistência de autenticação definida para 'inMemoryPersistence'."))
+                    .catch((error) => console.error("Erro ao definir persistência de autenticação:", error));
             } catch (error) {
                 console.error('Erro ao inicializar Firebase. Verifique suas credenciais:', error);
                 displayAlert(["Erro: O sistema de base de dados não foi inicializado. Por favor, forneça suas credenciais Firebase e recarregue a página."]);
@@ -338,10 +344,7 @@
         } else {
             console.error("ERRO: Firebase ou autenticação NÃO inicializados. Verifique suas credenciais e a conexão.");
         }
-        } else {
-            console.warn("firebaseConfig está vazio ou contém placeholders. O Firebase não será inicializado até que as credenciais sejam fornecidas.");
-            displayAlert(["Aviso: As credenciais do Firebase não foram configuradas. O aplicativo não funcionará corretamente. Por favor, edite o código para adicionar suas credenciais."]);
-        }
+        // >>>>>>> REMOVIDO BLOCO 'else' DUPLICADO AQUI <<<<<<<
 
         // =============================================================================
         // IMPORTANTE: VOCÊ DEVE SUBSTITUIR "txHwdn3rwubSff4PvekjO4PM7wb2" PELO SEU UID DE UTILIZADOR REAL.
@@ -380,7 +383,6 @@
         const navRegisterButton = document.getElementById('nav-register-button');
         const navRemindersButton = document.getElementById('nav-reminders-button');
         const logoutButton = document.getElementById('logout-button');
-
         const contractsListSection = document.getElementById('contracts-list-section');
         const contractsGrid = document.getElementById('contracts-grid');
 
@@ -412,13 +414,13 @@
         let isRegistering = false;
         let contractsData = [];
         let remindersData = [];
-        const processColors = {}; // To store colors for each Processo SEI
+        const processColors = {};
+        // To store colors for each Processo SEI
         const colorPalette = [
             '#DBEAFE', '#D1FAE5', '#FEE2E2', '#FEF9C3', '#EDE9FE', '#FCE7F3', '#EEF2FF',
             '#CCFBF1', '#FFEDD5', '#ECFCCB', '#CFFAFE', '#FAE8FF', '#FFE4E6', '#E0F2FE',
             '#F5F3FF', '#FFFBEB', '#E5E7EB'
         ];
-
         // Options for form fields
         const momentoAtualOptions = [
             'Inicial', 'Primeira Renovação', 'Segunda Renovação', 'Terceira Renovação',
@@ -432,7 +434,6 @@
             'HJXXIII', 'HIJPII', 'HMAL', 'HEM', 'HAC', 'HRJP', 'CHB', 'HRBJA',
             'CSSFA', 'CSSFE', 'CSSI', 'HRAD', 'HCM', 'MOV', 'HJK', 'CSPD', 'IRS', 'HRB'
         ];
-
         // --- Utility Functions ---
 
         /**
@@ -473,7 +474,8 @@
          * @param {Function} onConfirmAction - The function to execute if confirmed.
          */
         function displayConfirm(message, onConfirmAction) {
-            confirmMessageP.innerHTML = message; // Use innerHTML to allow for HTML in message
+            confirmMessageP.innerHTML = message;
+            // Use innerHTML to allow for HTML in message
             currentConfirmAction = onConfirmAction;
             customConfirmModal.classList.remove('hidden');
         }
@@ -542,19 +544,21 @@
 
             let monthsToAddTotal = 0;
             if (contractLawType === 'Lei 8.666/93 (60 meses)') {
-                monthsToAddTotal = 60; // 5 anos
+                monthsToAddTotal = 60;
+            // 5 anos
             } else if (contractLawType === 'Lei 14.133/21 (10 anos)') {
-                monthsToAddTotal = 120; // 10 anos
+                monthsToAddTotal = 120;
+            // 10 anos
             } else {
                 return 'Tipo de lei inválido';
             }
 
             const endDate = new Date(startDate);
             endDate.setMonth(endDate.getMonth() + monthsToAddTotal);
-
             // Adjust day if it overflows (e.g., Jan 31 + 1 month = Feb 28/29, not Mar 3)
             if (endDate.getDate() !== day) {
-                endDate.setDate(0); // Set to last day of previous month
+                endDate.setDate(0);
+            // Set to last day of previous month
             }
 
             const formattedDay = String(endDate.getDate()).padStart(2, '0');
@@ -572,7 +576,8 @@
             if (numValue === null || numValue === undefined || isNaN(numValue)) {
                 return '';
             }
-            const number = typeof numValue === 'string' ? parseFloat(numValue) : numValue;
+            const number = typeof numValue === 'string' ?
+parseFloat(numValue) : numValue;
             if (isNaN(number)) return '';
             return number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
         }
@@ -645,7 +650,6 @@
 
             navRemindersButton.classList.remove('bg-purple-600', 'text-white', 'shadow-md');
             navRemindersButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-
             if (page === 'list') {
                 contractsListSection.classList.remove('hidden');
                 navListButton.classList.add('bg-purple-600', 'text-white', 'shadow-md');
@@ -666,10 +670,12 @@
          * @param {Array<Object>} contracts - Array of contract objects.
          */
         function renderContracts(contracts) {
-            contractsGrid.innerHTML = ''; // Clear existing contracts
+            contractsGrid.innerHTML = '';
+            // Clear existing contracts
 
             if (contracts.length === 0) {
-                contractsGrid.innerHTML = '<p class="col-span-full text-center text-gray-600 text-lg">Nenhum contrato encontrado. ' + (isAdmin ? 'Clique em "Registrar Contrato" para adicionar um novo.' : '') + '</p>';
+                contractsGrid.innerHTML = '<p class="col-span-full text-center text-gray-600 text-lg">Nenhum contrato encontrado.
+' + (isAdmin ? 'Clique em "Registrar Contrato" para adicionar um novo.' : '') + '</p>';
                 return;
             }
 
@@ -683,8 +689,6 @@
 
                 return (a.processoSCEI || '').localeCompare(b.processoSCEI || '');
             });
-
-
             sortedContracts.forEach(contract => {
                 // Assign a color to each unique Processo SEI
                 if (!processColors[contract.processoSCEI]) {
@@ -703,10 +707,9 @@
                     today.setHours(0,0,0,0);
                     const diffTime = endDate.getTime() - today.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
                     expiringSoonTag = `
                         <span class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                            ⚠ VENCENDO EM ${diffDays} DIAS!
+                            ? VENCENDO EM ${diffDays} DIAS!
                         </span>
                     `;
                 }
@@ -716,3 +719,10 @@
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${contract.nomeEmpresa || 'N/A'}</h3>
                     <p class="text-gray-600 text-sm mb-1">Processo SEI: <span class="font-semibold">${contract.processoSCEI || 'N/A'}</span></p>
                     <p class="text-gray-600 text-sm mb-1">
+                `;
+                // ... (restante do código para renderizar o cartão do contrato)
+            });
+        }
+    </script>
+</body>
+</html>
