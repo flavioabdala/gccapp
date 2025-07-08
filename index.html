@@ -315,6 +315,7 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                if (app && db && auth)
                 console.log("Firebase inicializado com sucesso.");
                 // Configura a persistência para 'NONE' para evitar login automático
                 auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
