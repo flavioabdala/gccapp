@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gest„o de Contratos e Lembretes</title>
+    <title>Gest√£o de Contratos e Lembretes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Estilos personalizados para a fonte Inter */
@@ -13,7 +13,7 @@
             padding: 0;
         }
 
-        /* AnimaÁ„o de piscar para contratos vencendo */
+        /* Anima√ß√£o de piscar para contratos vencendo */
         @keyframes pulse-red {
             0%, 100% { border-color: #ef4444; } /* red-500 */
             50% { border-color: #f87171; } /* red-400 */
@@ -22,7 +22,7 @@
             animation: pulse-red 1.5s infinite;
         }
 
-        /* Estilos para o modal de alerta e confirmaÁ„o */
+        /* Estilos para o modal de alerta e confirma√ß√£o */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -145,7 +145,7 @@
     <div id="main-app-content" class="flex-grow flex flex-col hidden">
         <header class="bg-gray-800 text-white p-4 shadow-md flex justify-between items-center flex-wrap gap-2">
             <div class="flex items-center">
-                <h1 class="text-2xl font-bold mr-4">Gest„o de Contratos e Lembretes</h1>
+                <h1 class="text-2xl font-bold mr-4">Gest√£o de Contratos e Lembretes</h1>
                 <nav>
                     <button id="contracts-nav-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">Contratos</button>
                     <button id="reminders-nav-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Lembretes</button>
@@ -174,14 +174,14 @@
                     </div>
                     <div>
                         <label for="contract-type" class="block text-gray-700 text-sm font-bold mb-2">Tipo de Contrato:</label>
-                        <input type="text" id="contract-type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: ManutenÁ„o, ServiÁo, LocaÁ„o" required>
+                        <input type="text" id="contract-type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Ex: Manuten√ß√£o, Servi√ßo, Loca√ß√£o" required>
                     </div>
                     <div>
-                        <label for="contract-start-date" class="block text-gray-700 text-sm font-bold mb-2">Data de InÌcio:</label>
+                        <label for="contract-start-date" class="block text-gray-700 text-sm font-bold mb-2">Data de In√≠cio:</label>
                         <input type="date" id="contract-start-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div>
-                        <label for="contract-end-date" class="block text-gray-700 text-sm font-bold mb-2">Data de TÈrmino:</label>
+                        <label for="contract-end-date" class="block text-gray-700 text-sm font-bold mb-2">Data de T√©rmino:</label>
                         <input type="date" id="contract-end-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div class="md:col-span-2">
@@ -189,12 +189,12 @@
                         <input type="number" id="contract-value" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00" step="0.01" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label for="contract-notes" class="block text-gray-700 text-sm font-bold mb-2">ObservaÁıes:</label>
+                        <label for="contract-notes" class="block text-gray-700 text-sm font-bold mb-2">Observa√ß√µes:</label>
                         <textarea id="contract-notes" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Detalhes adicionais..."></textarea>
                     </div>
                     <div class="md:col-span-2 flex justify-end">
                         <button type="submit" id="contract-submit-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Adicionar Contrato</button>
-                        <button type="button" id="contract-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar EdiÁ„o</button>
+                        <button type="button" id="contract-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar Edi√ß√£o</button>
                     </div>
                 </form>
             </div>
@@ -204,8 +204,8 @@
                 <div class="mb-4 flex flex-wrap gap-2 justify-between items-center">
                     <input type="text" id="contracts-search" placeholder="Pesquisar contratos..." class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex-grow">
                     <select id="contracts-sort" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="endDateAsc">Data de TÈrmino (Crescente)</option>
-                        <option value="endDateDesc">Data de TÈrmino (Decrescente)</option>
+                        <option value="endDateAsc">Data de T√©rmino (Crescente)</option>
+                        <option value="endDateDesc">Data de T√©rmino (Decrescente)</option>
                         <option value="clientAsc">Cliente (A-Z)</option>
                         <option value="clientDesc">Cliente (Z-A)</option>
                     </select>
@@ -216,11 +216,11 @@
                             <tr class="w-full bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                                 <th class="py-3 px-6 text-left">Cliente</th>
                                 <th class="py-3 px-6 text-left">Tipo</th>
-                                <th class="py-3 px-6 text-left">InÌcio</th>
-                                <th class="py-3 px-6 text-left">TÈrmino</th>
+                                <th class="py-3 px-6 text-left">In√≠cio</th>
+                                <th class="py-3 px-6 text-left">T√©rmino</th>
                                 <th class="py-3 px-6 text-left">Valor</th>
-                                <th class="py-3 px-6 text-left">ObservaÁıes</th>
-                                <th class="py-3 px-6 text-center">AÁıes</th>
+                                <th class="py-3 px-6 text-left">Observa√ß√µes</th>
+                                <th class="py-3 px-6 text-center">A√ß√µes</th>
                             </tr>
                         </thead>
                         <tbody id="contracts-table-body" class="text-gray-600 text-sm font-light">
@@ -236,20 +236,20 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Adicionar/Editar Lembrete</h2>
                 <form id="reminder-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="reminder-title" class="block text-gray-700 text-sm font-bold mb-2">TÌtulo:</label>
-                        <input type="text" id="reminder-title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="TÌtulo do Lembrete" required>
+                        <label for="reminder-title" class="block text-gray-700 text-sm font-bold mb-2">T√≠tulo:</label>
+                        <input type="text" id="reminder-title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="T√≠tulo do Lembrete" required>
                     </div>
                     <div>
                         <label for="reminder-date" class="block text-gray-700 text-sm font-bold mb-2">Data:</label>
                         <input type="date" id="reminder-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     </div>
                     <div class="md:col-span-2">
-                        <label for="reminder-notes" class="block text-gray-700 text-sm font-bold mb-2">ObservaÁıes:</label>
+                        <label for="reminder-notes" class="block text-gray-700 text-sm font-bold mb-2">Observa√ß√µes:</label>
                         <textarea id="reminder-notes" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Detalhes do lembrete..."></textarea>
                     </div>
                     <div class="md:col-span-2 flex justify-end">
                         <button type="submit" id="reminder-submit-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Adicionar Lembrete</button>
-                        <button type="button" id="reminder-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar EdiÁ„o</button>
+                        <button type="button" id="reminder-cancel-edit-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2 hidden">Cancelar Edi√ß√£o</button>
                     </div>
                 </form>
             </div>
@@ -261,18 +261,18 @@
                     <select id="reminders-sort" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="dateAsc">Data (Crescente)</option>
                         <option value="dateDesc">Data (Decrescente)</option>
-                        <option value="titleAsc">TÌtulo (A-Z)</option>
-                        <option value="titleDesc">TÌtulo (Z-A)</option>
+                        <option value="titleAsc">T√≠tulo (A-Z)</option>
+                        <option value="titleDesc">T√≠tulo (Z-A)</option>
                     </select>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full bg-white">
                         <thead>
                             <tr class="w-full bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">TÌtulo</th>
+                                <th class="py-3 px-6 text-left">T√≠tulo</th>
                                 <th class="py-3 px-6 text-left">Data</th>
-                                <th class="py-3 px-6 text-left">ObservaÁıes</th>
-                                <th class="py-3 px-6 text-center">AÁıes</th>
+                                <th class="py-3 px-6 text-left">Observa√ß√µes</th>
+                                <th class="py-3 px-6 text-center">A√ß√µes</th>
                             </tr>
                         </thead>
                         <tbody id="reminders-table-body" class="text-gray-600 text-sm font-light">
@@ -286,14 +286,15 @@
 
     <script type="module">
         // Firebase Configuration (coloque suas credenciais AQUI)
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw",
+  authDomain: "gcc-contratos.firebaseapp.com",
+  projectId: "gcc-contratos",
+  storageBucket: "gcc-contratos.firebasestorage.app",
+  messagingSenderId: "405415511927",
+  appId: "1:405415511927:web:4612190119302726820372",
+  measurementId: "G-T1T4N9WD5T"
+};
 
         // Inicialize o Firebase
         let app;
@@ -310,21 +311,21 @@
             remindersCollection = db.collection('reminders');
         } catch (error) {
             console.error("Erro ao inicializar Firebase:", error);
-            // === LINHA MODIFICADA: REMOVIDA A EXIBI«√O INICIAL DO ALERTA DE ERRO DO BANCO DE DADOS ===
-            // displayAlert(["Erro: O sistema de base de dados n„o foi inicializado. Por favor, forneÁa suas credenciais Firebase e recarregue a p·gina."]);
+            // === LINHA MODIFICADA: REMOVIDA A EXIBI√á√ÉO INICIAL DO ALERTA DE ERRO DO BANCO DE DADOS ===
+            // displayAlert(["Erro: O sistema de base de dados n√£o foi inicializado. Por favor, forne√ßa suas credenciais Firebase e recarregue a p√°gina."]);
         }
 
-        // === LINHA MODIFICADA: REMOVIDA A EXIBI«√O INICIAL DO ALERTA DE CREDENCIAIS ===
+        // === LINHA MODIFICADA: REMOVIDA A EXIBI√á√ÉO INICIAL DO ALERTA DE CREDENCIAIS ===
         // if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
-        //     displayAlert(["Aviso: As credenciais do Firebase n„o foram configuradas. O aplicativo n„o funcionar· corretamente. Por favor, edite o cÛdigo para adicionar suas credenciais."]);
+        //     displayAlert(["Aviso: As credenciais do Firebase n√£o foram configuradas. O aplicativo n√£o funcionar√° corretamente. Por favor, edite o c√≥digo para adicionar suas credenciais."]);
         // }
 
-        // Vari·veis globais
+        // Vari√°veis globais
         let isLoggedIn = false;
         let userId = '';
         let userEmail = '';
         let isAdmin = false;
-        const ADMIN_UID = 'SEU_UID_DE_ADMIN_AQUI'; // Substitua pelo UID do usu·rio administrador, se houver
+        const ADMIN_UID = 'SEU_UID_DE_ADMIN_AQUI'; // Substitua pelo UID do usu√°rio administrador, se houver
 
         let contractsData = [];
         let remindersData = [];
@@ -389,7 +390,7 @@
         const remindersSortSelect = document.getElementById('reminders-sort');
         const noRemindersMessage = document.getElementById('no-reminders-message');
 
-        // FunÁıes de Utilit·rio
+        // Fun√ß√µes de Utilit√°rio
         function showLoading() {
             loadingOverlay.classList.remove('hidden');
         }
@@ -510,7 +511,7 @@
         }
 
 
-        // FunÁıes de Contratos
+        // Fun√ß√µes de Contratos
         async function saveContract(event) {
             event.preventDefault();
             showLoading();
@@ -579,7 +580,7 @@
                 contractsTableBody.appendChild(row);
             });
 
-            // Adiciona listeners para os botıes de editar e excluir
+            // Adiciona listeners para os bot√µes de editar e excluir
             document.querySelectorAll('.edit-contract-btn').forEach(button => {
                 button.addEventListener('click', editContract);
             });
@@ -623,7 +624,7 @@
                 showLoading();
                 try {
                     await contractsCollection.doc(id).delete();
-                    displayAlert(["Contrato excluÌdo com sucesso!"]);
+                    displayAlert(["Contrato exclu√≠do com sucesso!"]);
                 } catch (e) {
                     console.error("Erro ao excluir contrato: ", e);
                     displayAlert(["Erro ao excluir contrato. Tente novamente."]);
@@ -657,7 +658,7 @@
             renderContracts(filteredContracts);
         }
 
-        // FunÁıes de Lembretes
+        // Fun√ß√µes de Lembretes
         async function saveReminder(event) {
             event.preventDefault();
             showLoading();
@@ -723,7 +724,7 @@
                 remindersTableBody.appendChild(row);
             });
 
-            // Adiciona listeners para os botıes de editar e excluir
+            // Adiciona listeners para os bot√µes de editar e excluir
             document.querySelectorAll('.edit-reminder-btn').forEach(button => {
                 button.addEventListener('click', editReminder);
             });
@@ -764,7 +765,7 @@
                 showLoading();
                 try {
                     await remindersCollection.doc(id).delete();
-                    displayAlert(["Lembrete excluÌdo com sucesso!"]);
+                    displayAlert(["Lembrete exclu√≠do com sucesso!"]);
                 } catch (e) {
                     console.error("Erro ao excluir lembrete: ", e);
                     displayAlert(["Erro ao excluir lembrete. Tente novamente."]);
@@ -797,7 +798,7 @@
             renderReminders(filteredReminders);
         }
 
-        // ConfiguraÁ„o de Listeners Firebase
+        // Configura√ß√£o de Listeners Firebase
         function setupFirebaseListeners() {
             if (contractsUnsubscribe) {
                 contractsUnsubscribe();
@@ -833,7 +834,7 @@
                 });
         }
 
-        // AutenticaÁ„o
+        // Autentica√ß√£o
         let isLoginMode = true; // true for login, false for register
 
         async function handleAuth() {
@@ -854,16 +855,16 @@
                     await auth.createUserWithEmailAndPassword(email, password);
                 }
             } catch (error) {
-                console.error("Erro de autenticaÁ„o:", error);
-                let errorMessage = "Erro de autenticaÁ„o. Tente novamente.";
+                console.error("Erro de autentica√ß√£o:", error);
+                let errorMessage = "Erro de autentica√ß√£o. Tente novamente.";
                 if (error.code === 'auth/invalid-email') {
-                    errorMessage = "Email inv·lido.";
+                    errorMessage = "Email inv√°lido.";
                 } else if (error.code === 'auth/user-disabled') {
-                    errorMessage = "Usu·rio desabilitado.";
+                    errorMessage = "Usu√°rio desabilitado.";
                 } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                     errorMessage = "Email ou senha incorretos.";
                 } else if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = "Este email j· est· em uso.";
+                    errorMessage = "Este email j√° est√° em uso.";
                 } else if (error.code === 'auth/weak-password') {
                     errorMessage = "A senha deve ter pelo menos 6 caracteres.";
                 }
@@ -882,7 +883,7 @@
             } else {
                 authModeTitle.textContent = 'Registrar';
                 authButton.textContent = 'Registrar';
-                toggleAuthModeButton.textContent = 'J· tenho uma conta';
+                toggleAuthModeButton.textContent = 'J√° tenho uma conta';
             }
         }
 
@@ -892,7 +893,7 @@
                 showLoading();
                 try {
                     await auth.signOut();
-                    displayAlert(["VocÍ foi desconectado."]);
+                    displayAlert(["Voc√™ foi desconectado."]);
                 } catch (error) {
                     console.error("Erro ao sair:", error);
                     displayAlert(["Erro ao fazer logout. Tente novamente."]);
@@ -920,38 +921,38 @@
         remindersSearchInput.addEventListener('input', filterAndSortReminders);
         remindersSortSelect.addEventListener('change', filterAndSortReminders);
 
-        // InicializaÁ„o do aplicativo
+        // Inicializa√ß√£o do aplicativo
         window.onload = () => {
-            // === LINHAS MODIFICADAS: AJUSTE PARA N√O FAZER LOGIN AUTOM¡TICO NA UI ===
-            // Este onAuthStateChanged ser· executado se houver um usu·rio logado ou n„o.
-            // A mudanÁa aqui È forÁar a exibiÁ„o da tela de autenticaÁ„o
-            // mesmo que o usu·rio esteja logado no Firebase, para simular
-            // a remoÁ„o do "login autom·tico" na UI.
+            // === LINHAS MODIFICADAS: AJUSTE PARA N√ÉO FAZER LOGIN AUTOM√ÅTICO NA UI ===
+            // Este onAuthStateChanged ser√° executado se houver um usu√°rio logado ou n√£o.
+            // A mudan√ßa aqui √© for√ßar a exibi√ß√£o da tela de autentica√ß√£o
+            // mesmo que o usu√°rio esteja logado no Firebase, para simular
+            // a remo√ß√£o do "login autom√°tico" na UI.
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    // Se o usu·rio est· logado no Firebase, mas queremos que ele veja a tela de login
-                    // A UI permanecer· na authScreen, e mainAppContent ficar· escondido.
-                    // As vari·veis de estado `isLoggedIn`, `userId`, `userEmail`, `isAdmin`
-                    // s„o resetadas para que a aplicaÁ„o n„o se comporte como se estivesse logada.
+                    // Se o usu√°rio est√° logado no Firebase, mas queremos que ele veja a tela de login
+                    // A UI permanecer√° na authScreen, e mainAppContent ficar√° escondido.
+                    // As vari√°veis de estado `isLoggedIn`, `userId`, `userEmail`, `isAdmin`
+                    // s√£o resetadas para que a aplica√ß√£o n√£o se comporte como se estivesse logada.
                     isLoggedIn = false;
                     userId = '';
                     userEmail = '';
                     isAdmin = false;
 
-                    authScreen.classList.remove('hidden'); // Garante que a tela de autenticaÁ„o esteja visÌvel
-                    mainAppContent.classList.add('hidden'); // Garante que o conte˙do principal esteja escondido
+                    authScreen.classList.remove('hidden'); // Garante que a tela de autentica√ß√£o esteja vis√≠vel
+                    mainAppContent.classList.add('hidden'); // Garante que o conte√∫do principal esteja escondido
 
-                    // Se vocÍ realmente quer que o usu·rio faÁa logout em cada recarga, descomente a linha abaixo:
+                    // Se voc√™ realmente quer que o usu√°rio fa√ßa logout em cada recarga, descomente a linha abaixo:
                     // signOut(auth);
                 } else {
-                    // Se n„o houver usu·rio logado no Firebase, mostre a tela de autenticaÁ„o.
+                    // Se n√£o houver usu√°rio logado no Firebase, mostre a tela de autentica√ß√£o.
                     isLoggedIn = false;
                     userId = '';
                     userEmail = '';
                     isAdmin = false;
                     authScreen.classList.remove('hidden');
                     mainAppContent.classList.add('hidden');
-                    // Limpa quaisquer dados existentes se o usu·rio sair
+                    // Limpa quaisquer dados existentes se o usu√°rio sair
                     contractsData = [];
                     remindersData = [];
                     renderContracts([]);
