@@ -951,4 +951,345 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
                     addUpdateContractButton.textContent = "Atualizar Contrato";
                     cancelEditButton.classList.remove('hidden');
 
-                    inputProcessoSCEI.
+                    inputProcessoSCEI.value = contract.processoSCEI || '';
+                    inputNomeEmpresa.value = contract.nomeEmpresa || '';
+                    inputObjetoContratacao.value = contract.objetoContratacao || '';
+                    inputNumeroContrato.value = contract.numeroContrato || '';
+                    inputInicioVigenciaTotal.value = formatDateForInput(contract.inicioVigenciaTotal);
+                    selectMomentoAtual.value = contract.momentoAtual || '';
+                    inputTerminoAtualContrato.value = formatDateForInput(contract.terminoAtualContrato);
+                    selectLawType.value = contract.lawType || '';
+                    inputValorContrato.value = formatNumberFromFirebaseForDisplay(contract.valorContrato);
+                    inputUltimasMovimentacoes.value = contract.ultimasMovimentacoes || '';
+
+                    unidadesCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = contract.unidadesParticipantes && contract.unidadesParticipantes.includes(checkbox.value);
+                    });
+
+                    setPage('register');
+                } else {
+                    displayAlert(["Contrato não encontrado para edição."]);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar contrato para edição:", error);
+                displayAlert(["Erro ao carregar contrato para edição. Por favor, tente novamente."]);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Confirms deletion of a contract.
+         * @param {string} contractId - The ID of the contract to delete.
+         */
+        function confirmDeleteContract(contractId) {
+            displayConfirm("Tem certeza que deseja excluir este contrato? Esta ação é irreversível.", async () => {
+                showLoading();
+                try {
+                    await deleteDoc(doc(db, 'contracts', contractId));
+                    displayAlert(["Contrato excluído com sucesso!"]);
+                } catch (error) {
+                    console.error("Erro ao excluir contrato:", error);
+                    displayAlert(["Erro ao excluir contrato. Por favor, tente novamente."]);
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        /**
+         * Adds a new reminder to Firestore.
+         */
+        async function addReminder() {
+            showLoading();
+            const reminderText = inputReminderText.value.trim();
+            const reminderDate = inputReminderDate.value;
+
+            if (!reminderText || !reminderDate) {
+                displayAlert(["Por favor, preencha o texto e a data do lembrete."]);
+                hideLoading();
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, 'reminders'), {
+                    userId: userId, // Associate reminder with current user
+                    reminderText: reminderText,
+                    reminderDate: formatDateFromInput(reminderDate),
+                    createdAt: Timestamp.now()
+                });
+                displayAlert(["Lembrete adicionado com sucesso!"]);
+                inputReminderText.value = '';
+                inputReminderDate.value = '';
+            } catch (error) {
+                console.error("Erro ao adicionar lembrete:", error);
+                displayAlert(["Erro ao adicionar lembrete. Por favor, tente novamente."]);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Confirms deletion of a reminder.
+         * @param {string} reminderId - The ID of the reminder to delete.
+         */
+        function confirmDeleteReminder(reminderId) {
+            displayConfirm("Tem certeza que deseja excluir este lembrete?", async () => {
+                showLoading();
+                try {
+                    await deleteDoc(doc(db, 'reminders', reminderId));
+                    displayAlert(["Lembrete excluído com sucesso!"]);
+                } catch (error) {
+                    console.error("Erro ao excluir lembrete:", error);
+                    displayAlert(["Erro ao excluir lembrete. Por favor, tente novamente."]);
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+
+        // --- Authentication and User Management ---
+
+        /**
+         * Toggles between login and registration forms.
+         */
+        function toggleAuthMode() {
+            isRegistering = !isRegistering;
+            if (isRegistering) {
+                authTitle.textContent = "Registe-se";
+                authActionButton.textContent = "Registar";
+                toggleAuthModeButton.textContent = "Já tem uma conta? Faça Login";
+                registerFieldsDiv.classList.remove('hidden');
+                // Clear password field when switching to register
+                authPasswordInput.value = '';
+            } else {
+                authTitle.textContent = "Login";
+                authActionButton.textContent = "Login";
+                toggleAuthModeButton.textContent = "Não tem uma conta? Registe-se";
+                registerFieldsDiv.classList.add('hidden');
+                // Clear password field when switching to login
+                authPasswordInput.value = '';
+            }
+        }
+
+        /**
+         * Handles user login or registration.
+         */
+        async function handleAuthAction() {
+            showLoading();
+            const email = authEmailInput.value;
+            const password = authPasswordInput.value;
+
+            if (!email || !password) {
+                displayAlert(["Por favor, preencha o email e a palavra-passe."]);
+                hideLoading();
+                return;
+            }
+
+            if (isRegistering) {
+                const fullName = authFullNameInput.value;
+                const cpf = authCpfInput.value;
+                const phone = authPhoneInput.value;
+
+                if (!fullName || !cpf || !phone) {
+                    displayAlert(["Por favor, preencha todos os campos de registo."]);
+                    hideLoading();
+                    return;
+                }
+
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // Save additional user info to Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        fullName: fullName,
+                        cpf: cpf,
+                        phone: phone,
+                        email: email,
+                        role: 'visualizador', // Default role for new users
+                        createdAt: Timestamp.now()
+                    });
+                    displayAlert(["Registo bem-sucedido! Pode agora fazer login."]);
+                    // Automatically log in after registration, onAuthStateChanged will handle UI
+                } catch (error) {
+                    console.error("Erro no registo:", error);
+                    let errorMessage = "Erro no registo. Por favor, tente novamente.";
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = "O email fornecido já está em uso.";
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = "O formato do email é inválido.";
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = "A palavra-passe é muito fraca (mínimo 6 caracteres).";
+                    }
+                    displayAlert([errorMessage]);
+                } finally {
+                    hideLoading();
+                }
+            } else {
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    // onAuthStateChanged will handle UI update
+                } catch (error) {
+                    console.error("Erro no login:", error);
+                    let errorMessage = "Erro no login. Email ou palavra-passe inválidos.";
+                    if (error.code === 'auth/invalid-email') {
+                        errorMessage = "O formato do email é inválido.";
+                    } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                        errorMessage = "Email ou palavra-passe inválidos. Verifique suas credenciais.";
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMessage = "Demasiadas tentativas de login falhadas. Por favor, tente novamente mais tarde.";
+                    }
+                    displayAlert([errorMessage]);
+                } finally {
+                    hideLoading();
+                }
+            }
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            showLoading();
+            try {
+                await signOut(auth);
+                displayAlert(["Sessão encerrada com sucesso."]);
+            } catch (error) {
+                console.error("Erro ao fazer logout:", error);
+                displayAlert(["Erro ao fazer logout. Por favor, tente novamente."]);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- UI Initialization and Event Listeners ---
+
+        // Populate select options
+        function populateSelectOptions() {
+            momentoAtualOptions.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                selectMomentoAtual.appendChild(opt);
+            });
+            lawTypeOptions.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                selectLawType.appendChild(opt);
+            });
+            unidadesDisponiveis.forEach(unidade => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+                div.innerHTML = `
+                    <input type="checkbox" id="unidade-${unidade}" value="${unidade}" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                    <label for="unidade-${unidade}" class="ml-2 text-gray-700 text-sm">${unidade}</label>
+                `;
+                unidadesCheckboxes.appendChild(div);
+            });
+        }
+        populateSelectOptions(); // Call to populate on load
+
+        // Reset contract form fields
+        function resetContractForm() {
+            inputProcessoSCEI.value = '';
+            inputNomeEmpresa.value = '';
+            inputObjetoContratacao.value = '';
+            inputNumeroContrato.value = '';
+            inputInicioVigenciaTotal.value = '';
+            selectMomentoAtual.value = '';
+            inputTerminoAtualContrato.value = '';
+            selectLawType.value = '';
+            inputValorContrato.value = '';
+            unidadesCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            inputUltimasMovimentacoes.value = '';
+            registerContractTitle.textContent = "Registrar Novo Contrato";
+            addUpdateContractButton.textContent = "Adicionar Contrato";
+            cancelEditButton.classList.add('hidden');
+            currentEditingContract = null;
+        }
+
+        // Update global alerts (e.g., contracts expiring soon, overdue reminders)
+        function updateGlobalAlerts(data, type) {
+            // This function would typically display a notification badge or similar.
+            // For now, it just logs.
+            if (type === 'contract') {
+                const expiring = data.filter(isExpiringSoon);
+                if (expiring.length > 0) {
+                    console.log(`ALERTA: ${expiring.length} contratos vencendo em breve!`);
+                }
+            } else if (type === 'reminder') {
+                const now = new Date();
+                now.setHours(0,0,0,0);
+                const overdue = data.filter(r => new Date(formatDateForInput(r.reminderDate)) < now);
+                if (overdue.length > 0) {
+                    console.log(`ALERTA: ${overdue.length} lembretes vencidos!`);
+                }
+            }
+        }
+
+
+        // Event Listeners
+        alertCloseButton.addEventListener('click', hideAlert);
+        confirmCancelButton.addEventListener('click', handleCancelConfirm);
+        confirmActionButton.addEventListener('click', handleConfirm);
+
+        toggleAuthModeButton.addEventListener('click', toggleAuthMode);
+        authActionButton.addEventListener('click', handleAuthAction);
+        logoutButton.addEventListener('click', handleLogout);
+
+        navListButton.addEventListener('click', () => setPage('list'));
+        navRegisterButton.addEventListener('click', () => {
+            resetContractForm(); // Clear form on navigating to register
+            setPage('register');
+        });
+        navRemindersButton.addEventListener('click', () => setPage('reminders'));
+
+        addUpdateContractButton.addEventListener('click', addUpdateContract);
+        cancelEditButton.addEventListener('click', resetContractForm);
+        addReminderButton.addEventListener('click', addReminder);
+
+        inputValorContrato.addEventListener('input', handleValorContratoInputChange);
+
+        // --- Initial Load Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoading(); // Show loading spinner immediately on page load
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    isLoggedIn = true;
+                    userId = user.uid;
+                    userEmail = user.email;
+                    // Check if the user's UID is in the ADMIN_UIDs array
+                    isAdmin = ADMIN_UIDs.includes(user.uid);
+
+                    userEmailDisplay.textContent = userEmail;
+                    userRoleDisplay.textContent = isAdmin ? 'Administrador' : 'Visualizador';
+                    userIdDisplay.textContent = userId;
+
+                    authScreen.classList.add('hidden');
+                    mainAppContent.classList.remove('hidden');
+                    setPage('list'); // Default to contracts list after login
+                    setupFirebaseListeners(); // Start listening for data
+                } else {
+                    isLoggedIn = false;
+                    userId = '';
+                    userEmail = '';
+                    isAdmin = false;
+                    authScreen.classList.remove('hidden');
+                    mainAppContent.classList.add('hidden');
+                    // Clear any existing data if user logs out
+                    contractsData = [];
+                    remindersData = [];
+                    renderContracts([]);
+                    renderReminders([]);
+                    updateGlobalAlerts([], 'contract');
+                    updateGlobalAlerts([], 'reminder');
+                }
+                hideLoading();
+            });
+        });
+    </script>
+</body>
+</html>
