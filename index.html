@@ -115,7 +115,8 @@ transition duration-300 ease-in-out">
                 <div class="mb-4">
                     <input
                         id="auth-fullName"
-                        class="w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        class="w-full 
+px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="Nome Completo"
                         autocomplete="name"
                     />
@@ -290,7 +291,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // Importante: Adicione 'setPersistence' e 'inMemoryPersistence' aqui
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, Timestamp, doc, updateDoc, setDoc, deleteDoc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // <<< Adicionei 'query', 'where', 'getDocs' aqui
 
         // --- Firebase Configuration Variables ---
         // AS SUAS CREDENCIAIS FIREBASE REAIS - OBTIDAS DO SEU CONSOLE FIREBASE.
@@ -300,7 +301,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
             apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw", // Ex: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw"
             authDomain: "gcc-contratos.firebaseapp.com", // Ex: "gcc-contratos.firebaseapp.com"
             projectId: "gcc-contratos", // Ex: "gcc-contratos"
-            storageBucket: "gcc-contratos.firebasestorage.app", // <<<< CORRIGIDO AQUI!
+            storageBucket: "gcc-contratos.appspot.com", // <<<< CORRIGIDO AQUI!
             messagingSenderId: "405415511927", // Ex: "405415511927"
             appId: "1:405415511927:web:4612190119302726820372", // Ex: "1:405415511927:web:4612190119302726820372"
         };
@@ -317,6 +318,11 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
         let isLoggedIn = false;
         let currentEditingContract = null; // Stores the contract being edited
 
+        // --- Global State Variables (MOVIDAS PARA CIMA PARA INICIALIZAÇÃO PRECOCE) ---
+        // Estas devem ser inicializadas antes de qualquer função que possa chamar displayAlert ou displayConfirm
+        let currentAlertMessages = [];
+        let currentConfirmAction = null;
+        
         // Inicializa o Firebase apenas se as credenciais forem válidas
         if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw") {
           try {
@@ -407,10 +413,7 @@ class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none foc
         const addReminderButton = document.getElementById('add-reminder-button');
         const remindersList = document.getElementById('reminders-list');
 
-        // --- Global State Variables ---
-        let currentAlertMessages = [];
-        let currentConfirmAction = null;
-        let isRegistering = false;
+        // --- Global State Variables --- // AQUI ESTAVAM ANTES, FORAM MOVIDAS PARA CIMA
         let contractsData = [];
         let remindersData = [];
         const processColors = {};
