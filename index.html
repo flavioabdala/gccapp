@@ -894,6 +894,7 @@
 
         async function addOrUpdateContract(event) {
             event.preventDefault();
+            console.log("Attempting to add/update contract. Current User ID:", currentUserId, "Is Admin:", isAdmin, "Admin UIDs:", ADMIN_UIDS); // Debugging log
             if (!isAdmin) {
                 showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para adicionar/editar contratos.');
                 return;
@@ -1397,6 +1398,7 @@
 
         async function addOrUpdateReminder(event) {
             event.preventDefault();
+            console.log("Attempting to add/update reminder. Current User ID:", currentUserId, "Is Admin:", isAdmin, "Admin UIDs:", ADMIN_UIDS); // Debugging log
             if (!isAdmin) {
                 showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para adicionar/editar lembretes.');
                 return;
@@ -1492,7 +1494,7 @@
 
                 const sei = seiElement ? seiElement.textContent.toLowerCase() : '';
                 const contractNum = contractNumElement ? contractNumElement.textContent.toLowerCase() : '';
-                const company = companyElement ? companyElement.textContent.toLowerCase() : '';
+                const company = companyElement ? company.textContent.toLowerCase() : '';
                 const object = objectElement ? objectElement.textContent.toLowerCase() : '';
 
                 if (sei.includes(searchTerm) || contractNum.includes(searchTerm) || company.includes(searchTerm) || object.includes(searchTerm)) {
