@@ -271,8 +271,8 @@
                     <label for="law-type" class="block text-sm font-medium text-gray-700">Tipo de Lei</label>
                     <select id="law-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                         <option value="">Selecione</option>
-                        <option value="8666">Lei 8666</option>
-                        <option value="nova">Lei Nova</option>
+                        <option value="8666">8.666/93</option>
+                        <option value="nova">14.133/21</option>
                     </select>
                 </div>
                 <div>
@@ -299,19 +299,20 @@
                     </select>
                 </div>
                 <div>
-                    <label for="initial-contract-value" class="block text-sm font-medium text-gray-700">Valor Inicial do Contrato</label>
-                    <input type="number" step="0.01" id="initial-contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label for="current-contract-value" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato</label>
-                    <input type="number" step="0.01" id="current-contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <label for="contract-value" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato</label>
+                    <input type="text" id="contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="R$ 0.000,00">
                 </div>
 
                 <div class="col-span-full">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Unidades Participantes</label>
-                    <div id="units-checkbox-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                        <!-- Units checkboxes will be dynamically loaded here -->
+                    <div id="units-checkbox-container" class="flex flex-wrap gap-2">
+                        <!-- Units will be dynamically loaded here -->
                     </div>
+                </div>
+
+                <div class="col-span-full">
+                    <label for="contract-observations" class="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea id="contract-observations" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
                 </div>
 
                 <div class="col-span-full flex justify-end space-x-3 mt-4">
@@ -347,12 +348,12 @@
                 </div>
                 <div>
                     <label for="renew-updated-value" class="block text-sm font-medium text-gray-700">Valor Atualizado (R$)</label>
-                    <input type="number" step="0.01" id="renew-updated-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <input type="text" id="renew-updated-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="R$ 0.000,00">
                 </div>
                 <div class="col-span-full">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Unidades para Renovação</label>
-                    <div id="renew-units-checkbox-container" class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        <!-- Units checkboxes will be dynamically loaded here -->
+                    <div id="renew-units-checkbox-container" class="flex flex-wrap gap-2">
+                        <!-- Units will be dynamically loaded here -->
                     </div>
                 </div>
                 <div class="col-span-full">
@@ -415,12 +416,12 @@
                     </div>
                     <div id="aditivo-value-change-container" class="hidden mt-4">
                         <label for="aditivo-value-change" class="block text-sm font-medium text-gray-700">Mudança de Valor (R$)</label>
-                        <input type="number" step="0.01" id="aditivo-value-change" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <input type="text" id="aditivo-value-change" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="R$ 0.000,00">
                     </div>
                     <div id="aditivo-units-container" class="hidden mt-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Unidades (Supressão/Acréscimo)</label>
-                        <div id="aditivo-units-checkbox-container" class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            <!-- Units checkboxes will be dynamically loaded here -->
+                        <div id="aditivo-units-checkbox-container" class="flex flex-wrap gap-2">
+                            <!-- Units will be dynamically loaded here -->
                         </div>
                     </div>
                     <div id="aditivo-others-description-container" class="hidden mt-4">
@@ -537,9 +538,8 @@
             measurementId: "G-T1T4N9WD5T"
         };
 
-        // Global app ID from environment (if available, otherwise use a default)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // Note: __firebase_config is no longer used here as the user provided a specific config.
+        // Global app ID from environment (using projectId for consistency with Firestore rules)
+        const appId = firebaseConfig.projectId;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
 
@@ -591,6 +591,25 @@
             return new Date(year, month - 1, day);
         }
 
+        // Function to format currency input
+        function formatCurrency(input) {
+            let value = input.value.replace(/\D/g, ''); // Remove non-digits
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+            value = (parseInt(value) / 100).toFixed(2); // Convert to number, then to fixed 2 decimals
+            value = value.replace('.', ','); // Replace dot with comma for display
+            value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); // Add thousands separator
+            input.value = `R$ ${value}`;
+        }
+
+        // Function to parse formatted currency to a float
+        function parseCurrencyToFloat(formattedValue) {
+            if (!formattedValue) return 0;
+            return parseFloat(formattedValue.replace('R$', '').replace(/\./g, '').replace(',', '.'));
+        }
+
         // --- Authentication Logic ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -612,15 +631,6 @@
                 isAuthReady = false; // Auth is not ready
                 console.log("Nenhum usuário logado.");
                 showPage('login-page');
-                // Removed signInAnonymously to prevent automatic login as requested by the user
-                // if (!initialAuthToken) {
-                //     try {
-                //         await signInAnonymously(auth);
-                //         console.log("Sessão anônima iniciada.");
-                //     } catch (error) {
-                //         console.error("Erro ao iniciar sessão anônima:", error);
-                //     }
-                // }
             }
         });
 
@@ -725,21 +735,32 @@
         }
 
         const ALL_UNITS = [
-            "HJXXIII", "HEM", "HAC", "HIJPII", "MOV", "CSPD", "HRAD", "CSSI",
-            "CSSFE", "CSSFA", "IRS", "HRJP", "CHB", "HRBJA", "CHPB", "HMAL", "HJK"
-        ];
+            "CHB", "CHPB", "CSPD", "CSSFA", "CSSFE", "CSSI", "HAC", "HEM", "HIJPII",
+            "HJXXIII", "HMAL", "HRAD", "HRBJA", "HRJP", "IRS", "MOV"
+        ].sort(); // Sorted alphabetically
 
-        function renderUnitsCheckboxes(containerId, selectedUnits = []) {
+        function renderUnitsToggle(containerId, selectedUnits = []) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
+            
             ALL_UNITS.forEach(unit => {
-                const isChecked = selectedUnits.includes(unit);
-                container.innerHTML += `
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" value="${unit}" class="form-checkbox h-4 w-4 text-blue-600 rounded" ${isChecked ? 'checked' : ''}>
-                        <span class="ml-2 text-sm text-gray-700">${unit}</span>
-                    </label>
-                `;
+                const isSelected = selectedUnits.includes(unit);
+                const unitElement = document.createElement('div');
+                unitElement.dataset.unit = unit;
+                unitElement.className = `px-3 py-1 rounded-full cursor-pointer text-sm font-medium transition-colors duration-200
+                                         ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`;
+                unitElement.textContent = unit;
+                unitElement.addEventListener('click', () => {
+                    const currentSelectedUnits = Array.from(container.querySelectorAll('.bg-blue-600')).map(el => el.dataset.unit);
+                    if (unitElement.classList.contains('bg-blue-600')) {
+                        unitElement.classList.remove('bg-blue-600', 'text-white');
+                        unitElement.classList.add('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300');
+                    } else {
+                        unitElement.classList.remove('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300');
+                        unitElement.classList.add('bg-blue-600', 'text-white');
+                    }
+                });
+                container.appendChild(unitElement);
             });
         }
 
@@ -768,11 +789,11 @@
                     }
                 }, (error) => {
                     console.error("Erro ao carregar contratos em tempo real:", error);
-                    showModal('message-modal', 'Erro', 'Erro ao carregar contratos. Tente novamente.');
+                    // Removed showModal here to prevent popups on initial load/tab change
                 });
             } catch (error) {
                 console.error("Erro ao configurar listener de contratos:", error);
-                showModal('message-modal', 'Erro', 'Erro ao carregar contratos. Tente novamente.');
+                // Removed showModal here to prevent popups on initial load/tab change
             }
         }
 
@@ -836,8 +857,9 @@
                 <p class="text-sm text-gray-700"><strong>Vencimento Máximo:</strong> ${formatDate(contract.maxContractTerm)}</p>
                 <p class="text-sm text-gray-700"><strong>Vigência Atual:</strong> ${formatDate(contract.currentValidityDate)}</p>
                 <p class="text-sm text-gray-700"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
-                <p class="text-sm text-gray-700"><strong>Valor Atual:</strong> R$ ${parseFloat(contract.currentContractValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p class="text-sm text-gray-700"><strong>Valor Atual:</strong> R$ ${parseFloat(contract.contractValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <p class="text-sm text-gray-700"><strong>Unidades:</strong> ${contract.participatingUnits.join(', ')}</p>
+                ${contract.observations ? `<p class="text-sm text-gray-700"><strong>Observações:</strong> ${contract.observations}</p>` : ''}
                 <div class="flex flex-wrap gap-2 mt-4">
                     <button class="edit-contract-button py-1 px-3 bg-yellow-500 text-white rounded-md text-xs hover:bg-yellow-600 hidden" data-id="${contract.id}">
                         <i class="fas fa-edit"></i> Editar
@@ -887,11 +909,13 @@
             const maxContractTerm = document.getElementById('max-contract-term').value; // This is already calculated
             const currentValidityDate = document.getElementById('current-validity-date').value;
             const renewalNumber = parseInt(document.getElementById('renewal-number').value);
-            const initialContractValue = parseFloat(document.getElementById('initial-contract-value').value);
-            const currentContractValue = parseFloat(document.getElementById('current-contract-value').value);
+            const contractValueFormatted = document.getElementById('contract-value').value;
+            const contractValue = parseCurrencyToFloat(contractValueFormatted);
+            const observations = document.getElementById('contract-observations').value; // New field
 
-            const selectedUnits = Array.from(document.querySelectorAll('#units-checkbox-container input[type="checkbox"]:checked'))
-                                      .map(checkbox => checkbox.value);
+            // Collect selected units from the new clickable elements
+            const selectedUnits = Array.from(document.querySelectorAll('#units-checkbox-container .bg-blue-600'))
+                                      .map(element => element.dataset.unit);
 
             const contractData = {
                 seiNumber,
@@ -903,9 +927,9 @@
                 maxContractTerm,
                 currentValidityDate,
                 renewalNumber,
-                initialContractValue,
-                currentContractValue,
+                contractValue, // Use the parsed float value
                 participatingUnits: selectedUnits,
+                observations: observations, // Save observations
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 status: 'active'
@@ -921,7 +945,8 @@
                 }
                 closeModal('contract-form-modal');
                 document.getElementById('contract-form').reset();
-            } catch (error) {
+            }
+            catch (error) {
                 console.error("Erro ao salvar contrato:", error);
                 showModal('message-modal', 'Erro', `Erro ao salvar contrato: ${error.message}`);
             }
@@ -947,9 +972,13 @@
                     document.getElementById('max-contract-term').value = contract.maxContractTerm;
                     document.getElementById('current-validity-date').value = contract.currentValidityDate;
                     document.getElementById('renewal-number').value = contract.renewalNumber;
-                    document.getElementById('initial-contract-value').value = contract.initialContractValue;
-                    document.getElementById('current-contract-value').value = contract.currentContractValue;
-                    renderUnitsCheckboxes('units-checkbox-container', contract.participatingUnits);
+                    
+                    // Set formatted value for display
+                    const formattedValue = (parseFloat(contract.contractValue) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    document.getElementById('contract-value').value = `R$ ${formattedValue}`;
+                    document.getElementById('contract-observations').value = contract.observations || ''; // Load observations
+
+                    renderUnitsToggle('units-checkbox-container', contract.participatingUnits); // Use renderUnitsToggle
                     showModal('contract-form-modal');
                 } else {
                     showModal('message-modal', 'Erro', 'Contrato não encontrado.');
@@ -972,12 +1001,16 @@
                     document.getElementById('renew-contract-id').value = contractId;
                     document.getElementById('renew-current-sei').value = contract.seiNumber;
                     document.getElementById('renew-current-validity-date').value = contract.currentValidityDate;
-                    document.getElementById('renew-updated-value').value = contract.currentContractValue;
+                    
+                    // Set formatted value for display
+                    const formattedValue = (parseFloat(contract.contractValue) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    document.getElementById('renew-updated-value').value = `R$ ${formattedValue}`;
+
                     document.getElementById('renew-next-validity-duration').value = ''; // Clear for new input
                     document.getElementById('renew-next-validity-date').value = ''; // Clear for new calculation
                     document.getElementById('renew-history-notes').value = contract.renewalHistory || '';
 
-                    renderUnitsCheckboxes('renew-units-checkbox-container', contract.participatingUnits);
+                    renderUnitsToggle('renew-units-checkbox-container', contract.participatingUnits); // Use renderUnitsToggle
                     showModal('renew-contract-modal');
                 } else {
                     showModal('message-modal', 'Erro', 'Contrato não encontrado para renovação.');
@@ -998,11 +1031,13 @@
             const contractId = document.getElementById('renew-contract-id').value;
             const currentValidityDateStr = document.getElementById('renew-current-validity-date').value;
             const nextValidityDuration = parseInt(document.getElementById('renew-next-validity-duration').value);
-            const renewUpdatedValue = parseFloat(document.getElementById('renew-updated-value').value);
+            const renewUpdatedValueFormatted = document.getElementById('renew-updated-value').value;
+            const renewUpdatedValue = parseCurrencyToFloat(renewUpdatedValueFormatted);
             const renewHistoryNotes = document.getElementById('renew-history-notes').value;
 
-            const selectedUnits = Array.from(document.querySelectorAll('#renew-units-checkbox-container input[type="checkbox"]:checked'))
-                                      .map(checkbox => checkbox.value);
+            // Collect selected units from the new clickable elements
+            const selectedUnits = Array.from(document.querySelectorAll('#renew-units-checkbox-container .bg-blue-600'))
+                                      .map(element => element.dataset.unit);
 
             if (!nextValidityDuration || nextValidityDuration <= 0) {
                 showModal('message-modal', 'Erro', 'Por favor, insira uma duração de vigência válida em meses.');
@@ -1021,7 +1056,7 @@
                 await updateDoc(contractRef, {
                     currentValidityDate: formatDate(nextValidityDate),
                     renewalNumber: currentRenewalNumber + 1,
-                    currentContractValue: renewUpdatedValue,
+                    contractValue: renewUpdatedValue, // Use the parsed float value
                     participatingUnits: selectedUnits,
                     renewalHistory: renewHistoryNotes,
                     updatedAt: new Date()
@@ -1070,7 +1105,7 @@
                 const contractDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/contracts`, contractId));
                 if (contractDoc.exists()) {
                     const contract = contractDoc.data();
-                    renderUnitsCheckboxes('aditivo-units-checkbox-container', contract.participatingUnits);
+                    renderUnitsToggle('aditivo-units-checkbox-container', contract.participatingUnits); // Use renderUnitsToggle
                 }
             } catch (error) {
                 console.error("Erro ao carregar unidades do contrato para aditivo:", error);
@@ -1099,15 +1134,18 @@
                 };
             } else if (addendumType === 'aditivo') {
                 const aditivoType = document.getElementById('aditivo-type').value;
+                const aditivoValueChangeFormatted = document.getElementById('aditivo-value-change').value;
+                const aditivoValueChange = parseCurrencyToFloat(aditivoValueChangeFormatted);
+
                 addendumDetails = {
                     type: aditivoType,
-                    valueChange: aditivoType === 'supressao' || aditivoType === 'acrescimo' ? parseFloat(document.getElementById('aditivo-value-change').value) : 0,
-                    units: (aditivoType === 'supressao' || aditivoType === 'acrescimo') ? Array.from(document.querySelectorAll('#aditivo-units-checkbox-container input[type="checkbox"]:checked')).map(cb => cb.value) : [],
+                    valueChange: aditivoValueChange,
+                    // Collect selected units from the new clickable elements
+                    units: (aditivoType === 'supressao' || aditivoType === 'acrescimo') ? Array.from(document.querySelectorAll('#aditivo-units-checkbox-container .bg-blue-600')).map(element => element.dataset.unit) : [],
                     description: aditivoType === 'outros_aditivo' ? document.getElementById('aditivo-others-description').value : ''
                 };
 
                 if (aditivoType === 'renovacao_aditivo') {
-                    // This should ideally trigger the renew modal or have similar logic
                     showModal('message-modal', 'Atenção', 'Para renovação, use o botão "Renovar" no card do contrato.');
                     return; // Prevent saving this aditivo type here
                 }
@@ -1120,15 +1158,15 @@
 
                 // Update contract value if it's an addendum with value change
                 if (addendumType === 'aditivo' && (addendumDetails.type === 'supressao' || addendumDetails.type === 'acrescimo')) {
-                    let newContractValue = currentContract.currentContractValue;
+                    let newContractValue = currentContract.contractValue;
                     if (addendumDetails.type === 'acrescimo') {
-                        newContractValue += addendumDetails.valueChange;
-                    } else if (addendumDetails.type === 'supressao') {
-                        newContractValue -= addendumDetails.valueChange;
+                        newContractValue += adendumDetails.valueChange;
+                    } else if (adendumDetails.type === 'supressao') {
+                        newContractValue -= adendumDetails.valueChange;
                     }
                     await updateDoc(contractRef, {
-                        currentContractValue: newContractValue,
-                        participatingUnits: addendumDetails.units, // Update units based on suppression/acrescimo
+                        contractValue: newContractValue, // Use the parsed float value
+                        participatingUnits: adendumDetails.units, // Update units based on suppression/acrescimo
                         addendums: arrayUnion({
                             number: addendumNumber,
                             type: addendumType,
@@ -1264,7 +1302,7 @@
                 }
             }, (error) => {
                 console.error("Erro ao carregar contratos encerrados:", error);
-                showModal('message-modal', 'Erro', 'Erro ao carregar contratos encerrados. Tente novamente.');
+                // Removed showModal here to prevent popups on initial load/tab change
             });
         }
 
@@ -1314,7 +1352,7 @@
                 setAdminPermissions(); // Re-apply permissions after rendering
             }, (error) => {
                 console.error("Erro ao carregar lembretes:", error);
-                showModal('message-modal', 'Erro', 'Erro ao carregar lembretes. Tente novamente.');
+                // Removed showModal here to prevent popups on initial load/tab change
             });
         }
 
@@ -1467,13 +1505,12 @@
 
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Initial sign-in with custom token if available (no anonymous sign-in)
-            if (initialAuthToken && auth) {
-                signInWithCustomToken(auth, initialAuthToken)
-                    .then(() => console.log("Signed in with custom token."))
-                    .catch((error) => console.error("Error signing in with custom token:", error));
-            }
-            // Removed signInAnonymously call here as well
+            // Removed initial sign-in with custom token to prevent auth/custom-token-mismatch error
+            // if (initialAuthToken && auth) {
+            //     signInWithCustomToken(auth, initialAuthToken)
+            //         .then(() => console.log("Signed in with custom token."))
+            //         .catch((error) => console.error("Error signing in with custom token:", error));
+            // }
 
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegister);
@@ -1487,12 +1524,20 @@
                 document.getElementById('contract-form').reset();
                 document.getElementById('contract-form').dataset.id = ''; // Clear ID for new contract
                 document.getElementById('max-contract-term').value = ''; // Clear max term
-                renderUnitsCheckboxes('units-checkbox-container'); // Render all units unchecked
+                document.getElementById('contract-value').value = ''; // Clear value
+                document.getElementById('contract-observations').value = ''; // Clear observations
+                renderUnitsToggle('units-checkbox-container'); // Render all units unchecked
                 showModal('contract-form-modal');
             });
             document.getElementById('contract-form').addEventListener('submit', addOrUpdateContract);
             document.getElementById('initial-process-date').addEventListener('change', calculateMaxContractTerm);
             document.getElementById('law-type').addEventListener('change', calculateMaxContractTerm);
+
+            // Add event listener for currency formatting
+            document.getElementById('contract-value').addEventListener('input', (e) => formatCurrency(e.target));
+            document.getElementById('renew-updated-value').addEventListener('input', (e) => formatCurrency(e.target));
+            document.getElementById('aditivo-value-change').addEventListener('input', (e) => formatCurrency(e.target));
+
 
             // Renew Contract Events
             document.getElementById('renew-form').addEventListener('submit', handleRenewContract);
