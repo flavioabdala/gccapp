@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Contratos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Gestão de Contratos</h1>
+        <button id="btnLogout">Sair</button>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-button active" data-tab="contratos">Contratos</button>
+        <button class="tab-button" data-tab="lembretes">Lembretes</button>
+        <button class="tab-button" data-tab="processos-encerrados">Processos Encerrados</button>
+    </nav>
+
+    <main>
+        <section id="contratos" class="tab-content active">
+            <h2>Lista de Contratos</h2>
+            <div class="search-bar">
+                <input type="text" id="contractSearchInput" placeholder="Buscar contrato (Processo SEI, Número, Empresa, Objeto...)">
+            </div>
+            <button id="btnAddContract" class="admin-only">Adicionar Novo Contrato</button>
+            <div id="contractsList" class="contracts-grid">
+                </div>
+        </section>
+
+        <section id="lembretes" class="tab-content">
+            <h2>Lembretes</h2>
+            <div id="remindersList">
+                </div>
+            <button id="btnAddReminder" class="admin-only">Adicionar Lembrete</button>
+        </section>
+
+        <section id="processos-encerrados" class="tab-content">
+            <h2>Processos Encerrados</h2>
+            <div id="endedContractsList" class="contracts-grid">
+                </div>
+        </section>
+    </main>
+
+    <div id="contractModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar/Editar Contrato</h2>
+            <form id="contractForm">
+                <label for="processoSei">Processo SEI:</label>
+                <input type="text" id="processoSei" required>
+                
+                <label for="numeroContrato">Número do Contrato:</label>
+                <input type="text" id="numeroContrato" required>
+                
+                <label for="nomeEmpresa">Nome da Empresa:</label>
+                <input type="text" id="nomeEmpresa" required>
+                
+                <label for="objeto">Objeto:</label>
+                <textarea id="objeto" required></textarea>
+                
+                <label for="dataInicialProcesso">Data Inicial do Processo:</label>
+                <input type="date" id="dataInicialProcesso" required>
+                
+                <label for="tipoLei">Tipo de Lei (para prazo máximo):</label>
+                <select id="tipoLei">
+                    <option value="8666">Lei 8666 (60 meses)</option>
+                    <option value="nova">Lei Nova (10 anos)</option>
+                </select>
+                <p>Prazo Máximo do Contrato: <span id="prazoMaximoDisplay"></span></p>
+
+                <label for="vigenciaAtual">Vigência Atual (Vencimento):</label>
+                <input type="date" id="vigenciaAtual" required>
+                
+                <label for="numeroRenovacao">Número da Renovação:</label>
+                <input type="number" id="numeroRenovacao" value="1" min="1" required>
+                
+                <label for="valorAtualizado">Valor Atualizado:</label>
+                <input type="number" id="valorAtualizado" step="0.01" required>
+                
+                <label>Unidades Participantes:</label>
+                <div id="unidadesParticipantes" class="checkbox-group">
+                    </div>
+
+                <button type="submit">Salvar Contrato</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="movimentacaoSelectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Escolha a Movimentação</h2>
+            <div class="movimentacao-options">
+                <button id="btnSelectAditivo" class="movimentacao-option-button">Aditivo</button>
+                <button id="btnSelectApostilamento" class="movimentacao-option-button">Apostilamento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="aditivoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar Aditivo</h2>
+            <form id="aditivoForm">
+                <label for="aditivoTipo">Tipo de Aditivo:</label>
+                <select id="aditivoTipo" required>
+                    <option value="">Selecione</option>
+                    <option value="Renovacao">Renovação</option>
+                    <option value="Supressao">Supressão</option>
+                    <option value="Acrescimo">Acréscimo</option>
+                    <option value="Outros">Outros</option>
+                </select>
+
+                <label for="aditivoNumero">Número do Aditivo:</label>
+                <input type="number" id="aditivoNumero" min="1" required>
+
+                <label for="aditivoObjeto">Objeto do Aditivo:</label>
+                <textarea id="aditivoObjeto" required></textarea>
+
+                <div id="renovacaoFields" style="display: none;">
+                    <h3>Detalhes da Renovação</h3>
+                    <label for="renovacaoVigenciaMeses">Tempo da próxima renovação (meses):</label>
+                    <input type="number" id="renovacaoVigenciaMeses" min="1">
+                    <p>Próximo Vencimento: <span id="proximoVencimentoDisplay"></span></p>
+                    <label for="renovacaoValor">Valor para Renovação:</label>
+                    <input type="number" id="renovacaoValor" step="0.01">
+                    <label>Unidades Aceitaram Renovação:</label>
+                    <div id="unidadesRenovacao" class="checkbox-group">
+                        </div>
+                </div>
+
+                <div id="supressaoFields" style="display: none;">
+                    <h3>Detalhes da Supressão</h3>
+                    <label for="supressaoValor">Novo Valor do Contrato:</label>
+                    <input type="number" id="supressaoValor" step="0.01">
+                    <label>Unidades a Suprimir:</label>
+                    <div id="unidadesSupressao" class="checkbox-group">
+                        </div>
+                </div>
+
+                <div id="acrescimoFields" style="display: none;">
+                    <h3>Detalhes do Acréscimo</h3>
+                    <label for="acrescimoValor">Novo Valor do Contrato:</label>
+                    <input type="number" id="acrescimoValor" step="0.01">
+                </div>
+
+                <div id="outrosAditivoFields" style="display: none;">
+                    <h3>Outros Detalhes do Aditivo</h3>
+                    <label for="aditivoOutrosDesc">Descrição do Aditivo:</label>
+                    <textarea id="aditivoOutrosDesc"></textarea>
+                </div>
+
+                <button type="submit">Salvar Aditivo</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="apostilamentoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar Apostilamento</h2>
+            <form id="apostilamentoForm">
+                <label for="apostilamentoTipo">Tipo de Apostilamento:</label>
+                <select id="apostilamentoTipo" required>
+                    <option value="">Selecione</option>
+                    <option value="Reajuste">Reajuste</option>
+                    <option value="DesignacaoGestoresFiscais">Designação de Gestores e Fiscais</option>
+                    <option value="DotacaoOrcamentaria">Dotação Orçamentária</option>
+                    <option value="Outros">Outros</option>
+                </select>
+
+                <label for="apostilamentoNumero">Número do Apostilamento:</label>
+                <input type="number" id="apostilamentoNumero" min="1" required>
+
+                <label for="apostilamentoObjeto">Objeto do Apostilamento:</label>
+                <textarea id="apostilamentoObjeto" required></textarea>
+
+                <div id="outrosApostilamentoFields" style="display: none;">
+                    <label for="apostilamentoOutrosDesc">Descrição do Apostilamento:</label>
+                    <textarea id="apostilamentoOutrosDesc"></textarea>
+                </div>
+
+                <button type="submit">Salvar Apostilamento</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="deleteReasonModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Motivo do Encerramento do Contrato</h2>
+            <form id="deleteReasonForm">
+                <label for="deleteReasonText">Por favor, descreva o motivo do encerramento:</label>
+                <textarea id="deleteReasonText" rows="5" required></textarea>
+                <button type="submit">Confirmar Encerramento</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar Lembrete</h2>
+            <form id="reminderForm">
+                <label for="reminderTitle">Título:</label>
+                <input type="text" id="reminderTitle" required>
+                <label for="reminderDescription">Descrição:</label>
+                <textarea id="reminderDescription"></textarea>
+                <label for="reminderDate">Data de Vencimento:</label>
+                <input type="date" id="reminderDate" required>
+                <label for="reminderUrgency">Urgência:</label>
+                <select id="reminderUrgency" required>
+                    <option value="verde">Verde (Sem Urgência)</option>
+                    <option value="amarelo">Amarelo (Moderado)</option>
+                    <option value="vermelho">Vermelho (Urgente)</option>
+                </select>
+                <button type="submit">Salvar Lembrete</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

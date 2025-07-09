@@ -1,233 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Contratos</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header>
-        <h1>Gestão de Contratos</h1>
-        <button id="btnLogout">Sair</button>
-    </header>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
 
-    <nav class="tabs">
-        <button class="tab-button active" data-tab="contratos">Contratos</button>
-        <button class="tab-button" data-tab="lembretes">Lembretes</button>
-        <button class="tab-button" data-tab="processos-encerrados">Processos Encerrados</button>
-    </nav>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/11.10.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/11.10.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/11.10.0/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
-    <main>
-        <section id="contratos" class="tab-content active">
-            <h2>Lista de Contratos</h2>
-            <div class="search-bar">
-                <input type="text" id="contractSearchInput" placeholder="Buscar contrato (Processo SEI, Número, Empresa, Objeto...)">
-            </div>
-            <button id="btnAddContract" class="admin-only">Adicionar Novo Contrato</button>
-            <div id="contractsList" class="contracts-grid">
-                </div>
-        </section>
-
-        <section id="lembretes" class="tab-content">
-            <h2>Lembretes</h2>
-            <div id="remindersList">
-                </div>
-            <button id="btnAddReminder" class="admin-only">Adicionar Lembrete</button>
-        </section>
-
-        <section id="processos-encerrados" class="tab-content">
-            <h2>Processos Encerrados</h2>
-            <div id="endedContractsList" class="contracts-grid">
-                </div>
-        </section>
-    </main>
-
-    <div id="contractModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar/Editar Contrato</h2>
-            <form id="contractForm">
-                <label for="processoSei">Processo SEI:</label>
-                <input type="text" id="processoSei" required>
-                
-                <label for="numeroContrato">Número do Contrato:</label>
-                <input type="text" id="numeroContrato" required>
-                
-                <label for="nomeEmpresa">Nome da Empresa:</label>
-                <input type="text" id="nomeEmpresa" required>
-                
-                <label for="objeto">Objeto:</label>
-                <textarea id="objeto" required></textarea>
-                
-                <label for="dataInicialProcesso">Data Inicial do Processo:</label>
-                <input type="date" id="dataInicialProcesso" required>
-                
-                <label for="tipoLei">Tipo de Lei (para prazo máximo):</label>
-                <select id="tipoLei">
-                    <option value="8666">Lei 8666 (60 meses)</option>
-                    <option value="nova">Lei Nova (10 anos)</option>
-                </select>
-                <p>Prazo Máximo do Contrato: <span id="prazoMaximoDisplay"></span></p>
-
-                <label for="vigenciaAtual">Vigência Atual (Vencimento):</label>
-                <input type="date" id="vigenciaAtual" required>
-                
-                <label for="numeroRenovacao">Número da Renovação:</label>
-                <input type="number" id="numeroRenovacao" value="1" min="1" required>
-                
-                <label for="valorAtualizado">Valor Atualizado:</label>
-                <input type="number" id="valorAtualizado" step="0.01" required>
-                
-                <label>Unidades Participantes:</label>
-                <div id="unidadesParticipantes" class="checkbox-group">
-                    </div>
-
-                <button type="submit">Salvar Contrato</button>
-            </form>
-        </div>
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        body, #message { margin-top: 0; background: white; box-shadow: none; }
+        body { border-top: 16px solid #ffa100; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="message">
+      <h2>Welcome</h2>
+      <h1>Firebase Hosting Setup Complete</h1>
+      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
+      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
     </div>
+    <p id="load">Firebase SDK Loading&hellip;</p>
 
-    <div id="movimentacaoSelectionModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Escolha a Movimentação</h2>
-            <div class="movimentacao-options">
-                <button id="btnSelectAditivo" class="movimentacao-option-button">Aditivo</button>
-                <button id="btnSelectApostilamento" class="movimentacao-option-button">Apostilamento</button>
-            </div>
-        </div>
-    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const loadEl = document.querySelector('#load');
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        // firebase.auth().onAuthStateChanged(user => { });
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        // firebase.firestore().doc('/foo/bar').get().then(() => { });
+        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+        // firebase.messaging().requestPermission().then(() => { });
+        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+        // firebase.analytics(); // call to activate
+        // firebase.analytics().logEvent('tutorial_completed');
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
 
-    <div id="aditivoModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar Aditivo</h2>
-            <form id="aditivoForm">
-                <label for="aditivoTipo">Tipo de Aditivo:</label>
-                <select id="aditivoTipo" required>
-                    <option value="">Selecione</option>
-                    <option value="Renovacao">Renovação</option>
-                    <option value="Supressao">Supressão</option>
-                    <option value="Acrescimo">Acréscimo</option>
-                    <option value="Outros">Outros</option>
-                </select>
-
-                <label for="aditivoNumero">Número do Aditivo:</label>
-                <input type="number" id="aditivoNumero" min="1" required>
-
-                <label for="aditivoObjeto">Objeto do Aditivo:</label>
-                <textarea id="aditivoObjeto" required></textarea>
-
-                <div id="renovacaoFields" style="display: none;">
-                    <h3>Detalhes da Renovação</h3>
-                    <label for="renovacaoVigenciaMeses">Tempo da próxima renovação (meses):</label>
-                    <input type="number" id="renovacaoVigenciaMeses" min="1">
-                    <p>Próximo Vencimento: <span id="proximoVencimentoDisplay"></span></p>
-                    <label for="renovacaoValor">Valor para Renovação:</label>
-                    <input type="number" id="renovacaoValor" step="0.01">
-                    <label>Unidades Aceitaram Renovação:</label>
-                    <div id="unidadesRenovacao" class="checkbox-group">
-                        </div>
-                </div>
-
-                <div id="supressaoFields" style="display: none;">
-                    <h3>Detalhes da Supressão</h3>
-                    <label for="supressaoValor">Novo Valor do Contrato:</label>
-                    <input type="number" id="supressaoValor" step="0.01">
-                    <label>Unidades a Suprimir:</label>
-                    <div id="unidadesSupressao" class="checkbox-group">
-                        </div>
-                </div>
-
-                <div id="acrescimoFields" style="display: none;">
-                    <h3>Detalhes do Acréscimo</h3>
-                    <label for="acrescimoValor">Novo Valor do Contrato:</label>
-                    <input type="number" id="acrescimoValor" step="0.01">
-                </div>
-
-                <div id="outrosAditivoFields" style="display: none;">
-                    <h3>Outros Detalhes do Aditivo</h3>
-                    <label for="aditivoOutrosDesc">Descrição do Aditivo:</label>
-                    <textarea id="aditivoOutrosDesc"></textarea>
-                </div>
-
-                <button type="submit">Salvar Aditivo</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="apostilamentoModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar Apostilamento</h2>
-            <form id="apostilamentoForm">
-                <label for="apostilamentoTipo">Tipo de Apostilamento:</label>
-                <select id="apostilamentoTipo" required>
-                    <option value="">Selecione</option>
-                    <option value="Reajuste">Reajuste</option>
-                    <option value="DesignacaoGestoresFiscais">Designação de Gestores e Fiscais</option>
-                    <option value="DotacaoOrcamentaria">Dotação Orçamentária</option>
-                    <option value="Outros">Outros</option>
-                </select>
-
-                <label for="apostilamentoNumero">Número do Apostilamento:</label>
-                <input type="number" id="apostilamentoNumero" min="1" required>
-
-                <label for="apostilamentoObjeto">Objeto do Apostilamento:</label>
-                <textarea id="apostilamentoObjeto" required></textarea>
-
-                <div id="outrosApostilamentoFields" style="display: none;">
-                    <label for="apostilamentoOutrosDesc">Descrição do Apostilamento:</label>
-                    <textarea id="apostilamentoOutrosDesc"></textarea>
-                </div>
-
-                <button type="submit">Salvar Apostilamento</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="deleteReasonModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Motivo do Encerramento do Contrato</h2>
-            <form id="deleteReasonForm">
-                <label for="deleteReasonText">Por favor, descreva o motivo do encerramento:</label>
-                <textarea id="deleteReasonText" rows="5" required></textarea>
-                <button type="submit">Confirmar Encerramento</button>
-            </form>
-        </div>
-    </div>
-
-
-    <div id="reminderModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar Lembrete</h2>
-            <form id="reminderForm">
-                <label for="reminderTitle">Título:</label>
-                <input type="text" id="reminderTitle" required>
-                <label for="reminderDescription">Descrição:</label>
-                <textarea id="reminderDescription"></textarea>
-                <label for="reminderDate">Data de Vencimento:</label>
-                <input type="date" id="reminderDate" required>
-                <label for="reminderUrgency">Urgência:</label>
-                <select id="reminderUrgency" required>
-                    <option value="verde">Verde (Sem Urgência)</option>
-                    <option value="amarelo">Amarelo (Moderado)</option>
-                    <option value="vermelho">Vermelho (Urgente)</option>
-                </select>
-                <button type="submit">Salvar Lembrete</button>
-            </form>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
-    <script src="firebase-config.js"></script>
-    <script src="auth.js"></script>
-    <script src="main.js"></script>
-</body>
+        try {
+          let app = firebase.app();
+          let features = [
+            'auth', 
+            'database', 
+            'firestore',
+            'functions',
+            'messaging', 
+            'storage', 
+            'analytics', 
+            'remoteConfig',
+            'performance',
+          ].filter(feature => typeof app[feature] === 'function');
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+        } catch (e) {
+          console.error(e);
+          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+        }
+      });
+    </script>
+  </body>
 </html>
