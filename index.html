@@ -4,230 +4,1606 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Contratos</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Purple background for the login page */
+        #app.login-background {
+            background-color: #8B5CF6; /* A shade of purple for the background */
+        }
+        .flashing {
+            animation: flash 1s infinite alternate;
+        }
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <h1>Gestão de Contratos</h1>
-        <button id="btnLogout">Sair</button>
-    </header>
+<body class="flex flex-col min-h-screen">
+    <!-- Main content area -->
+    <div id="app" class="flex-grow flex items-center justify-center p-4 login-background">
+        <!-- Login Page -->
+        <div id="login-page" class="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6">
+            <h1 class="text-4xl font-bold text-center text-gray-800">Gestão de Contratos</h1>
+            <p class="text-md text-center text-gray-600">Bem-vindo(a)! Faça login para continuar.</p>
 
-    <nav class="tabs">
-        <button class="tab-button active" data-tab="contratos">Contratos</button>
-        <button class="tab-button" data-tab="lembretes">Lembretes</button>
-        <button class="tab-button" data-tab="processos-encerrados">Processos Encerrados</button>
-    </nav>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="login-email" name="email" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="login-password" name="password" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Entrar
+                </button>
+            </form>
+            <p class="text-center text-sm text-gray-600">
+                Não tem uma conta? <a href="#" id="show-register" class="font-medium text-blue-600 hover:text-blue-500">Registre-se</a>
+            </p>
+            <div id="login-message" class="text-center text-red-600 text-sm mt-2"></div>
+        </div>
 
-    <main>
-        <section id="contratos" class="tab-content active">
-            <h2>Lista de Contratos</h2>
-            <div class="search-bar">
-                <input type="text" id="contractSearchInput" placeholder="Buscar contrato (Processo SEI, Número, Empresa, Objeto...)">
+        <!-- Register Page -->
+        <div id="register-page" class="hidden w-full max-w-lg bg-white rounded-xl shadow-lg p-8 space-y-6">
+            <h2 class="text-3xl font-bold text-center text-gray-800">Registro de Usuário</h2>
+            <p class="text-md text-center text-gray-600">Preencha seus dados para criar uma conta.</p>
+
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label for="register-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                    <input type="text" id="register-name" name="name" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-address" class="block text-sm font-medium text-gray-700">Endereço</label>
+                    <input type="text" id="register-address" name="address" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-cpf" class="block text-sm font-medium text-gray-700">CPF</label>
+                    <input type="text" id="register-cpf" name="cpf" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-phone" class="block text-sm font-medium text-gray-700">Telefone</label>
+                    <input type="text" id="register-phone" name="phone" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="register-email" name="email" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="register-password" name="password" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-confirm-password" class="block text-sm font-medium text-gray-700">Confirmar Senha</label>
+                    <input type="password" id="register-confirm-password" name="confirm_password" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Registrar
+                </button>
+            </form>
+            <p class="text-center text-sm text-gray-600">
+                Já tem uma conta? <a href="#" id="show-login" class="font-medium text-blue-600 hover:text-blue-500">Fazer Login</a>
+            </p>
+            <div id="register-message" class="text-center text-red-600 text-sm mt-2"></div>
+        </div>
+
+        <!-- Contract Management Page -->
+        <div id="main-page" class="hidden w-full h-full flex flex-col bg-white rounded-xl shadow-lg p-4 md:p-8">
+            <!-- Purple strip at the top -->
+            <div class="bg-purple-700 text-white p-4 rounded-t-xl mb-6 flex flex-col md:flex-row justify-between items-center">
+                <h2 class="text-3xl font-bold text-white mb-4 md:mb-0">Gestão de Contratos</h2>
+                <div class="flex items-center space-x-4">
+                    <span id="user-id-display" class="text-sm text-purple-100"></span>
+                    <button id="logout-button" class="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200">Sair</button>
+                </div>
             </div>
-            <button id="btnAddContract" class="admin-only">Adicionar Novo Contrato</button>
-            <div id="contractsList" class="contracts-grid">
-                </div>
-        </section>
 
-        <section id="lembretes" class="tab-content">
-            <h2>Lembretes</h2>
-            <div id="remindersList">
-                </div>
-            <button id="btnAddReminder" class="admin-only">Adicionar Lembrete</button>
-        </section>
+            <!-- Tabs for navigation -->
+            <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+                <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 active-tab" data-tab="contracts">Contratos</button>
+                <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="reminders">Lembretes</button>
+                <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="terminated-contracts">Encerrados</button>
+            </div>
 
-        <section id="processos-encerrados" class="tab-content">
-            <h2>Processos Encerrados</h2>
-            <div id="endedContractsList" class="contracts-grid">
+            <!-- Contracts Tab Content -->
+            <div id="contracts-tab" class="tab-content active flex-grow flex flex-col">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
+                    <input type="text" id="search-input" placeholder="Buscar contratos..."
+                           class="flex-grow px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <button id="add-contract-button" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200">
+                        <i class="fas fa-plus mr-2"></i>Adicionar Contrato
+                    </button>
                 </div>
-        </section>
-    </main>
 
-    <div id="contractModal" class="modal">
+                <div id="contracts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto flex-grow">
+                    <!-- Contract cards will be loaded here -->
+                    <p id="no-contracts-message" class="text-center text-gray-500 col-span-full hidden">Nenhum contrato encontrado.</p>
+                </div>
+            </div>
+
+            <!-- Reminders Tab Content -->
+            <div id="reminders-tab" class="tab-content hidden flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-semibold text-gray-800">Lembretes</h3>
+                    <button id="add-reminder-button" class="py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200">
+                        <i class="fas fa-plus mr-2"></i>Adicionar Lembrete
+                    </button>
+                </div>
+                <div id="reminders-list" class="space-y-4 overflow-y-auto flex-grow">
+                    <!-- Reminders will be loaded here -->
+                    <p id="no-reminders-message" class="text-center text-gray-500 hidden">Nenhum lembrete encontrado.</p>
+                </div>
+            </div>
+
+            <!-- Terminated Contracts Tab Content -->
+            <div id="terminated-contracts-tab" class="tab-content hidden flex-grow flex flex-col">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Contratos Encerrados</h3>
+                <div id="terminated-contracts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto flex-grow">
+                    <!-- Terminated contract cards will be loaded here -->
+                    <p id="no-terminated-contracts-message" class="text-center text-gray-500 col-span-full hidden">Nenhum contrato encerrado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Generic Message Modal -->
+    <div id="message-modal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar/Editar Contrato</h2>
-            <form id="contractForm">
-                <label for="processoSei">Processo SEI:</label>
-                <input type="text" id="processoSei" required>
-                
-                <label for="numeroContrato">Número do Contrato:</label>
-                <input type="text" id="numeroContrato" required>
-                
-                <label for="nomeEmpresa">Nome da Empresa:</label>
-                <input type="text" id="nomeEmpresa" required>
-                
-                <label for="objeto">Objeto:</label>
-                <textarea id="objeto" required></textarea>
-                
-                <label for="dataInicialProcesso">Data Inicial do Processo:</label>
-                <input type="date" id="dataInicialProcesso" required>
-                
-                <label for="tipoLei">Tipo de Lei (para prazo máximo):</label>
-                <select id="tipoLei">
-                    <option value="8666">Lei 8666 (60 meses)</option>
-                    <option value="nova">Lei Nova (10 anos)</option>
-                </select>
-                <p>Prazo Máximo do Contrato: <span id="prazoMaximoDisplay"></span></p>
+            <span class="close-button" onclick="closeModal('message-modal')">&times;</span>
+            <h3 id="message-modal-title" class="text-xl font-semibold mb-4"></h3>
+            <p id="message-modal-body" class="mb-4"></p>
+            <div class="flex justify-end">
+                <button onclick="closeModal('message-modal')" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">OK</button>
+            </div>
+        </div>
+    </div>
 
-                <label for="vigenciaAtual">Vigência Atual (Vencimento):</label>
-                <input type="date" id="vigenciaAtual" required>
-                
-                <label for="numeroRenovacao">Número da Renovação:</label>
-                <input type="number" id="numeroRenovacao" value="1" min="1" required>
-                
-                <label for="valorAtualizado">Valor Atualizado:</label>
-                <input type="number" id="valorAtualizado" step="0.01" required>
-                
-                <label>Unidades Participantes:</label>
-                <div id="unidadesParticipantes" class="checkbox-group">
+    <!-- Contract Form Modal -->
+    <div id="contract-form-modal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <span class="close-button" onclick="closeModal('contract-form-modal')">&times;</span>
+            <h3 class="text-xl font-semibold mb-4" id="contract-form-title">Adicionar Novo Contrato</h3>
+            <form id="contract-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="sei-number" class="block text-sm font-medium text-gray-700">Processo SEI</label>
+                    <input type="text" id="sei-number" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="contract-number" class="block text-sm font-medium text-gray-700">Número do Contrato</label>
+                    <input type="text" id="contract-number" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="company-name" class="block text-sm font-medium text-gray-700">Nome da Empresa</label>
+                    <input type="text" id="company-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="contract-object" class="block text-sm font-medium text-gray-700">Objeto</label>
+                    <input type="text" id="contract-object" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="initial-process-date" class="block text-sm font-medium text-gray-700">Data Inicial do Processo</label>
+                    <input type="date" id="initial-process-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="law-type" class="block text-sm font-medium text-gray-700">Tipo de Lei</label>
+                    <select id="law-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">Selecione</option>
+                        <option value="8666">Lei 8666</option>
+                        <option value="nova">Lei Nova</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="max-contract-term" class="block text-sm font-medium text-gray-700">Prazo Máximo do Contrato</label>
+                    <input type="text" id="max-contract-term" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                </div>
+                <div>
+                    <label for="current-validity-date" class="block text-sm font-medium text-gray-700">Vigência Atual do Contrato</label>
+                    <input type="date" id="current-validity-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="renewal-number" class="block text-sm font-medium text-gray-700">Renovação</label>
+                    <select id="renewal-number" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="1">1ª Renovação</option>
+                        <option value="2">2ª Renovação</option>
+                        <option value="3">3ª Renovação</option>
+                        <option value="4">4ª Renovação</option>
+                        <option value="5">5ª Renovação</option>
+                        <option value="6">6ª Renovação</option>
+                        <option value="7">7ª Renovação</option>
+                        <option value="8">8ª Renovação</option>
+                        <option value="9">9ª Renovação</option>
+                        <option value="10">10ª Renovação</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="initial-contract-value" class="block text-sm font-medium text-gray-700">Valor Inicial do Contrato</label>
+                    <input type="number" step="0.01" id="initial-contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="current-contract-value" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato</label>
+                    <input type="number" step="0.01" id="current-contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+
+                <div class="col-span-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unidades Participantes</label>
+                    <div id="units-checkbox-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        <!-- Units checkboxes will be dynamically loaded here -->
                     </div>
+                </div>
 
-                <button type="submit">Salvar Contrato</button>
+                <div class="col-span-full flex justify-end space-x-3 mt-4">
+                    <button type="button" onclick="closeModal('contract-form-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                    <button type="submit" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar Contrato</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <div id="movimentacaoSelectionModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Escolha a Movimentação</h2>
-            <div class="movimentacao-options">
-                <button id="btnSelectAditivo" class="movimentacao-option-button">Aditivo</button>
-                <button id="btnSelectApostilamento" class="movimentacao-option-button">Apostilamento</button>
-            </div>
+    <!-- Renew Contract Modal -->
+    <div id="renew-contract-modal" class="modal">
+        <div class="modal-content max-w-xl">
+            <span class="close-button" onclick="closeModal('renew-contract-modal')">&times;</span>
+            <h3 class="text-xl font-semibold mb-4">Renovar Contrato</h3>
+            <form id="renew-form" class="space-y-4">
+                <input type="hidden" id="renew-contract-id">
+                <div>
+                    <label for="renew-current-sei" class="block text-sm font-medium text-gray-700">Processo SEI</label>
+                    <input type="text" id="renew-current-sei" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                </div>
+                <div>
+                    <label for="renew-current-validity-date" class="block text-sm font-medium text-gray-700">Vigência Atual</label>
+                    <input type="date" id="renew-current-validity-date" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                </div>
+                <div>
+                    <label for="renew-next-validity-duration" class="block text-sm font-medium text-gray-700">Tempo de Vigência (meses)</label>
+                    <input type="number" id="renew-next-validity-duration" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="renew-next-validity-date" class="block text-sm font-medium text-gray-700">Próximo Vencimento</label>
+                    <input type="date" id="renew-next-validity-date" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                </div>
+                <div>
+                    <label for="renew-updated-value" class="block text-sm font-medium text-gray-700">Valor Atualizado (R$)</label>
+                    <input type="number" step="0.01" id="renew-updated-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="col-span-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unidades para Renovação</label>
+                    <div id="renew-units-checkbox-container" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <!-- Units checkboxes will be dynamically loaded here -->
+                    </div>
+                </div>
+                <div class="col-span-full">
+                    <label for="renew-history-notes" class="block text-sm font-medium text-gray-700">Histórico de Movimentações</label>
+                    <textarea id="renew-history-notes" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 mt-4">
+                    <button type="button" onclick="closeModal('renew-contract-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                    <button type="submit" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Confirmar Renovação</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div id="aditivoModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar Aditivo</h2>
-            <form id="aditivoForm">
-                <label for="aditivoTipo">Tipo de Aditivo:</label>
-                <select id="aditivoTipo" required>
-                    <option value="">Selecione</option>
-                    <option value="Renovacao">Renovação</option>
-                    <option value="Supressao">Supressão</option>
-                    <option value="Acrescimo">Acréscimo</option>
-                    <option value="Outros">Outros</option>
-                </select>
-
-                <label for="aditivoNumero">Número do Aditivo:</label>
-                <input type="number" id="aditivoNumero" min="1" required>
-
-                <label for="aditivoObjeto">Objeto do Aditivo:</label>
-                <textarea id="aditivoObjeto" required></textarea>
-
-                <div id="renovacaoFields" style="display: none;">
-                    <h3>Detalhes da Renovação</h3>
-                    <label for="renovacaoVigenciaMeses">Tempo da próxima renovação (meses):</label>
-                    <input type="number" id="renovacaoVigenciaMeses" min="1">
-                    <p>Próximo Vencimento: <span id="proximoVencimentoDisplay"></span></p>
-                    <label for="renovacaoValor">Valor para Renovação:</label>
-                    <input type="number" id="renovacaoValor" step="0.01">
-                    <label>Unidades Aceitaram Renovação:</label>
-                    <div id="unidadesRenovacao" class="checkbox-group">
+    <!-- Apostilamento/Aditivo Modal -->
+    <div id="addendum-modal" class="modal">
+        <div class="modal-content max-w-xl">
+            <span class="close-button" onclick="closeModal('addendum-modal')">&times;</span>
+            <h3 class="text-xl font-semibold mb-4">Apostilamento ou Aditivo</h3>
+            <form id="addendum-form" class="space-y-4">
+                <input type="hidden" id="addendum-contract-id">
+                <div>
+                    <label for="addendum-type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                    <select id="addendum-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">Selecione</option>
+                        <option value="apostilamento">Apostilamento</option>
+                        <option value="aditivo">Aditivo</option>
+                    </select>
+                </div>
+                <div id="addendum-number-container" class="hidden">
+                    <label for="addendum-number" class="block text-sm font-medium text-gray-700">Número</label>
+                    <input type="number" id="addendum-number" min="1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div id="apostilamento-options" class="hidden">
+                    <div>
+                        <label for="apostilamento-type" class="block text-sm font-medium text-gray-700">Tipo de Apostilamento</label>
+                        <select id="apostilamento-type" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Selecione</option>
+                            <option value="reajuste">Reajuste</option>
+                            <option value="designacao">Designação de Gestores e Fiscais</option>
+                            <option value="dotacao">Dotação Orçamentária</option>
+                            <option value="outros_apostilamento">Outros</option>
+                        </select>
+                    </div>
+                    <div id="apostilamento-others-description-container" class="hidden mt-4">
+                        <label for="apostilamento-others-description" class="block text-sm font-medium text-gray-700">Descrição (Outros)</label>
+                        <textarea id="apostilamento-others-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                    </div>
+                </div>
+                <div id="aditivo-options" class="hidden">
+                    <div>
+                        <label for="aditivo-type" class="block text-sm font-medium text-gray-700">Tipo de Aditivo</label>
+                        <select id="aditivo-type" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Selecione</option>
+                            <option value="renovacao_aditivo">Renovação</option>
+                            <option value="supressao">Supressão</option>
+                            <option value="acrescimo">Acréscimo</option>
+                            <option value="outros_aditivo">Outros</option>
+                        </select>
+                    </div>
+                    <div id="aditivo-value-change-container" class="hidden mt-4">
+                        <label for="aditivo-value-change" class="block text-sm font-medium text-gray-700">Mudança de Valor (R$)</label>
+                        <input type="number" step="0.01" id="aditivo-value-change" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div id="aditivo-units-container" class="hidden mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Unidades (Supressão/Acréscimo)</label>
+                        <div id="aditivo-units-checkbox-container" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <!-- Units checkboxes will be dynamically loaded here -->
                         </div>
+                    </div>
+                    <div id="aditivo-others-description-container" class="hidden mt-4">
+                        <label for="aditivo-others-description" class="block text-sm font-medium text-gray-700">Descrição (Outros)</label>
+                        <textarea id="aditivo-others-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                    </div>
                 </div>
-
-                <div id="supressaoFields" style="display: none;">
-                    <h3>Detalhes da Supressão</h3>
-                    <label for="supressaoValor">Novo Valor do Contrato:</label>
-                    <input type="number" id="supressaoValor" step="0.01">
-                    <label>Unidades a Suprimir:</label>
-                    <div id="unidadesSupressao" class="checkbox-group">
-                        </div>
+                <div class="flex justify-end space-x-3 mt-4">
+                    <button type="button" onclick="closeModal('addendum-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                    <button type="submit" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar</button>
                 </div>
-
-                <div id="acrescimoFields" style="display: none;">
-                    <h3>Detalhes do Acréscimo</h3>
-                    <label for="acrescimoValor">Novo Valor do Contrato:</label>
-                    <input type="number" id="acrescimoValor" step="0.01">
-                </div>
-
-                <div id="outrosAditivoFields" style="display: none;">
-                    <h3>Outros Detalhes do Aditivo</h3>
-                    <label for="aditivoOutrosDesc">Descrição do Aditivo:</label>
-                    <textarea id="aditivoOutrosDesc"></textarea>
-                </div>
-
-                <button type="submit">Salvar Aditivo</button>
             </form>
         </div>
     </div>
 
-    <div id="apostilamentoModal" class="modal">
+    <!-- Reminder Form Modal -->
+    <div id="reminder-form-modal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar Apostilamento</h2>
-            <form id="apostilamentoForm">
-                <label for="apostilamentoTipo">Tipo de Apostilamento:</label>
-                <select id="apostilamentoTipo" required>
-                    <option value="">Selecione</option>
-                    <option value="Reajuste">Reajuste</option>
-                    <option value="DesignacaoGestoresFiscais">Designação de Gestores e Fiscais</option>
-                    <option value="DotacaoOrcamentaria">Dotação Orçamentária</option>
-                    <option value="Outros">Outros</option>
-                </select>
-
-                <label for="apostilamentoNumero">Número do Apostilamento:</label>
-                <input type="number" id="apostilamentoNumero" min="1" required>
-
-                <label for="apostilamentoObjeto">Objeto do Apostilamento:</label>
-                <textarea id="apostilamentoObjeto" required></textarea>
-
-                <div id="outrosApostilamentoFields" style="display: none;">
-                    <label for="apostilamentoOutrosDesc">Descrição do Apostilamento:</label>
-                    <textarea id="apostilamentoOutrosDesc"></textarea>
+            <span class="close-button" onclick="closeModal('reminder-form-modal')">&times;</span>
+            <h3 class="text-xl font-semibold mb-4" id="reminder-form-title">Adicionar Lembrete</h3>
+            <form id="reminder-form" class="space-y-4">
+                <input type="hidden" id="reminder-id">
+                <div>
+                    <label for="reminder-text" class="block text-sm font-medium text-gray-700">Lembrete</label>
+                    <textarea id="reminder-text" rows="4" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
                 </div>
-
-                <button type="submit">Salvar Apostilamento</button>
+                <div>
+                    <label for="reminder-due-date" class="block text-sm font-medium text-gray-700">Data de Vencimento</label>
+                    <input type="date" id="reminder-due-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="reminder-urgency" class="block text-sm font-medium text-gray-700">Urgência</label>
+                    <select id="reminder-urgency" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="green">Verde (Sem Urgência)</option>
+                        <option value="yellow">Amarelo (Moderado)</option>
+                        <option value="red">Vermelho (Urgente)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 mt-4">
+                    <button type="button" onclick="closeModal('reminder-form-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                    <button type="submit" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar Lembrete</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <div id="deleteReasonModal" class="modal">
+    <!-- Terminate Contract Modal -->
+    <div id="terminate-contract-modal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Motivo do Encerramento do Contrato</h2>
-            <form id="deleteReasonForm">
-                <label for="deleteReasonText">Por favor, descreva o motivo do encerramento:</label>
-                <textarea id="deleteReasonText" rows="5" required></textarea>
-                <button type="submit">Confirmar Encerramento</button>
+            <span class="close-button" onclick="closeModal('terminate-contract-modal')">&times;</span>
+            <h3 class="text-xl font-semibold mb-4">Encerrar Contrato</h3>
+            <form id="terminate-form" class="space-y-4">
+                <input type="hidden" id="terminate-contract-id">
+                <div>
+                    <label for="termination-reason" class="block text-sm font-medium text-gray-700">Motivo do Encerramento</label>
+                    <textarea id="termination-reason" rows="4" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 mt-4">
+                    <button type="button" onclick="closeModal('terminate-contract-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                    <button type="submit" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">Confirmar Encerramento</button>
+                </div>
             </form>
         </div>
     </div>
 
+    <!-- Global Utility Functions -->
+    <script>
+        // These functions are made global to be accessible from onclick attributes
+        function showModal(modalId, title = '', body = '') {
+            const modal = document.getElementById(modalId);
+            if (modalId === 'message-modal') {
+                document.getElementById('message-modal-title').textContent = title;
+                document.getElementById('message-modal-body').textContent = body;
+                // Remove any previous cancel button if it exists
+                const existingCancelButton = modal.querySelector('#message-modal .flex.justify-end .py-2.px-4.bg-gray-300');
+                if (existingCancelButton) {
+                    existingCancelButton.remove();
+                }
+            }
+            modal.style.display = 'flex';
+        }
 
-    <div id="reminderModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Adicionar Lembrete</h2>
-            <form id="reminderForm">
-                <label for="reminderTitle">Título:</label>
-                <input type="text" id="reminderTitle" required>
-                <label for="reminderDescription">Descrição:</label>
-                <textarea id="reminderDescription"></textarea>
-                <label for="reminderDate">Data de Vencimento:</label>
-                <input type="date" id="reminderDate" required>
-                <label for="reminderUrgency">Urgência:</label>
-                <select id="reminderUrgency" required>
-                    <option value="verde">Verde (Sem Urgência)</option>
-                    <option value="amarelo">Amarelo (Moderado)</option>
-                    <option value="vermelho">Vermelho (Urgente)</option>
-                </select>
-                <button type="submit">Salvar Lembrete</button>
-            </form>
-        </div>
-    </div>
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+    </script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDKs and Main Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <script src="firebase-config.js"></script>
-    <script src="auth.js"></script>
-    <script src="main.js"></script>
+        // Global variables for Firebase and app state
+        let app, db, auth;
+        let currentUserId = null;
+        let isAdmin = false;
+        let isAuthReady = false; // New flag for authentication readiness
+
+        // Admin UIDs (replace with your actual admin UIDs)
+        const ADMIN_UIDS = [
+            "xo7oBxVSn8QeUx3HvAl8gO3Mq2w1",
+            "txHwdn3rwubSff4PvekjO4PM7wb2"
+        ];
+
+        // Provided Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw",
+            authDomain: "gcc-contratos.firebaseapp.com",
+            projectId: "gcc-contratos",
+            storageBucket: "gcc-contratos.firebasestorage.app",
+            messagingSenderId: "405415511927",
+            appId: "1:405415511927:web:4612190119302726820372",
+            measurementId: "G-T1T4N9WD5T"
+        };
+
+        // Global app ID from environment (if available, otherwise use a default)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Note: __firebase_config is no longer used here as the user provided a specific config.
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+
+        // Initialize Firebase
+        if (Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log("Firebase inicializado.");
+        } else {
+            console.error("Firebase config não está disponível. A aplicação pode não funcionar corretamente.");
+        }
+
+        // --- Utility Functions (showModal and closeModal are now global) ---
+        function showPage(pageId) {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('main-page').classList.add('hidden');
+
+            // Set background for login page
+            const appDiv = document.getElementById('app');
+            if (pageId === 'login-page' || pageId === 'register-page') {
+                appDiv.classList.add('login-background');
+            } else {
+                appDiv.classList.remove('login-background');
+            }
+
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        // Function to format date to YYYY-MM-DD
+        function formatDate(date) {
+            if (!date) return '';
+            let d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            let year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
+        // Function to parse YYYY-MM-DD string to Date object
+        function parseDate(dateString) {
+            if (!dateString) return null;
+            const [year, month, day] = dateString.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        // --- Authentication Logic ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                isAdmin = ADMIN_UIDS.includes(currentUserId);
+                document.getElementById('user-id-display').textContent = `ID do Usuário: ${currentUserId}`;
+                console.log("Usuário logado:", currentUserId, "Admin:", isAdmin);
+                isAuthReady = true; // Auth is ready
+                console.log("Autenticação pronta. Carregando dados...");
+                showPage('main-page');
+                // Load initial data for contracts and reminders only after auth is ready
+                loadContracts();
+                loadReminders();
+                // Set admin permissions for buttons
+                setAdminPermissions();
+            } else {
+                currentUserId = null;
+                isAdmin = false;
+                isAuthReady = false; // Auth is not ready
+                console.log("Nenhum usuário logado.");
+                showPage('login-page');
+                // Removed signInAnonymously to prevent automatic login as requested by the user
+                // if (!initialAuthToken) {
+                //     try {
+                //         await signInAnonymously(auth);
+                //         console.log("Sessão anônima iniciada.");
+                //     } catch (error) {
+                //         console.error("Erro ao iniciar sessão anônima:", error);
+                //     }
+                // }
+            }
+        });
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const messageDiv = document.getElementById('login-message');
+            messageDiv.textContent = '';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle page redirection
+            } catch (error) {
+                console.error("Erro de login:", error);
+                messageDiv.textContent = `Erro de login: ${error.message}`;
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const address = document.getElementById('register-address').value;
+            const cpf = document.getElementById('register-cpf').value;
+            const phone = document.getElementById('register-phone').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const messageDiv = document.getElementById('register-message');
+            messageDiv.textContent = '';
+
+            if (password !== confirmPassword) {
+                messageDiv.textContent = 'As senhas não coincidem!';
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Store additional user data in Firestore
+                await setDoc(doc(db, `artifacts/${appId}/users/${user.uid}/profile`, 'data'), {
+                    name: name,
+                    address: address,
+                    cpf: cpf,
+                    phone: phone,
+                    email: email,
+                    createdAt: new Date()
+                });
+                showModal('message-modal', 'Sucesso!', 'Usuário registrado com sucesso! Faça login para continuar.');
+                showPage('login-page'); // Redirect to login after successful registration
+            } catch (error) {
+                console.error("Erro de registro:", error);
+                messageDiv.textContent = `Erro de registro: ${error.message}`;
+            }
+        }
+
+        function handleLogout() {
+            signOut(auth).then(() => {
+                console.log("Usuário deslogado.");
+                // onAuthStateChanged will handle page redirection
+            }).catch((error) => {
+                console.error("Erro ao deslogar:", error);
+                showModal('message-modal', 'Erro', 'Erro ao deslogar. Tente novamente.');
+            });
+        }
+
+        function setAdminPermissions() {
+            const adminButtons = document.querySelectorAll('#add-contract-button, #add-reminder-button, .edit-contract-button, .delete-contract-button, .renew-contract-button, .add-addendum-button, .terminate-contract-button, .edit-reminder-button, .delete-reminder-button, .publish-addendum-button');
+            adminButtons.forEach(button => {
+                if (isAdmin) {
+                    button.classList.remove('hidden');
+                } else {
+                    button.classList.add('hidden');
+                }
+            });
+            // Specific handling for reminder add button
+            const addReminderButton = document.getElementById('add-reminder-button');
+            if (isAdmin) {
+                addReminderButton.classList.remove('hidden');
+            } else {
+                addReminderButton.classList.add('hidden');
+            }
+        }
+
+        // --- Contract Management Logic ---
+        const CONTRACT_COLORS = [
+            'bg-blue-100 border-blue-300', 'bg-green-100 border-green-300', 'bg-yellow-100 border-yellow-300',
+            'bg-red-100 border-red-300', 'bg-purple-100 border-purple-300', 'bg-indigo-100 border-indigo-300',
+            'bg-pink-100 border-pink-300', 'bg-teal-100 border-teal-300', 'bg-orange-100 border-orange-300',
+            'bg-cyan-100 border-cyan-300'
+        ];
+        const seiColorMap = {};
+        let nextColorIndex = 0;
+
+        function getColorForSei(seiNumber) {
+            if (!seiColorMap[seiNumber]) {
+                seiColorMap[seiNumber] = CONTRACT_COLORS[nextColorIndex % CONTRACT_COLORS.length];
+                nextColorIndex++;
+            }
+            return seiColorMap[seiNumber];
+        }
+
+        const ALL_UNITS = [
+            "HJXXIII", "HEM", "HAC", "HIJPII", "MOV", "CSPD", "HRAD", "CSSI",
+            "CSSFE", "CSSFA", "IRS", "HRJP", "CHB", "HRBJA", "CHPB", "HMAL", "HJK"
+        ];
+
+        function renderUnitsCheckboxes(containerId, selectedUnits = []) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            ALL_UNITS.forEach(unit => {
+                const isChecked = selectedUnits.includes(unit);
+                container.innerHTML += `
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" value="${unit}" class="form-checkbox h-4 w-4 text-blue-600 rounded" ${isChecked ? 'checked' : ''}>
+                        <span class="ml-2 text-sm text-gray-700">${unit}</span>
+                    </label>
+                `;
+            });
+        }
+
+        async function loadContracts() {
+            if (!db || !currentUserId || !isAuthReady) { // Check isAuthReady
+                console.log("Não foi possível carregar contratos: DB, User ou Auth não estão prontos.");
+                return;
+            }
+
+            const contractsListDiv = document.getElementById('contracts-list');
+            const noContractsMessage = document.getElementById('no-contracts-message');
+            contractsListDiv.innerHTML = ''; // Clear previous contracts
+
+            try {
+                // Listen for real-time updates
+                onSnapshot(collection(db, `artifacts/${appId}/public/data/contracts`), (snapshot) => {
+                    const contracts = [];
+                    snapshot.forEach(doc => {
+                        contracts.push({ id: doc.id, ...doc.data() });
+                    });
+                    displayContracts(contracts);
+                    if (contracts.length === 0) {
+                        noContractsMessage.classList.remove('hidden');
+                    } else {
+                        noContractsMessage.classList.add('hidden');
+                    }
+                }, (error) => {
+                    console.error("Erro ao carregar contratos em tempo real:", error);
+                    showModal('message-modal', 'Erro', 'Erro ao carregar contratos. Tente novamente.');
+                });
+            } catch (error) {
+                console.error("Erro ao configurar listener de contratos:", error);
+                showModal('message-modal', 'Erro', 'Erro ao carregar contratos. Tente novamente.');
+            }
+        }
+
+        function displayContracts(contracts) {
+            const contractsListDiv = document.getElementById('contracts-list');
+            contractsListDiv.innerHTML = '';
+
+            // Separate contracts into "flashing" and "normal"
+            const sixMonthsFromNow = new Date();
+            sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+
+            const flashingContracts = [];
+            const normalContracts = [];
+
+            contracts.forEach(contract => {
+                const validityDate = parseDate(contract.currentValidityDate);
+                if (validityDate && validityDate <= sixMonthsFromNow) {
+                    flashingContracts.push(contract);
+                } else {
+                    normalContracts.push(contract);
+                }
+            });
+
+            // Sort flashing contracts by validity date (closest first)
+            flashingContracts.sort((a, b) => parseDate(a.currentValidityDate) - parseDate(b.currentValidityDate));
+
+            // Combine and render
+            [...flashingContracts, ...normalContracts].forEach(contract => {
+                const contractCard = createContractCard(contract);
+                contractsListDiv.appendChild(contractCard);
+            });
+
+            setAdminPermissions(); // Re-apply permissions after rendering
+        }
+
+        function createContractCard(contract) {
+            const card = document.createElement('div');
+            const seiColorClass = getColorForSei(contract.seiNumber);
+            const isFlashing = contract.currentValidityDate && parseDate(contract.currentValidityDate) <= new Date(new Date().setMonth(new Date().getMonth() + 6));
+            const addendumPendingClass = contract.addendumPendingPublication ? 'bg-orange-200 border-orange-400' : ''; // Different color for pending addendum
+
+            card.className = `contract-card p-6 border rounded-xl shadow-md space-y-2 relative transition-all duration-300
+                             ${seiColorClass} ${addendumPendingClass} ${isFlashing ? 'flashing' : ''}`;
+            card.dataset.id = contract.id;
+            card.dataset.sei = contract.seiNumber; // For grouping/sorting later
+
+            const addendumStatusHtml = contract.addendumPendingPublication ? `
+                <div class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    Aguardando Publicação
+                </div>
+                <p class="text-sm text-orange-700 mt-2">Motivo: ${contract.addendumPendingPublicationReason || 'N/A'}</p>
+            ` : '';
+
+            card.innerHTML = `
+                ${addendumStatusHtml}
+                <h3 class="text-lg font-bold text-gray-900">${contract.companyName}</h3>
+                <p class="text-sm text-gray-700"><strong>SEI:</strong> ${contract.seiNumber}</p>
+                <p class="text-sm text-gray-700"><strong>Contrato:</strong> ${contract.contractNumber}</p>
+                <p class="text-sm text-gray-700"><strong>Objeto:</strong> ${contract.contractObject}</p>
+                <p class="text-sm text-gray-700"><strong>Início Processo:</strong> ${formatDate(contract.initialProcessDate)}</p>
+                <p class="text-sm text-gray-700"><strong>Vencimento Máximo:</strong> ${formatDate(contract.maxContractTerm)}</p>
+                <p class="text-sm text-gray-700"><strong>Vigência Atual:</strong> ${formatDate(contract.currentValidityDate)}</p>
+                <p class="text-sm text-gray-700"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
+                <p class="text-sm text-gray-700"><strong>Valor Atual:</strong> R$ ${parseFloat(contract.currentContractValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p class="text-sm text-gray-700"><strong>Unidades:</strong> ${contract.participatingUnits.join(', ')}</p>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button class="edit-contract-button py-1 px-3 bg-yellow-500 text-white rounded-md text-xs hover:bg-yellow-600 hidden" data-id="${contract.id}">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="renew-contract-button py-1 px-3 bg-green-500 text-white rounded-md text-xs hover:bg-green-600 hidden" data-id="${contract.id}">
+                        <i class="fas fa-sync-alt"></i> Renovar
+                    </button>
+                    <button class="add-addendum-button py-1 px-3 bg-purple-500 text-white rounded-md text-xs hover:bg-purple-600 hidden" data-id="${contract.id}">
+                        <i class="fas fa-file-alt"></i> Apostilamento/Aditivo
+                    </button>
+                    ${contract.addendumPendingPublication ? `
+                        <button class="publish-addendum-button py-1 px-3 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 hidden" data-id="${contract.id}">
+                            <i class="fas fa-check"></i> Publicar Aditivo
+                        </button>
+                    ` : ''}
+                    <button class="terminate-contract-button py-1 px-3 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 hidden" data-id="${contract.id}">
+                        <i class="fas fa-times-circle"></i> Encerrar
+                    </button>
+                </div>
+            `;
+
+            card.querySelector('.edit-contract-button').addEventListener('click', () => editContract(contract.id));
+            card.querySelector('.renew-contract-button').addEventListener('click', () => openRenewModal(contract.id));
+            card.querySelector('.add-addendum-button').addEventListener('click', () => openAddendumModal(contract.id));
+            if (contract.addendumPendingPublication) {
+                card.querySelector('.publish-addendum-button').addEventListener('click', () => publishAddendum(contract.id));
+            }
+            card.querySelector('.terminate-contract-button').addEventListener('click', () => openTerminateModal(contract.id));
+
+            return card;
+        }
+
+        async function addOrUpdateContract(event) {
+            event.preventDefault();
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para adicionar/editar contratos.');
+                return;
+            }
+
+            const id = document.getElementById('contract-form').dataset.id;
+            const seiNumber = document.getElementById('sei-number').value;
+            const contractNumber = document.getElementById('contract-number').value;
+            const companyName = document.getElementById('company-name').value;
+            const contractObject = document.getElementById('contract-object').value;
+            const initialProcessDate = document.getElementById('initial-process-date').value;
+            const lawType = document.getElementById('law-type').value;
+            const maxContractTerm = document.getElementById('max-contract-term').value; // This is already calculated
+            const currentValidityDate = document.getElementById('current-validity-date').value;
+            const renewalNumber = parseInt(document.getElementById('renewal-number').value);
+            const initialContractValue = parseFloat(document.getElementById('initial-contract-value').value);
+            const currentContractValue = parseFloat(document.getElementById('current-contract-value').value);
+
+            const selectedUnits = Array.from(document.querySelectorAll('#units-checkbox-container input[type="checkbox"]:checked'))
+                                      .map(checkbox => checkbox.value);
+
+            const contractData = {
+                seiNumber,
+                contractNumber,
+                companyName,
+                contractObject,
+                initialProcessDate,
+                lawType,
+                maxContractTerm,
+                currentValidityDate,
+                renewalNumber,
+                initialContractValue,
+                currentContractValue,
+                participatingUnits: selectedUnits,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active'
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, `artifacts/${appId}/public/data/contracts`, id), contractData);
+                    showModal('message-modal', 'Sucesso!', 'Contrato atualizado com sucesso!');
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/contracts`), contractData);
+                    showModal('message-modal', 'Sucesso!', 'Contrato adicionado com sucesso!');
+                }
+                closeModal('contract-form-modal');
+                document.getElementById('contract-form').reset();
+            } catch (error) {
+                console.error("Erro ao salvar contrato:", error);
+                showModal('message-modal', 'Erro', `Erro ao salvar contrato: ${error.message}`);
+            }
+        }
+
+        async function editContract(id) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para editar contratos.');
+                return;
+            }
+            try {
+                const contractDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/contracts`, id));
+                if (contractDoc.exists()) {
+                    const contract = contractDoc.data();
+                    document.getElementById('contract-form-title').textContent = 'Editar Contrato';
+                    document.getElementById('contract-form').dataset.id = id;
+                    document.getElementById('sei-number').value = contract.seiNumber;
+                    document.getElementById('contract-number').value = contract.contractNumber;
+                    document.getElementById('company-name').value = contract.companyName;
+                    document.getElementById('contract-object').value = contract.contractObject;
+                    document.getElementById('initial-process-date').value = contract.initialProcessDate;
+                    document.getElementById('law-type').value = contract.lawType;
+                    document.getElementById('max-contract-term').value = contract.maxContractTerm;
+                    document.getElementById('current-validity-date').value = contract.currentValidityDate;
+                    document.getElementById('renewal-number').value = contract.renewalNumber;
+                    document.getElementById('initial-contract-value').value = contract.initialContractValue;
+                    document.getElementById('current-contract-value').value = contract.currentContractValue;
+                    renderUnitsCheckboxes('units-checkbox-container', contract.participatingUnits);
+                    showModal('contract-form-modal');
+                } else {
+                    showModal('message-modal', 'Erro', 'Contrato não encontrado.');
+                }
+            } catch (error) {
+                console.error("Erro ao carregar contrato para edição:", error);
+                showModal('message-modal', 'Erro', `Erro ao carregar contrato: ${error.message}`);
+            }
+        }
+
+        async function openRenewModal(contractId) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para renovar contratos.');
+                return;
+            }
+            try {
+                const contractDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/contracts`, contractId));
+                if (contractDoc.exists()) {
+                    const contract = contractDoc.data();
+                    document.getElementById('renew-contract-id').value = contractId;
+                    document.getElementById('renew-current-sei').value = contract.seiNumber;
+                    document.getElementById('renew-current-validity-date').value = contract.currentValidityDate;
+                    document.getElementById('renew-updated-value').value = contract.currentContractValue;
+                    document.getElementById('renew-next-validity-duration').value = ''; // Clear for new input
+                    document.getElementById('renew-next-validity-date').value = ''; // Clear for new calculation
+                    document.getElementById('renew-history-notes').value = contract.renewalHistory || '';
+
+                    renderUnitsCheckboxes('renew-units-checkbox-container', contract.participatingUnits);
+                    showModal('renew-contract-modal');
+                } else {
+                    showModal('message-modal', 'Erro', 'Contrato não encontrado para renovação.');
+                }
+            } catch (error) {
+                console.error("Erro ao abrir modal de renovação:", error);
+                showModal('message-modal', 'Erro', `Erro ao carregar dados para renovação: ${error.message}`);
+            }
+        }
+
+        async function handleRenewContract(event) {
+            event.preventDefault();
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para renovar contratos.');
+                return;
+            }
+
+            const contractId = document.getElementById('renew-contract-id').value;
+            const currentValidityDateStr = document.getElementById('renew-current-validity-date').value;
+            const nextValidityDuration = parseInt(document.getElementById('renew-next-validity-duration').value);
+            const renewUpdatedValue = parseFloat(document.getElementById('renew-updated-value').value);
+            const renewHistoryNotes = document.getElementById('renew-history-notes').value;
+
+            const selectedUnits = Array.from(document.querySelectorAll('#renew-units-checkbox-container input[type="checkbox"]:checked'))
+                                      .map(checkbox => checkbox.value);
+
+            if (!nextValidityDuration || nextValidityDuration <= 0) {
+                showModal('message-modal', 'Erro', 'Por favor, insira uma duração de vigência válida em meses.');
+                return;
+            }
+
+            try {
+                const currentValidityDate = new Date(currentValidityDateStr + 'T00:00:00'); // Ensure UTC for consistent calculation
+                const nextValidityDate = new Date(currentValidityDate);
+                nextValidityDate.setMonth(nextValidityDate.getMonth() + nextValidityDuration);
+
+                const contractRef = doc(db, `artifacts/${appId}/public/data/contracts`, contractId);
+                const contractSnap = await getDoc(contractRef);
+                const currentRenewalNumber = contractSnap.data().renewalNumber || 0;
+
+                await updateDoc(contractRef, {
+                    currentValidityDate: formatDate(nextValidityDate),
+                    renewalNumber: currentRenewalNumber + 1,
+                    currentContractValue: renewUpdatedValue,
+                    participatingUnits: selectedUnits,
+                    renewalHistory: renewHistoryNotes,
+                    updatedAt: new Date()
+                });
+                showModal('message-modal', 'Sucesso!', 'Contrato renovado com sucesso!');
+                closeModal('renew-contract-modal');
+            } catch (error) {
+                console.error("Erro ao renovar contrato:", error);
+                showModal('message-modal', 'Erro', `Erro ao renovar contrato: ${error.message}`);
+            }
+        }
+
+        function calculateNextValidityDate() {
+            const currentValidityDateStr = document.getElementById('renew-current-validity-date').value;
+            const nextValidityDuration = parseInt(document.getElementById('renew-next-validity-duration').value);
+            const nextValidityDateInput = document.getElementById('renew-next-validity-date');
+
+            if (currentValidityDateStr && nextValidityDuration > 0) {
+                const currentValidityDate = new Date(currentValidityDateStr + 'T00:00:00');
+                const nextValidityDate = new Date(currentValidityDate);
+                nextValidityDate.setMonth(nextValidityDate.getMonth() + nextValidityDuration);
+                nextValidityDateInput.value = formatDate(nextValidityDate);
+            } else {
+                nextValidityDateInput.value = '';
+            }
+        }
+
+        async function openAddendumModal(contractId) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para adicionar apostilamentos/aditivos.');
+                return;
+            }
+            document.getElementById('addendum-contract-id').value = contractId;
+            document.getElementById('addendum-type').value = '';
+            document.getElementById('addendum-number-container').classList.add('hidden');
+            document.getElementById('apostilamento-options').classList.add('hidden');
+            document.getElementById('aditivo-options').classList.add('hidden');
+            document.getElementById('apostilamento-others-description-container').classList.add('hidden');
+            document.getElementById('aditivo-value-change-container').classList.add('hidden');
+            document.getElementById('aditivo-units-container').classList.add('hidden');
+            document.getElementById('aditivo-others-description-container').classList.add('hidden');
+            document.getElementById('addendum-form').reset();
+
+            // Load current contract units for aditivo-units-checkbox-container
+            try {
+                const contractDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/contracts`, contractId));
+                if (contractDoc.exists()) {
+                    const contract = contractDoc.data();
+                    renderUnitsCheckboxes('aditivo-units-checkbox-container', contract.participatingUnits);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar unidades do contrato para aditivo:", error);
+            }
+
+            showModal('addendum-modal');
+        }
+
+        async function handleAddendum(event) {
+            event.preventDefault();
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para adicionar apostilamentos/aditivos.');
+                return;
+            }
+
+            const contractId = document.getElementById('addendum-contract-id').value;
+            const addendumType = document.getElementById('addendum-type').value;
+            const addendumNumber = parseInt(document.getElementById('addendum-number').value) || 1;
+            let addendumDetails = {};
+
+            if (addendumType === 'apostilamento') {
+                const apostilamentoType = document.getElementById('apostilamento-type').value;
+                addendumDetails = {
+                    type: apostilamentoType,
+                    description: apostilamentoType === 'outros_apostilamento' ? document.getElementById('apostilamento-others-description').value : ''
+                };
+            } else if (addendumType === 'aditivo') {
+                const aditivoType = document.getElementById('aditivo-type').value;
+                addendumDetails = {
+                    type: aditivoType,
+                    valueChange: aditivoType === 'supressao' || aditivoType === 'acrescimo' ? parseFloat(document.getElementById('aditivo-value-change').value) : 0,
+                    units: (aditivoType === 'supressao' || aditivoType === 'acrescimo') ? Array.from(document.querySelectorAll('#aditivo-units-checkbox-container input[type="checkbox"]:checked')).map(cb => cb.value) : [],
+                    description: aditivoType === 'outros_aditivo' ? document.getElementById('aditivo-others-description').value : ''
+                };
+
+                if (aditivoType === 'renovacao_aditivo') {
+                    // This should ideally trigger the renew modal or have similar logic
+                    showModal('message-modal', 'Atenção', 'Para renovação, use o botão "Renovar" no card do contrato.');
+                    return; // Prevent saving this aditivo type here
+                }
+            }
+
+            try {
+                const contractRef = doc(db, `artifacts/${appId}/public/data/contracts`, contractId);
+                const contractSnap = await getDoc(contractRef);
+                const currentContract = contractSnap.data();
+
+                // Update contract value if it's an addendum with value change
+                if (addendumType === 'aditivo' && (addendumDetails.type === 'supressao' || addendumDetails.type === 'acrescimo')) {
+                    let newContractValue = currentContract.currentContractValue;
+                    if (addendumDetails.type === 'acrescimo') {
+                        newContractValue += addendumDetails.valueChange;
+                    } else if (addendumDetails.type === 'supressao') {
+                        newContractValue -= addendumDetails.valueChange;
+                    }
+                    await updateDoc(contractRef, {
+                        currentContractValue: newContractValue,
+                        participatingUnits: addendumDetails.units, // Update units based on suppression/acrescimo
+                        addendums: arrayUnion({
+                            number: addendumNumber,
+                            type: addendumType,
+                            details: addendumDetails,
+                            date: new Date(),
+                            pendingPublication: true,
+                            reasonPending: ''
+                        }),
+                        addendumPendingPublication: true, // Set flag for color change
+                        addendumPendingPublicationReason: '', // Clear any previous reason
+                        updatedAt: new Date()
+                    });
+                } else {
+                    await updateDoc(contractRef, {
+                        addendums: arrayUnion({
+                            number: addendumNumber,
+                            type: addendumType,
+                            details: addendumDetails,
+                            date: new Date(),
+                            pendingPublication: true,
+                            reasonPending: ''
+                        }),
+                        addendumPendingPublication: true, // Set flag for color change
+                        addendumPendingPublicationReason: '', // Clear any previous reason
+                        updatedAt: new Date()
+                    });
+                }
+
+                showModal('message-modal', 'Sucesso!', `${addendumType === 'apostilamento' ? 'Apostilamento' : 'Aditivo'} adicionado com sucesso! O contrato está aguardando publicação.`);
+                closeModal('addendum-modal');
+            } catch (error) {
+                console.error("Erro ao adicionar apostilamento/aditivo:", error);
+                showModal('message-modal', 'Erro', `Erro ao adicionar: ${error.message}`);
+            }
+        }
+
+        async function publishAddendum(contractId) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para publicar aditivos.');
+                return;
+            }
+            try {
+                const contractRef = doc(db, `artifacts/${appId}/public/data/contracts`, contractId);
+                const contractSnap = await getDoc(contractRef);
+                const contractData = contractSnap.data();
+
+                // Find the latest pending addendum and mark it as published
+                const updatedAddendums = contractData.addendums.map(ad => {
+                    if (ad.pendingPublication) {
+                        return { ...ad, pendingPublication: false, reasonPending: '', publishedAt: new Date() };
+                    }
+                    return ad;
+                });
+
+                await updateDoc(contractRef, {
+                    addendums: updatedAddendums,
+                    addendumPendingPublication: false, // Clear flag
+                    addendumPendingPublicationReason: '', // Clear reason
+                    updatedAt: new Date()
+                });
+                showModal('message-modal', 'Sucesso!', 'Aditivo publicado com sucesso!');
+            } catch (error) {
+                console.error("Erro ao publicar aditivo:", error);
+                showModal('message-modal', 'Erro', `Erro ao publicar aditivo: ${error.message}`);
+            }
+        }
+
+        async function openTerminateModal(contractId) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para encerrar contratos.');
+                return;
+            }
+            document.getElementById('terminate-contract-id').value = contractId;
+            document.getElementById('termination-reason').value = '';
+            showModal('terminate-contract-modal');
+        }
+
+        async function handleTerminateContract(event) {
+            event.preventDefault();
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para encerrar contratos.');
+                return;
+            }
+
+            const contractId = document.getElementById('terminate-contract-id').value;
+            const terminationReason = document.getElementById('termination-reason').value;
+
+            try {
+                const contractRef = doc(db, `artifacts/${appId}/public/data/contracts`, contractId);
+                const contractSnap = await getDoc(contractRef);
+                const contractData = contractSnap.data();
+
+                // Move to terminated contracts collection
+                await setDoc(doc(db, `artifacts/${appId}/public/data/terminated_contracts`, contractId), {
+                    ...contractData,
+                    terminationReason: terminationReason,
+                    terminatedAt: new Date(),
+                    status: 'terminated'
+                });
+                // Delete from active contracts
+                await deleteDoc(contractRef);
+
+                showModal('message-modal', 'Sucesso!', 'Contrato encerrado e movido para a lista de encerrados.');
+                closeModal('terminate-contract-modal');
+            } catch (error) {
+                console.error("Erro ao encerrar contrato:", error);
+                showModal('message-modal', 'Erro', `Erro ao encerrar contrato: ${error.message}`);
+            }
+        }
+
+        function loadTerminatedContracts() {
+            if (!db || !currentUserId || !isAuthReady) { // Check isAuthReady
+                console.log("Não foi possível carregar contratos encerrados: DB, User ou Auth não estão prontos.");
+                return;
+            }
+
+            const terminatedContractsListDiv = document.getElementById('terminated-contracts-list');
+            const noTerminatedContractsMessage = document.getElementById('no-terminated-contracts-message');
+            terminatedContractsListDiv.innerHTML = '';
+
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/terminated_contracts`), (snapshot) => {
+                const terminatedContracts = [];
+                snapshot.forEach(doc => {
+                    terminatedContracts.push({ id: doc.id, ...doc.data() });
+                });
+                if (terminatedContracts.length === 0) {
+                    noTerminatedContractsMessage.classList.remove('hidden');
+                } else {
+                    noTerminatedContractsMessage.classList.add('hidden');
+                    terminatedContracts.forEach(contract => {
+                        terminatedContractsListDiv.appendChild(createTerminatedContractCard(contract));
+                    });
+                }
+            }, (error) => {
+                console.error("Erro ao carregar contratos encerrados:", error);
+                showModal('message-modal', 'Erro', 'Erro ao carregar contratos encerrados. Tente novamente.');
+            });
+        }
+
+        function createTerminatedContractCard(contract) {
+            const card = document.createElement('div');
+            card.className = `p-6 border border-gray-300 bg-gray-50 rounded-xl shadow-md space-y-2`;
+            card.innerHTML = `
+                <h3 class="text-lg font-bold text-gray-900">${contract.companyName}</h3>
+                <p class="text-sm text-gray-700"><strong>SEI:</strong> ${contract.seiNumber}</p>
+                <p class="text-sm text-gray-700"><strong>Contrato:</strong> ${contract.contractNumber}</p>
+                <p class="text-sm text-gray-700"><strong>Objeto:</strong> ${contract.contractObject}</p>
+                <p class="text-sm text-gray-700"><strong>Motivo do Encerramento:</strong> ${contract.terminationReason || 'N/A'}</p>
+                <p class="text-sm text-gray-700"><strong>Encerrado em:</strong> ${formatDate(contract.terminatedAt?.toDate()) || 'N/A'}</p>
+            `;
+            return card;
+        }
+
+        // --- Reminder Management Logic ---
+        async function loadReminders() {
+            if (!db || !currentUserId || !isAuthReady) { // Check isAuthReady
+                console.log("Não foi possível carregar lembretes: DB, User ou Auth não estão prontos.");
+                return;
+            }
+
+            const remindersListDiv = document.getElementById('reminders-list');
+            const noRemindersMessage = document.getElementById('no-reminders-message');
+            remindersListDiv.innerHTML = '';
+
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/reminders`), (snapshot) => {
+                const reminders = [];
+                snapshot.forEach(doc => {
+                    reminders.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort reminders by due date (closest first)
+                reminders.sort((a, b) => parseDate(a.dueDate) - parseDate(b.dueDate));
+
+                remindersListDiv.innerHTML = ''; // Clear existing reminders
+                if (reminders.length === 0) {
+                    noRemindersMessage.classList.remove('hidden');
+                } else {
+                    noRemindersMessage.classList.add('hidden');
+                    reminders.forEach(reminder => {
+                        remindersListDiv.appendChild(createReminderCard(reminder));
+                    });
+                }
+                setAdminPermissions(); // Re-apply permissions after rendering
+            }, (error) => {
+                console.error("Erro ao carregar lembretes:", error);
+                showModal('message-modal', 'Erro', 'Erro ao carregar lembretes. Tente novamente.');
+            });
+        }
+
+        function createReminderCard(reminder) {
+            const card = document.createElement('div');
+            let bgColorClass = '';
+            let textColorClass = '';
+            switch (reminder.urgency) {
+                case 'red':
+                    bgColorClass = 'bg-red-100 border-red-300';
+                    textColorClass = 'text-red-800';
+                    break;
+                case 'yellow':
+                    bgColorClass = 'bg-yellow-100 border-yellow-300';
+                    textColorClass = 'text-yellow-800';
+                    break;
+                case 'green':
+                    bgColorClass = 'bg-green-100 border-green-300';
+                    textColorClass = 'text-green-800';
+                    break;
+            }
+
+            card.className = `p-4 border rounded-xl shadow-sm ${bgColorClass} ${textColorClass} flex justify-between items-center`;
+            card.innerHTML = `
+                <div>
+                    <p class="font-semibold">${reminder.text}</p>
+                    <p class="text-sm mt-1">Vencimento: ${formatDate(reminder.dueDate)}</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="edit-reminder-button py-1 px-3 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 hidden" data-id="${reminder.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-reminder-button py-1 px-3 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 hidden" data-id="${reminder.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            card.querySelector('.edit-reminder-button').addEventListener('click', () => editReminder(reminder.id));
+            card.querySelector('.delete-reminder-button').addEventListener('click', () => deleteReminder(reminder.id));
+            return card;
+        }
+
+        async function addOrUpdateReminder(event) {
+            event.preventDefault();
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para adicionar/editar lembretes.');
+                return;
+            }
+
+            const id = document.getElementById('reminder-id').value;
+            const text = document.getElementById('reminder-text').value;
+            const dueDate = document.getElementById('reminder-due-date').value;
+            const urgency = document.getElementById('reminder-urgency').value;
+
+            const reminderData = {
+                text,
+                dueDate,
+                urgency,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, `artifacts/${appId}/public/data/reminders`, id), reminderData);
+                    showModal('message-modal', 'Sucesso!', 'Lembrete atualizado com sucesso!');
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/reminders`), reminderData);
+                    showModal('message-modal', 'Sucesso!', 'Lembrete adicionado com sucesso!');
+                }
+                closeModal('reminder-form-modal');
+                document.getElementById('reminder-form').reset();
+            } catch (error) {
+                console.error("Erro ao salvar lembrete:", error);
+                showModal('message-modal', 'Erro', `Erro ao salvar lembrete: ${error.message}`);
+            }
+        }
+
+        async function editReminder(id) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para editar lembretes.');
+                return;
+            }
+            try {
+                const reminderDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/reminders`, id));
+                if (reminderDoc.exists()) {
+                    const reminder = reminderDoc.data();
+                    document.getElementById('reminder-form-title').textContent = 'Editar Lembrete';
+                    document.getElementById('reminder-id').value = id;
+                    document.getElementById('reminder-text').value = reminder.text;
+                    document.getElementById('reminder-due-date').value = reminder.dueDate;
+                    document.getElementById('reminder-urgency').value = reminder.urgency;
+                    showModal('reminder-form-modal');
+                } else {
+                    showModal('message-modal', 'Erro', 'Lembrete não encontrado.');
+                }
+            } catch (error) {
+                console.error("Erro ao carregar lembrete para edição:", error);
+                showModal('message-modal', 'Erro', `Erro ao carregar lembrete: ${error.message}`);
+            }
+        }
+
+        async function deleteReminder(id) {
+            if (!isAdmin) {
+                showModal('message-modal', 'Permissão Negada', 'Você não tem permissão para excluir lembretes.');
+                return;
+            }
+            // Custom confirmation modal
+            showModal('message-modal', 'Confirmação', 'Tem certeza que deseja excluir este lembrete?');
+            const modalActions = document.getElementById('message-modal').querySelector('.flex.justify-end');
+            modalActions.innerHTML = `
+                <button id="confirm-delete-button" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">Excluir</button>
+                <button onclick="closeModal('message-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 ml-3">Cancelar</button>
+            `;
+            document.getElementById('confirm-delete-button').onclick = async () => {
+                try {
+                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/reminders`, id));
+                    showModal('message-modal', 'Sucesso!', 'Lembrete excluído com sucesso!');
+                } catch (error) {
+                    console.error("Erro ao excluir lembrete:", error);
+                    showModal('message-modal', 'Erro', `Erro ao excluir lembrete: ${error.message}`);
+                }
+            };
+        }
+
+        // --- Search Functionality ---
+        function filterContracts() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const contractCards = document.querySelectorAll('.contract-card');
+
+            contractCards.forEach(card => {
+                // Get text content from relevant paragraphs/elements
+                const seiElement = card.querySelector('p:nth-child(3)');
+                const contractNumElement = card.querySelector('p:nth-child(4)');
+                const companyElement = card.querySelector('h3');
+                const objectElement = card.querySelector('p:nth-child(5)');
+
+                const sei = seiElement ? seiElement.textContent.toLowerCase() : '';
+                const contractNum = contractNumElement ? contractNumElement.textContent.toLowerCase() : '';
+                const company = companyElement ? companyElement.textContent.toLowerCase() : '';
+                const object = objectElement ? objectElement.textContent.toLowerCase() : '';
+
+                if (sei.includes(searchTerm) || contractNum.includes(searchTerm) || company.includes(searchTerm) || object.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial sign-in with custom token if available (no anonymous sign-in)
+            if (initialAuthToken && auth) {
+                signInWithCustomToken(auth, initialAuthToken)
+                    .then(() => console.log("Signed in with custom token."))
+                    .catch((error) => console.error("Error signing in with custom token:", error));
+            }
+            // Removed signInAnonymously call here as well
+
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            document.getElementById('show-register').addEventListener('click', (e) => { e.preventDefault(); showPage('register-page'); });
+            document.getElementById('show-login').addEventListener('click', (e) => { e.preventDefault(); showPage('login-page'); });
+            document.getElementById('logout-button').addEventListener('click', handleLogout);
+
+            // Contract Management Events
+            document.getElementById('add-contract-button').addEventListener('click', () => {
+                document.getElementById('contract-form-title').textContent = 'Adicionar Novo Contrato';
+                document.getElementById('contract-form').reset();
+                document.getElementById('contract-form').dataset.id = ''; // Clear ID for new contract
+                document.getElementById('max-contract-term').value = ''; // Clear max term
+                renderUnitsCheckboxes('units-checkbox-container'); // Render all units unchecked
+                showModal('contract-form-modal');
+            });
+            document.getElementById('contract-form').addEventListener('submit', addOrUpdateContract);
+            document.getElementById('initial-process-date').addEventListener('change', calculateMaxContractTerm);
+            document.getElementById('law-type').addEventListener('change', calculateMaxContractTerm);
+
+            // Renew Contract Events
+            document.getElementById('renew-form').addEventListener('submit', handleRenewContract);
+            document.getElementById('renew-next-validity-duration').addEventListener('input', calculateNextValidityDate);
+            document.getElementById('renew-current-validity-date').addEventListener('change', calculateNextValidityDate);
+
+            // Addendum Events
+            document.getElementById('addendum-type').addEventListener('change', (e) => {
+                const type = e.target.value;
+                document.getElementById('addendum-number-container').classList.remove('hidden');
+                document.getElementById('apostilamento-options').classList.add('hidden');
+                document.getElementById('aditivo-options').classList.add('hidden');
+                document.getElementById('apostilamento-others-description-container').classList.add('hidden');
+                document.getElementById('aditivo-value-change-container').classList.add('hidden');
+                document.getElementById('aditivo-units-container').classList.add('hidden');
+                document.getElementById('aditivo-others-description-container').classList.add('hidden');
+
+                if (type === 'apostilamento') {
+                    document.getElementById('apostilamento-options').classList.remove('hidden');
+                } else if (type === 'aditivo') {
+                    document.getElementById('aditivo-options').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('apostilamento-type').addEventListener('change', (e) => {
+                if (e.target.value === 'outros_apostilamento') {
+                    document.getElementById('apostilamento-others-description-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('apostilamento-others-description-container').classList.add('hidden');
+                }
+            });
+
+            document.getElementById('aditivo-type').addEventListener('change', (e) => {
+                const aditivoType = e.target.value;
+                document.getElementById('aditivo-value-change-container').classList.add('hidden');
+                document.getElementById('aditivo-units-container').classList.add('hidden');
+                document.getElementById('aditivo-others-description-container').classList.add('hidden');
+
+                if (aditivoType === 'supressao' || aditivoType === 'acrescimo') {
+                    document.getElementById('aditivo-value-change-container').classList.remove('hidden');
+                    document.getElementById('aditivo-units-container').classList.remove('hidden');
+                } else if (aditivoType === 'outros_aditivo') {
+                    document.getElementById('aditivo-others-description-container').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('addendum-form').addEventListener('submit', handleAddendum);
+
+            // Terminate Contract Events
+            document.getElementById('terminate-form').addEventListener('submit', handleTerminateContract);
+
+            // Reminder Management Events
+            document.getElementById('add-reminder-button').addEventListener('click', () => {
+                document.getElementById('reminder-form-title').textContent = 'Adicionar Lembrete';
+                document.getElementById('reminder-form').reset();
+                document.getElementById('reminder-id').value = ''; // Clear ID for new reminder
+                showModal('reminder-form-modal');
+            });
+            document.getElementById('reminder-form').addEventListener('submit', addOrUpdateReminder);
+
+            // Search Event
+            document.getElementById('search-input').addEventListener('input', filterContracts);
+
+            // Tab Navigation
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active-tab', 'border-blue-500', 'text-blue-600'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+                    e.target.classList.add('active-tab', 'border-blue-500', 'text-blue-600');
+                    const tabId = e.target.dataset.tab;
+                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+
+                    // Load data for the selected tab
+                    if (tabId === 'contracts') {
+                        loadContracts();
+                    } else if (tabId === 'reminders') {
+                        loadReminders();
+                    } else if (tabId === 'terminated-contracts') {
+                        loadTerminatedContracts();
+                    }
+                });
+            });
+        });
+
+        // Function to calculate max contract term based on law type
+        function calculateMaxContractTerm() {
+            const initialProcessDateInput = document.getElementById('initial-process-date');
+            const lawTypeSelect = document.getElementById('law-type');
+            const maxContractTermInput = document.getElementById('max-contract-term');
+
+            const initialDateStr = initialProcessDateInput.value;
+            const lawType = lawTypeSelect.value;
+
+            if (initialDateStr && lawType) {
+                const initialDate = new Date(initialDateStr + 'T00:00:00'); // Ensure UTC for consistent calculation
+                let maxMonths = 0;
+
+                if (lawType === '8666') {
+                    maxMonths = 60; // 60 months for Lei 8666
+                } else if (lawType === 'nova') {
+                    maxMonths = 120; // 10 years = 120 months for Lei Nova
+                }
+
+                const maxTermDate = new Date(initialDate);
+                maxTermDate.setMonth(maxTermDate.getMonth() + maxMonths);
+                maxContractTermInput.value = formatDate(maxTermDate);
+            } else {
+                maxContractTermInput.value = '';
+            }
+        }
+    </script>
 </body>
 </html>
