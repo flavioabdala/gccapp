@@ -3,913 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gest„o de Contratos e Lembretes</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Estilos personalizados para a fonte Inter */
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* AnimaÁ„o de piscar para contratos vencendo */
-        @keyframes pulse-red {
-            0%, 100% { border-color: #ef4444; } /* red-500 */
-            50% { border-color: #f87171; } /* red-400 */
-        }
-        .animate-pulse-red {
-            animation: pulse-red 1.5s infinite;
-        }
-
-        /* Estilos para o modal de alerta e confirmaÁ„o */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
-        }
-
-        .modal-buttons {
-            margin-top: 1.5rem;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Custom scrollbar for webkit browsers */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-    </style>
-    <!-- Importa os mÛdulos necess·rios do Firebase a partir de CDNs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDoc, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // SUAS CREDENCIAIS FIREBASE - COPIADAS DIRETAMENTE DO SEU CONSOLE FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw",
-            authDomain: "gcc-contratos.firebaseapp.com",
-            projectId: "gcc-contratos",
-            storageBucket: "gcc-contratos.firebasestorage.app",
-            messagingSenderId: "405415511927",
-            appId: "1:405415511927:web:4612190119302726820372",
-            measurementId: "G-T1T4N9WD5T" // Este È para Analytics, n„o È usado no app mas mantido se vocÍ o usa
-        };
-
-        // Inicialize o Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const contractsCollection = collection(db, 'contracts');
-        const remindersCollection = collection(db, 'reminders');
-        const usersCollection = collection(db, 'users'); // ColeÁ„o para dados adicionais de usu·rios
-
-        // Vari·veis globais
-        let isLoggedIn = false;
-        let userId = '';
-        let userEmail = '';
-        let isAdmin = false;
-        // SUBSTITUA ESTE UID PELO UID DA SUA CONTA DE ADMINISTRADOR NO FIREBASE
-        // VocÍ pode encontrar seu UID no Console do Firebase > Authentication > Users
-        const ADMIN_UID = 'txHwdn3rwubSff4PvekjO4PM7wb2';
-
-        let contractsData = [];
-        let remindersData = [];
-        let currentEditingContractId = null;
-        let currentEditingReminderId = null;
-        let contractsUnsubscribe = null;
-        let remindersUnsubscribe = null;
-
-        // Elementos DOM
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const customAlertModal = document.getElementById('customAlertModal');
-        const customAlertMessage = document.getElementById('customAlertMessage');
-        const customAlertOkButton = document.getElementById('customAlertOkButton');
-        const customConfirmModal = document.getElementById('customConfirmModal');
-        const customConfirmMessage = document.getElementById('customConfirmMessage');
-        const customConfirmOkButton = document.getElementById('customConfirmOkButton');
-        const customConfirmCancelButton = document.getElementById('customConfirmCancelButton');
-
-        const authScreen = document.getElementById('auth-screen');
-        const mainAppContent = document.getElementById('main-app-content');
-        const authModeTitle = document.getElementById('auth-mode-title');
-        const authEmailInput = document.getElementById('auth-email');
-        const authPasswordInput = document.getElementById('auth-password');
-        const authButton = document.getElementById('auth-button');
-        const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
-        const logoutButton = document.getElementById('logout-button');
-
-        const userEmailDisplay = document.getElementById('user-email-display');
-        const userRoleDisplay = document.getElementById('user-role-display');
-        const userIdDisplay = document.getElementById('user-id-display');
-        const contractsNavBtn = document.getElementById('contracts-nav-btn');
-        const remindersNavBtn = document.getElementById('reminders-nav-btn');
-        const contractsSection = document.getElementById('contracts-section');
-        const remindersSection = document.getElementById('reminders-section');
-        const globalAlerts = document.getElementById('global-alerts');
-        const globalAlertList = document.getElementById('global-alert-list');
-
-        // Campos de registro adicionais
-        const registerFields = document.getElementById('register-fields');
-        const authFullNameInput = document.getElementById('auth-fullName');
-        const authCpfInput = document.getElementById('auth-cpf');
-        const authPhoneInput = document.getElementById('auth-phone');
-        const authAddressInput = document.getElementById('auth-address'); // NOVO CAMPO: EndereÁo
-        const authConfirmPasswordInput = document.getElementById('auth-confirmPassword');
-
-        // Contract Elements
-        const contractForm = document.getElementById('contract-form');
-        const contractClientInput = document.getElementById('contract-client');
-        const contractTypeInput = document.getElementById('contract-type');
-        const contractSeiProcessInput = document.getElementById('contract-sei-process');
-        const contractStartDateInput = document.getElementById('contract-start-date');
-        const contractEndDateInput = document.getElementById('contract-end-date');
-        const contractValueInput = document.getElementById('contract-value');
-        const contractNotesInput = document.getElementById('contract-notes');
-        const contractSubmitBtn = document.getElementById('contract-submit-btn');
-        const contractCancelEditBtn = document.getElementById('contract-cancel-edit-btn');
-        const contractsTableBody = document.getElementById('contracts-table-body');
-        const contractsSearchInput = document.getElementById('contracts-search');
-        const contractsSortSelect = document.getElementById('contracts-sort');
-        const noContractsMessage = document.getElementById('no-contracts-message');
-
-        // Reminder Elements
-        const reminderForm = document.getElementById('reminder-form');
-        const reminderTitleInput = document.getElementById('reminder-title');
-        const reminderDateInput = document.getElementById('reminder-date');
-        const reminderNotesInput = document.getElementById('reminder-notes');
-        const reminderSubmitBtn = document.getElementById('reminder-submit-btn');
-        const reminderCancelEditBtn = document.getElementById('reminder-cancel-edit-btn');
-        const remindersTableBody = document.getElementById('reminders-table-body');
-        const remindersSearchInput = document.getElementById('reminders-search');
-        const remindersSortSelect = document.getElementById('reminders-sort');
-        const noRemindersMessage = document.getElementById('no-reminders-message');
-
-        // FunÁıes de Utilit·rio
-        function showLoading() {
-            loadingOverlay.classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            loadingOverlay.classList.add('hidden');
-        }
-
-        function displayAlert(messages) {
-            customAlertMessage.innerHTML = messages.map(msg => `<li>${msg}</li>`).join('');
-            customAlertModal.classList.remove('hidden');
-            return new Promise(resolve => {
-                customAlertOkButton.onclick = () => {
-                    customAlertModal.classList.add('hidden');
-                    resolve(true);
-                };
-            });
-        }
-
-        function displayConfirm(message) {
-            customConfirmMessage.textContent = message;
-            customConfirmModal.classList.remove('hidden');
-            return new Promise(resolve => {
-                customConfirmOkButton.onclick = () => {
-                    customConfirmModal.classList.add('hidden');
-                    resolve(true);
-                };
-                customConfirmCancelButton.onclick = () => {
-                    customConfirmModal.classList.add('hidden');
-                    resolve(false);
-                };
-            });
-        }
-
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-            return new Date(dateString).toLocaleDateString('pt-BR', options);
-        }
-
-        function calculateDaysRemaining(endDate) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
-            const end = new Date(endDate);
-            end.setHours(0, 0, 0, 0); // Reset time for accurate comparison
-            const diffTime = end.getTime() - today.getTime();
-            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        }
-
-        function setPage(page) {
-            contractsSection.classList.add('hidden');
-            remindersSection.classList.add('hidden');
-            contractsNavBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-            remindersNavBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-            contractsNavBtn.classList.add('bg-gray-700', 'hover:bg-gray-600');
-            remindersNavBtn.classList.add('bg-gray-700', 'hover:bg-gray-600');
-
-            if (page === 'list') {
-                contractsSection.classList.remove('hidden');
-                contractsNavBtn.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                contractsNavBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
-            } else if (page === 'reminders') {
-                remindersSection.classList.remove('hidden');
-                remindersNavBtn.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                remindersNavBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
-            }
-        }
-
-        const colorPalette = [
-            '#FFCCBC', // Light Orange
-            '#D1C4E9', // Light Purple
-            '#C8E6C9', // Light Green
-            '#BBDEFB', // Light Blue
-            '#FFECB3', // Light Yellow
-            '#F8BBD0', // Light Pink
-            '#B2EBF2', // Light Cyan
-            '#E1BEE7'  // Light Magenta
-        ];
-
-        function processColors(processNumber) {
-            if (!processNumber) return '#FFFFFF'; // Default white if no process number
-            let hash = 0;
-            for (let i = 0; i < processNumber.length; i++) {
-                hash = processNumber.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const index = Math.abs(hash % colorPalette.length);
-            return colorPalette[index];
-        }
-
-        function updateGlobalAlerts(data, type) {
-            let alerts = [];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (type === 'contract') {
-                alerts = data.filter(item => {
-                    const daysRemaining = calculateDaysRemaining(item.endDate);
-                    return daysRemaining <= 30 && daysRemaining >= 0;
-                }).map(item => `Contrato com ${item.client} (${item.type}) vence em ${formatDate(item.endDate)} (Faltam ${calculateDaysRemaining(item.endDate)} dias).`);
-            } else if (type === 'reminder') {
-                alerts = data.filter(item => {
-                    const reminderDate = new Date(item.date);
-                    reminderDate.setHours(0, 0, 0, 0);
-                    return reminderDate.getTime() >= today.getTime(); // Future or today reminders
-                }).sort((a, b) => new Date(a.date) - new Date(b.date))
-                  .map(item => `Lembrete: ${item.title} em ${formatDate(item.date)}.`);
-            }
-
-            // Combine all active alerts
-            const currentContractAlerts = globalAlertList.querySelectorAll('[data-type="contract-alert"]');
-            const currentReminderAlerts = globalAlertList.querySelectorAll('[data-type="reminder-alert"]');
-
-            // Clear previous alerts of the same type
-            currentContractAlerts.forEach(el => el.remove());
-            currentReminderAlerts.forEach(el => el.remove());
-
-            // Add new alerts
-            if (type === 'contract') {
-                alerts.forEach(alert => {
-                    const li = document.createElement('li');
-                    li.textContent = alert;
-                    li.setAttribute('data-type', 'contract-alert');
-                    globalAlertList.appendChild(li);
-                });
-            } else if (type === 'reminder') {
-                alerts.forEach(alert => {
-                    const li = document.createElement('li');
-                    li.textContent = alert;
-                    li.setAttribute('data-type', 'reminder-alert');
-                    globalAlertList.appendChild(li);
-                });
-            }
-
-            const totalAlerts = globalAlertList.children.length;
-            if (totalAlerts > 0) {
-                globalAlerts.classList.remove('hidden');
-            } else {
-                globalAlerts.classList.add('hidden');
-            }
-        }
-
-
-        // FunÁıes de Contratos
-        async function saveContract(event) {
-            event.preventDefault();
-            showLoading();
-
-            const contract = {
-                client: contractClientInput.value,
-                type: contractTypeInput.value,
-                seiProcess: contractSeiProcessInput.value,
-                startDate: contractStartDateInput.value,
-                endDate: contractEndDateInput.value,
-                value: parseFloat(contractValueInput.value),
-                notes: contractNotesInput.value,
-                userId: userId, // Associate contract with the logged-in user
-                createdAt: currentEditingContractId ? contractsData.find(c => c.id === currentEditingContractId).createdAt : serverTimestamp(),
-                updatedAt: serverTimestamp()
-            };
-
-            try {
-                if (currentEditingContractId) {
-                    await updateDoc(doc(db, 'contracts', currentEditingContractId), contract);
-                    displayAlert(["Contrato atualizado com sucesso!"]);
-                } else {
-                    await addDoc(contractsCollection, contract);
-                    displayAlert(["Contrato adicionado com sucesso!"]);
-                }
-                resetContractForm();
-            } catch (e) {
-                console.error("Erro ao salvar contrato: ", e);
-                displayAlert(["Erro ao salvar contrato. Tente novamente."]);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function renderContracts(contracts) {
-            contractsTableBody.innerHTML = '';
-            noContractsMessage.classList.add('hidden');
-
-            if (contracts.length === 0) {
-                noContractsMessage.classList.remove('hidden');
-                return;
-            }
-
-            contracts.forEach(contract => {
-                const row = document.createElement('tr');
-                row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
-
-                const daysRemaining = calculateDaysRemaining(contract.endDate);
-                if (daysRemaining <= 30 && daysRemaining >= 0) {
-                    row.classList.add('bg-yellow-100', 'animate-pulse-red');
-                } else if (daysRemaining < 0) {
-                    row.classList.add('bg-red-100');
-                }
-
-                // Add background color based on seiProcess
-                row.style.backgroundColor = processColors(contract.seiProcess);
-
-
-                row.innerHTML = `
-                    <td class="py-3 px-6 text-left whitespace-nowrap">${contract.client}</td>
-                    <td class="py-3 px-6 text-left">${contract.type}</td>
-                    <td class="py-3 px-6 text-left">${contract.seiProcess || '-'}</td>
-                    <td class="py-3 px-6 text-left">${formatDate(contract.startDate)}</td>
-                    <td class="py-3 px-6 text-left">${formatDate(contract.endDate)}</td>
-                    <td class="py-3 px-6 text-left">R$ ${contract.value.toFixed(2)}</td>
-                    <td class="py-3 px-6 text-left">${contract.notes || '-'}</td>
-                    <td class="py-3 px-6 text-center whitespace-nowrap">
-                        <button class="edit-contract-btn bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded text-xs mr-2" data-id="${contract.id}">Editar</button>
-                        <button class="delete-contract-btn bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs" data-id="${contract.id}">Excluir</button>
-                        <button class="renew-contract-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs mt-1 md:mt-0" data-id="${contract.id}">Renovar</button>
-                    </td>
-                `;
-                contractsTableBody.appendChild(row);
-            });
-
-            // Adiciona listeners para os botıes de editar e excluir
-            document.querySelectorAll('.edit-contract-btn').forEach(button => {
-                button.addEventListener('click', editContract);
-            });
-            document.querySelectorAll('.delete-contract-btn').forEach(button => {
-                button.addEventListener('click', deleteContract);
-            });
-            document.querySelectorAll('.renew-contract-btn').forEach(button => {
-                button.addEventListener('click', renewContract);
-            });
-        }
-
-        function resetContractForm() {
-            contractForm.reset();
-            contractSubmitBtn.textContent = 'Adicionar Contrato';
-            contractCancelEditBtn.classList.add('hidden');
-            currentEditingContractId = null;
-        }
-
-        function editContract(event) {
-            const id = event.target.dataset.id;
-            const contract = contractsData.find(c => c.id === id);
-
-            if (contract) {
-                contractClientInput.value = contract.client;
-                contractTypeInput.value = contract.type;
-                contractSeiProcessInput.value = contract.seiProcess;
-                contractStartDateInput.value = contract.startDate;
-                contractEndDateInput.value = contract.endDate;
-                contractValueInput.value = contract.value;
-                contractNotesInput.value = contract.notes;
-
-                contractSubmitBtn.textContent = 'Atualizar Contrato';
-                contractCancelEditBtn.classList.remove('hidden');
-                currentEditingContractId = id;
-
-                // Scroll to form
-                contractForm.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        async function deleteContract(event) {
-            if (!isAdmin) {
-                displayAlert(["Apenas administradores podem excluir contratos."]);
-                return;
-            }
-            const id = event.target.dataset.id;
-            const confirm = await displayConfirm("Tem certeza que deseja excluir este contrato?");
-            if (confirm) {
-                showLoading();
-                try {
-                    await deleteDoc(doc(db, 'contracts', id));
-                    displayAlert(["Contrato excluÌdo com sucesso!"]);
-                } catch (e) {
-                    console.error("Erro ao excluir contrato: ", e);
-                    displayAlert(["Erro ao excluir contrato. Tente novamente."]);
-                } finally {
-                    hideLoading();
-                }
-            }
-        }
-
-        async function renewContract(event) {
-            if (!isAdmin) {
-                displayAlert(["Apenas administradores podem renovar contratos."]);
-                return;
-            }
-            const id = event.target.dataset.id;
-            const contract = contractsData.find(c => c.id === id);
-
-            if (contract) {
-                const confirm = await displayConfirm(`Tem certeza que deseja renovar o contrato com ${contract.client} (${contract.type})? A data de tÈrmino ser· estendida por 1 ano.`);
-                if (confirm) {
-                    showLoading();
-                    try {
-                        const oldEndDate = new Date(contract.endDate);
-                        oldEndDate.setFullYear(oldEndDate.getFullYear() + 1);
-                        const newEndDate = oldEndDate.toISOString().split('T')[0]; // Format to YYYY-MM-DD
-
-                        await updateDoc(doc(db, 'contracts', id), {
-                            endDate: newEndDate,
-                            updatedAt: serverTimestamp()
-                        });
-                        displayAlert(["Contrato renovado com sucesso!"]);
-                    } catch (e) {
-                        console.error("Erro ao renovar contrato: ", e);
-                        displayAlert(["Erro ao renovar contrato. Tente novamente."]);
-                    } finally {
-                        hideLoading();
-                    }
-                }
-            }
-        }
-
-        function filterAndSortContracts() {
-            let filteredContracts = contractsData.filter(contract => {
-                const searchTerm = contractsSearchInput.value.toLowerCase();
-                return contract.client.toLowerCase().includes(searchTerm) ||
-                       contract.type.toLowerCase().includes(searchTerm) ||
-                       (contract.seiProcess && contract.seiProcess.toLowerCase().includes(searchTerm)) ||
-                       contract.notes.toLowerCase().includes(searchTerm);
-            });
-
-            const sortOption = contractsSortSelect.value;
-            filteredContracts.sort((a, b) => {
-                if (sortOption === 'endDateAsc') {
-                    return new Date(a.endDate) - new Date(b.endDate);
-                } else if (sortOption === 'endDateDesc') {
-                    return new Date(b.endDate) - new Date(a.endDate);
-                } else if (sortOption === 'clientAsc') {
-                    return a.client.localeCompare(b.client);
-                } else if (sortOption === 'clientDesc') {
-                    return b.client.localeCompare(a.client);
-                } else if (sortOption === 'seiProcessAsc') {
-                    return (a.seiProcess || '').localeCompare(b.seiProcess || '');
-                } else if (sortOption === 'seiProcessDesc') {
-                    return (b.seiProcess || '').localeCompare(a.seiProcess || '');
-                }
-                return 0;
-            });
-            renderContracts(filteredContracts);
-        }
-
-        // FunÁıes de Lembretes
-        async function saveReminder(event) {
-            event.preventDefault();
-            showLoading();
-
-            const reminder = {
-                title: reminderTitleInput.value,
-                date: reminderDateInput.value,
-                notes: reminderNotesInput.value,
-                userId: userId, // Associate reminder with the logged-in user
-                createdAt: currentEditingReminderId ? remindersData.find(r => r.id === currentEditingReminderId).createdAt : serverTimestamp(),
-                updatedAt: serverTimestamp()
-            };
-
-            try {
-                if (currentEditingReminderId) {
-                    await updateDoc(doc(db, 'reminders', currentEditingReminderId), reminder);
-                    displayAlert(["Lembrete atualizado com sucesso!"]);
-                } else {
-                    await addDoc(remindersCollection, reminder);
-                    displayAlert(["Lembrete adicionado com sucesso!"]);
-                }
-                resetReminderForm();
-            } catch (e) {
-                console.error("Erro ao salvar lembrete: ", e);
-                displayAlert(["Erro ao salvar lembrete. Tente novamente."]);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function renderReminders(reminders) {
-            remindersTableBody.innerHTML = '';
-            noRemindersMessage.classList.add('hidden');
-
-            if (reminders.length === 0) {
-                noRemindersMessage.classList.remove('hidden');
-                return;
-            }
-
-            reminders.forEach(reminder => {
-                const row = document.createElement('tr');
-                row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
-
-                const reminderDate = new Date(reminder.date);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
-
-                if (reminderDate.getTime() < today.getTime()) {
-                    row.classList.add('bg-gray-100', 'text-gray-400'); // Lembretes passados
-                } else if (reminderDate.toDateString() === today.toDateString()) {
-                    row.classList.add('bg-blue-100'); // Lembretes para hoje
-                }
-
-                row.innerHTML = `
-                    <td class="py-3 px-6 text-left whitespace-nowrap">${reminder.title}</td>
-                    <td class="py-3 px-6 text-left">${formatDate(reminder.date)}</td>
-                    <td class="py-3 px-6 text-left">${reminder.notes || '-'}</td>
-                    <td class="py-3 px-6 text-center whitespace-nowrap">
-                        <button class="edit-reminder-btn bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded text-xs mr-2" data-id="${reminder.id}">Editar</button>
-                        <button class="delete-reminder-btn bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs" data-id="${reminder.id}">Excluir</button>
-                    </td>
-                `;
-                remindersTableBody.appendChild(row);
-            });
-
-            // Adiciona listeners para os botıes de editar e excluir
-            document.querySelectorAll('.edit-reminder-btn').forEach(button => {
-                button.addEventListener('click', editReminder);
-            });
-            document.querySelectorAll('.delete-reminder-btn').forEach(button => {
-                button.addEventListener('click', deleteReminder);
-            });
-        }
-
-        function resetReminderForm() {
-            reminderForm.reset();
-            reminderSubmitBtn.textContent = 'Adicionar Lembrete';
-            reminderCancelEditBtn.classList.add('hidden');
-            currentEditingReminderId = null;
-        }
-
-        function editReminder(event) {
-            const id = event.target.dataset.id;
-            const reminder = remindersData.find(r => r.id === id);
-
-            if (reminder) {
-                reminderTitleInput.value = reminder.title;
-                reminderDateInput.value = reminder.date;
-                reminderNotesInput.value = reminder.notes;
-
-                reminderSubmitBtn.textContent = 'Atualizar Lembrete';
-                reminderCancelEditBtn.classList.remove('hidden');
-                currentEditingReminderId = id;
-
-                // Scroll to form
-                reminderForm.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        async function deleteReminder(event) {
-            const id = event.target.dataset.id;
-            const confirm = await displayConfirm("Tem certeza que deseja excluir este lembrete?");
-            if (confirm) {
-                showLoading();
-                try {
-                    await deleteDoc(doc(db, 'reminders', id));
-                    displayAlert(["Lembrete excluÌdo com sucesso!"]);
-                } catch (e) {
-                    console.error("Erro ao excluir lembrete: ", e);
-                    displayAlert(["Erro ao excluir lembrete. Tente novamente."]);
-                } finally {
-                    hideLoading();
-                }
-            }
-        }
-
-        function filterAndSortReminders() {
-            let filteredReminders = remindersData.filter(reminder => {
-                const searchTerm = remindersSearchInput.value.toLowerCase();
-                return reminder.title.toLowerCase().includes(searchTerm) ||
-                       reminder.notes.toLowerCase().includes(searchTerm);
-            });
-
-            const sortOption = remindersSortSelect.value;
-            filteredReminders.sort((a, b) => {
-                if (sortOption === 'dateAsc') {
-                    return new Date(a.date) - new Date(b.date);
-                } else if (sortOption === 'dateDesc') {
-                    return new Date(b.date) - new Date(a.date);
-                } else if (sortOption === 'titleAsc') {
-                    return a.title.localeCompare(b.title);
-                } else if (sortOption === 'titleDesc') {
-                    return b.title.localeCompare(a.title);
-                }
-                return 0;
-            });
-            renderReminders(filteredReminders);
-        }
-
-        // ConfiguraÁ„o de Listeners Firebase
-        function setupFirebaseListeners() {
-            if (contractsUnsubscribe) {
-                contractsUnsubscribe();
-            }
-            if (remindersUnsubscribe) {
-                remindersUnsubscribe();
-            }
-
-            // Listen for contracts
-            const qContracts = query(contractsCollection, where('userId', '==', userId), orderBy('endDate', 'asc'));
-            contractsUnsubscribe = onSnapshot(qContracts, snapshot => {
-                contractsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                filterAndSortContracts(); // Render with current filters/sort
-                updateGlobalAlerts(contractsData, 'contract');
-            }, error => {
-                console.error("Erro ao buscar contratos: ", error);
-                displayAlert(["Erro ao carregar contratos."]);
-            });
-
-            // Listen for reminders
-            const qReminders = query(remindersCollection, where('userId', '==', userId), orderBy('date', 'asc'));
-            remindersUnsubscribe = onSnapshot(qReminders, snapshot => {
-                remindersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                filterAndSortReminders(); // Render with current filters/sort
-                updateGlobalAlerts(remindersData, 'reminder');
-            }, error => {
-                console.error("Erro ao buscar lembretes: ", error);
-                displayAlert(["Erro ao carregar lembretes."]);
-            });
-        }
-
-        // AutenticaÁ„o
-        let isAuthRegistering = false; // false for login, true for register
-
-        async function handleAuthAction() {
-            const email = authEmailInput.value.trim();
-            const password = authPasswordInput.value.trim();
-            const fullName = authFullNameInput.value.trim();
-            const cpf = authCpfInput.value.trim();
-            const phone = authPhoneInput.value.trim();
-            const address = authAddressInput.value.trim(); // NOVO CAMPO: EndereÁo
-            const confirmPassword = authConfirmPasswordInput.value.trim();
-
-            if (!email || !password) {
-                displayAlert(['Por favor, preencha o E-mail e a Palavra-passe.']);
-                return;
-            }
-
-            showLoading();
-            try {
-                let userCredential;
-                if (isAuthRegistering) {
-                    if (!fullName || !phone || !address) { // ValidaÁ„o de endereÁo adicionada
-                        displayAlert(['Por favor, preencha o Nome Completo, Telefone e EndereÁo para registo.']);
-                        hideLoading();
-                        return;
-                    }
-                    if (password !== confirmPassword) {
-                        displayAlert(['As palavras-passe n„o coincidem. Por favor, digite a mesma palavra-passe em ambos os campos.']);
-                        hideLoading();
-                        return;
-                    }
-
-                    try {
-                        userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                        // Salva dados adicionais do usu·rio no Firestore
-                        await setDoc(doc(db, 'users', userCredential.user.uid), {
-                            name: fullName,
-                            email: email,
-                            cpf: cpf,
-                            phone: phone,
-                            address: address, // Salva o novo campo de endereÁo
-                            createdAt: serverTimestamp(),
-                            isAdmin: false // Novas contas n„o s„o administradores por padr„o
-                        });
-                        displayAlert(['Conta registrada com sucesso! VocÍ pode agora iniciar sess„o.']);
-                        // Alternar de volta para o modo de login apÛs o registro bem-sucedido
-                        isAuthRegistering = false;
-                        updateAuthUI();
-                    } catch (authError) {
-                        let errorMessage = "Erro ao registar conta. Tente novamente.";
-                        if (authError.code === 'auth/email-already-in-use') {
-                            errorMessage = "Este email j· est· em uso.";
-                        } else if (authError.code === 'auth/weak-password') {
-                            errorMessage = "A palavra-passe deve ter pelo menos 6 caracteres.";
-                        } else if (authError.code === 'auth/invalid-email') {
-                            errorMessage = "EndereÁo de email inv·lido.";
-                        }
-                        displayAlert([errorMessage]);
-                    }
-                } else { // Login mode
-                    try {
-                        userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    } catch (authError) {
-                        let errorMessage = "Erro de autenticaÁ„o. Tente novamente.";
-                        if (authError.code === 'auth/invalid-email' || authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
-                            errorMessage = "E-mail ou palavra-passe incorretos.";
-                        } else if (authError.code === 'auth/user-disabled') {
-                            errorMessage = "Esta conta de usu·rio foi desativada.";
-                        }
-                        displayAlert([errorMessage]);
-                    }
-                }
-            } catch (error) {
-                console.error("Erro geral de autenticaÁ„o:", error);
-                displayAlert(["Ocorreu um erro inesperado. Tente novamente."]);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function updateAuthUI() {
-            if (isAuthRegistering) {
-                authModeTitle.textContent = 'Registrar';
-                authButton.textContent = 'Registrar';
-                toggleAuthModeButton.textContent = 'J· tenho uma conta';
-                registerFields.classList.remove('hidden');
-                authConfirmPasswordInput.setAttribute('required', 'true');
-                authFullNameInput.setAttribute('required', 'true');
-                authPhoneInput.setAttribute('required', 'true');
-                authAddressInput.setAttribute('required', 'true'); // Define endereÁo como obrigatÛrio
-            } else {
-                authModeTitle.textContent = 'Gest„o de Contratos'; // Volta para o tÌtulo da tela de login
-                authButton.textContent = 'Entrar';
-                toggleAuthModeButton.textContent = 'Criar uma conta';
-                registerFields.classList.add('hidden');
-                authConfirmPasswordInput.removeAttribute('required');
-                authFullNameInput.removeAttribute('required');
-                authPhoneInput.removeAttribute('required');
-                authAddressInput.removeAttribute('required'); // Remove obrigatÛrio
-            }
-            // Limpa os campos quando o modo muda
-            authEmailInput.value = '';
-            authPasswordInput.value = '';
-            authFullNameInput.value = '';
-            authCpfInput.value = '';
-            authPhoneInput.value = '';
-            authAddressInput.value = ''; // Limpa o novo campo de endereÁo
-            authConfirmPasswordInput.value = '';
-        }
-
-        function toggleAuthMode() {
-            isAuthRegistering = !isAuthRegistering;
-            updateAuthUI();
-        }
-
-        async function handleLogout() {
-            const confirm = await displayConfirm("Tem certeza que deseja sair?");
-            if (confirm) {
-                showLoading();
-                try {
-                    await signOut(auth);
-                    displayAlert(["VocÍ foi desconectado."]);
-                } catch (error) {
-                    console.error("Erro ao sair:", error);
-                    displayAlert(["Erro ao fazer logout. Tente novamente."]);
-                } finally {
-                    hideLoading();
-                }
-            }
-        }
-
-        // Event Listeners
-        authButton.addEventListener('click', handleAuthAction);
-        toggleAuthModeButton.addEventListener('click', toggleAuthMode);
-        logoutButton.addEventListener('click', handleLogout);
-
-        contractsNavBtn.addEventListener('click', () => setPage('list'));
-        remindersNavBtn.addEventListener('click', () => setPage('reminders'));
-
-        contractForm.addEventListener('submit', saveContract);
-        contractCancelEditBtn.addEventListener('click', resetContractForm);
-        contractsSearchInput.addEventListener('input', filterAndSortContracts);
-        contractsSortSelect.addEventListener('change', filterAndSortContracts);
-
-        reminderForm.addEventListener('submit', saveReminder);
-        reminderCancelEditBtn.addEventListener('click', resetReminderForm);
-        remindersSearchInput.addEventListener('input', filterAndSortReminders);
-        remindersSortSelect.addEventListener('change', filterAndSortReminders);
-
-        // InicializaÁ„o do aplicativo
-        window.onload = () => {
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    // Tenta buscar os dados adicionais do usu·rio
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-
-                    if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data();
-                        isLoggedIn = true;
-                        userId = user.uid;
-                        userEmail = user.email;
-                        isAdmin = (user.uid === ADMIN_UID || (userData && userData.isAdmin === true)); // Verifica se o usu·rio È admin via UID ou dado no Firestore
-
-                        userEmailDisplay.textContent = userEmail;
-                        userRoleDisplay.textContent = isAdmin ? 'Administrador' : 'Visualizador';
-                        userIdDisplay.textContent = userId;
-
-                        authScreen.classList.add('hidden');
-                        mainAppContent.classList.remove('hidden');
-                        setPage('list'); // Default to contracts list after login
-                        setupFirebaseListeners(); // Start listening for data
-                    } else {
-                        // Caso o documento do usu·rio n„o exista no Firestore (ex: usu·rio antigo ou erro no registro)
-                        // Poderia forÁar o logout ou redirecionar para a tela de preenchimento de perfil.
-                        // Por enquanto, apenas desloga para evitar estado inconsistente.
-                        console.warn("Documento de usu·rio n„o encontrado no Firestore para UID:", user.uid);
-                        signOut(auth); // ForÁa o logout se o perfil no Firestore n„o for encontrado
-                    }
-                } else {
-                    isLoggedIn = false;
-                    userId = '';
-                    userEmail = '';
-                    isAdmin = false;
-                    authScreen.classList.remove('hidden');
-                    mainAppContent.classList.add('hidden');
-                    // Clear any existing data if user logs out
-                    contractsData = [];
-                    remindersData = [];
-                    renderContracts([]);
-                    renderReminders([]);
-                    updateGlobalAlerts([], 'contract');
-                    updateGlobalAlerts([], 'reminder');
-                }
-                hideLoading();
-            });
-        };
-    </script>
+    <title>Gest√£o de Contratos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Gest√£o de Contratos</h1>
+        <button id="btnLogout">Sair</button>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-button active" data-tab="contratos">Contratos</button>
+        <button class="tab-button" data-tab="lembretes">Lembretes</button>
+        <button class="tab-button" data-tab="processos-encerrados">Processos Encerrados</button>
+    </nav>
+
+    <main>
+        <section id="contratos" class="tab-content active">
+            <h2>Lista de Contratos</h2>
+            <div class="search-bar">
+                <input type="text" id="contractSearchInput" placeholder="Buscar contrato (Processo SEI, N√∫mero, Empresa, Objeto...)">
+            </div>
+            <button id="btnAddContract" class="admin-only">Adicionar Novo Contrato</button>
+            <div id="contractsList" class="contracts-grid">
+                </div>
+        </section>
+
+        <section id="lembretes" class="tab-content">
+            <h2>Lembretes</h2>
+            <div id="remindersList">
+                </div>
+            <button id="btnAddReminder" class="admin-only">Adicionar Lembrete</button>
+        </section>
+
+        <section id="processos-encerrados" class="tab-content">
+            <h2>Processos Encerrados</h2>
+            <div id="endedContractsList" class="contracts-grid">
+                </div>
+        </section>
+    </main>
+
+    <div id="contractModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar/Editar Contrato</h2>
+            <form id="contractForm">
+                <label for="processoSei">Processo SEI:</label>
+                <input type="text" id="processoSei" required>
+                
+                <label for="numeroContrato">N√∫mero do Contrato:</label>
+                <input type="text" id="numeroContrato" required>
+                
+                <label for="nomeEmpresa">Nome da Empresa:</label>
+                <input type="text" id="nomeEmpresa" required>
+                
+                <label for="objeto">Objeto:</label>
+                <textarea id="objeto" required></textarea>
+                
+                <label for="dataInicialProcesso">Data Inicial do Processo:</label>
+                <input type="date" id="dataInicialProcesso" required>
+                
+                <label for="tipoLei">Tipo de Lei (para prazo m√°ximo):</label>
+                <select id="tipoLei">
+                    <option value="8666">Lei 8666 (60 meses)</option>
+                    <option value="nova">Lei Nova (10 anos)</option>
+                </select>
+                <p>Prazo M√°ximo do Contrato: <span id="prazoMaximoDisplay"></span></p>
+
+                <label for="vigenciaAtual">Vig√™ncia Atual (Vencimento):</label>
+                <input type="date" id="vigenciaAtual" required>
+                
+                <label for="numeroRenovacao">N√∫mero da Renova√ß√£o:</label>
+                <input type="number" id="numeroRenovacao" value="1" min="1" required>
+                
+                <label for="valorAtualizado">Valor Atualizado:</label>
+                <input type="number" id="valorAtualizado" step="0.01" required>
+                
+                <label>Unidades Participantes:</label>
+                <div id="unidadesParticipantes" class="checkbox-group">
+                    </div>
+
+                <button type="submit">Salvar Contrato</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="movimentacaoSelectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Escolha a Movimenta√ß√£o</h2>
+            <div class="movimentacao-options">
+                <button id="btnSelectAditivo" class="movimentacao-option-button">Aditivo</button>
+                <button id="btnSelectApostilamento" class="movimentacao-option-button">Apostilamento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="aditivoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar Aditivo</h2>
+            <form id="aditivoForm">
+                <label for="aditivoTipo">Tipo de Aditivo:</label>
+                <select id="aditivoTipo" required>
+                    <option value="">Selecione</option>
+                    <option value="Renovacao">Renova√ß√£o</option>
+                    <option value="Supressao">Supress√£o</option>
+                    <option value="Acrescimo">Acr√©scimo</option>
+                    <option value="Outros">Outros</option>
+                </select>
+
+                <label for="aditivoNumero">N√∫mero do Aditivo:</label>
+                <input type="number" id="aditivoNumero" min="1" required>
+
+                <label for="aditivoObjeto">Objeto do Aditivo:</label>
+                <textarea id="aditivoObjeto" required></textarea>
+
+                <div id="renovacaoFields" style="display: none;">
+                    <h3>Detalhes da Renova√ß√£o</h3>
+                    <label for="renovacaoVigenciaMeses">Tempo da pr√≥xima renova√ß√£o (meses):</label>
+                    <input type="number" id="renovacaoVigenciaMeses" min="1">
+                    <p>Pr√≥ximo Vencimento: <span id="proximoVencimentoDisplay"></span></p>
+                    <label for="renovacaoValor">Valor para Renova√ß√£o:</label>
+                    <input type="number" id="renovacaoValor" step="0.01">
+                    <label>Unidades Aceitaram Renova√ß√£o:</label>
+                    <div id="unidadesRenovacao" class="checkbox-group">
+                        </div>
+                </div>
+
+                <div id="supressaoFields" style="display: none;">
+                    <h3>Detalhes da Supress√£o</h3>
+                    <label for="supressaoValor">Novo Valor do Contrato:</label>
+                    <input type="number" id="supressaoValor" step="0.01">
+                    <label>Unidades a Suprimir:</label>
+                    <div id="unidadesSupressao" class="checkbox-group">
+                        </div>
+                </div>
+
+                <div id="acrescimoFields" style="display: none;">
+                    <h3>Detalhes do Acr√©scimo</h3>
+                    <label for="acrescimoValor">Novo Valor do Contrato:</label>
+                    <input type="number" id="acrescimoValor" step="0.01">
+                </div>
+
+                <div id="outrosAditivoFields" style="display: none;">
+                    <h3>Outros Detalhes do Aditivo</h3>
+                    <label for="aditivoOutrosDesc">Descri√ß√£o do Aditivo:</label>
+                    <textarea id="aditivoOutrosDesc"></textarea>
+                </div>
+
+                <button type="submit">Salvar Aditivo</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="apostilamentoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar Apostilamento</h2>
+            <form id="apostilamentoForm">
+                <label for="apostilamentoTipo">Tipo de Apostilamento:</label>
+                <select id="apostilamentoTipo" required>
+                    <option value="">Selecione</option>
+                    <option value="Reajuste">Reajuste</option>
+                    <option value="DesignacaoGestoresFiscais">Designa√ß√£o de Gestores e Fiscais</option>
+                    <option value="DotacaoOrcamentaria">Dota√ß√£o Or√ßament√°ria</option>
+                    <option value="Outros">Outros</option>
+                </select>
+
+                <label for="apostilamentoNumero">N√∫mero do Apostilamento:</label>
+                <input type="number" id="apostilamentoNumero" min="1" required>
+
+                <label for="apostilamentoObjeto">Objeto do Apostilamento:</label>
+                <textarea id="apostilamentoObjeto" required></textarea>
+
+                <div id="outrosApostilamentoFields" style="display: none;">
+                    <label for="apostilamentoOutrosDesc">Descri√ß√£o do Apostilamento:</label>
+                    <textarea id="apostilamentoOutrosDesc"></textarea>
+                </div>
+
+                <button type="submit">Salvar Apostilamento</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="deleteReasonModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Motivo do Encerramento do Contrato</h2>
+            <form id="deleteReasonForm">
+                <label for="deleteReasonText">Por favor, descreva o motivo do encerramento:</label>
+                <textarea id="deleteReasonText" rows="5" required></textarea>
+                <button type="submit">Confirmar Encerramento</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar Lembrete</h2>
+            <form id="reminderForm">
+                <label for="reminderTitle">T√≠tulo:</label>
+                <input type="text" id="reminderTitle" required>
+                <label for="reminderDescription">Descri√ß√£o:</label>
+                <textarea id="reminderDescription"></textarea>
+                <label for="reminderDate">Data de Vencimento:</label>
+                <input type="date" id="reminderDate" required>
+                <label for="reminderUrgency">Urg√™ncia:</label>
+                <select id="reminderUrgency" required>
+                    <option value="verde">Verde (Sem Urg√™ncia)</option>
+                    <option value="amarelo">Amarelo (Moderado)</option>
+                    <option value="vermelho">Vermelho (Urgente)</option>
+                </select>
+                <button type="submit">Salvar Lembrete</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
