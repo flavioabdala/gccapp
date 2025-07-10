@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -234,8 +234,10 @@
 
                 <!-- contracts-list agora conterá os grupos de SEI para arrastar e soltar -->
                 <div id="contracts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto flex-grow">
-                    <p id="no-contracts-message" class="text-center text-gray-500 col-span-full hidden">Nenhum contrato encontrado.</p>
+                    <!-- Contract cards will be rendered here -->
                 </div>
+                <!-- Moved no-contracts-message outside contracts-list -->
+                <p id="no-contracts-message" class="text-center text-gray-500 col-span-full hidden mt-4">Nenhum contrato encontrado.</p>
             </div>
 
             <div id="reminders-tab" class="tab-content hidden flex-grow flex flex-col">
@@ -1207,7 +1209,7 @@
             showLoginLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 showPage('login-page');
-                if (loginMessage) loginMessage.textContent = '';
+                if (loginMessage) loginMessage.textContent = ''; // Clear login message when switching back to login
             });
 
             loginForm.addEventListener('submit', async (e) => {
@@ -1222,10 +1224,8 @@
                 } catch (error) {
                     console.error("Erro de login:", error);
                     let errorMessage = "Erro ao fazer login. Verifique seu e-mail e senha.";
-                    if (error.code === 'auth/user-not-found') {
-                        errorMessage = "Usuário não encontrado. Verifique o e-mail ou registre-se.";
-                    } else if (error.code === 'auth/wrong-password') {
-                        errorMessage = "Senha incorreta.";
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-login-credentials') {
+                        errorMessage = "Credenciais inválidas. Verifique seu e-mail e senha ou registre-se.";
                     } else if (error.code === 'auth/invalid-email') {
                         errorMessage = "E-mail inválido.";
                     }
@@ -1372,6 +1372,7 @@
                 unsubscribeTerminatedContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`)
                     .orderBy('terminationDate', 'desc')
                     .onSnapshot(snapshot => {
+                        console.log(`loadTerminatedContracts: onSnapshot received ${snapshot.docs.length} documents for terminated contracts.`); // Added log
                         const terminatedContractsList = document.getElementById('terminated-contracts-list'); // Fetch locally
                         if (terminatedContractsList) terminatedContractsList.innerHTML = '';
                         const terminatedContracts = [];
@@ -1731,11 +1732,15 @@
                 }
 
                 terminatedContractsList.innerHTML = '';
+                console.log(`displayTerminatedContracts: Received ${contractsToDisplay.length} contracts to display.`);
+
                 if (contractsToDisplay.length === 0) {
                     noTerminatedContractsMessage.classList.remove('hidden');
+                    console.log("displayTerminatedContracts: No terminated contracts, showing empty message.");
                     return;
                 } else {
                     noTerminatedContractsMessage.classList.add('hidden');
+                    console.log("displayTerminatedContracts: Contracts found, hiding empty message.");
                 }
 
                 contractsToDisplay.forEach(contract => {
@@ -1749,7 +1754,6 @@
                             </div>
                             <p class="text-gray-600 text-sm"><strong>SEI:</strong> ${contract.seiNumber}</p>
                             <p class="text-gray-600 text-sm"><strong>Contrato:</strong> ${contract.contractNumber}</p>
-                            <p class="text-gray-600 text-sm"><strong>Objeto:</strong> ${contract.contractObject}</p>
                             <p class="text-gray-600 text-sm"><strong>Vigência Final:</strong> ${new Date(contract.currentValidityDate).toLocaleDateString('pt-BR')}</p>
                             <p class="text-gray-600 text-sm"><strong>Data de Encerramento:</strong> ${new Date(contract.terminationDate).toLocaleDateString('pt-BR')}</p>
                             ${contract.terminationNotes ? `<p class="text-gray-600 text-sm"><strong>Motivo:</strong> ${contract.terminationNotes}</p>` : ''}
@@ -1765,7 +1769,10 @@
                         </div>
                     `;
                     terminatedContractsList.appendChild(terminatedCard);
+                    console.log(`displayTerminatedContracts: Appended contract card for ${contract.companyName}. Current children count: ${terminatedContractsList.children.length}`); // Added log
                 });
+
+                console.log(`displayTerminatedContracts: Final children count in terminatedContractsList: ${terminatedContractsList.children.length}`);
 
                 document.querySelectorAll('.view-history-button').forEach(button => {
                     button.addEventListener('click', (e) => viewContractHistory(e.currentTarget.dataset.id, 'terminated_contracts'));
@@ -2083,7 +2090,7 @@
                             };
 
                             await contractRef.update({
-                                currentValidityDate: nextValidityDate, // Corrigido para usar nextValidityDate
+                                currentValidityDate: newValidityDate, // Corrigido para usar nextValidityDate
                                 renewalNumber: newRenewalNumber,
                                 contractValue: updatedValue,
                                 participatingUnits: renewedParticipatingUnits,
