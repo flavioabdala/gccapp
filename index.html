@@ -117,6 +117,14 @@
         .contract-card-in-group:last-child {
             margin-bottom: 0; /* No margin for the last card in a group */
         }
+        /* Styles for sub-option sections */
+        .sub-option-section {
+            display: none;
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -216,7 +224,6 @@
             <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
                 <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 active-tab" data-tab="contracts">Contratos</button>
                 <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="reminders">Lembretes</button>
-                <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="in-renewal">Em Renovação</button>
                 <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="terminated-contracts">Encerrados</button>
             </div>
 
@@ -249,14 +256,6 @@
                 </div>
                 <div id="reminders-list" class="space-y-4 overflow-y-auto flex-grow">
                     <p id="no-reminders-message" class="text-center text-gray-500 hidden">Nenhum lembrete encontrado.</p>
-                </div>
-            </div>
-
-            <!-- New "Em Renovação" Tab Content -->
-            <div id="in-renewal-tab" class="tab-content hidden flex-grow flex flex-col">
-                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Contratos em Renovação</h3>
-                <div id="in-renewal-contracts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto flex-grow">
-                    <p id="no-in-renewal-contracts-message" class="text-center text-gray-500 col-span-full hidden">Nenhum contrato em processo de renovação.</p>
                 </div>
             </div>
 
@@ -360,16 +359,14 @@
         </div>
     </div>
 
-    <!-- REMOVIDO: renew-contract-modal foi substituído pelo fluxo de checklist -->
-
     <div id="addendum-modal" class="modal">
-        <div class="modal-content max-w-2xl">
+        <div class="modal-content max-w-3xl"> <!-- Increased max-width for better layout -->
             <span class="close-button" onclick="closeModal('addendum-modal')">&times;</span>
             <h3 class="text-xl font-semibold mb-4">Apostilamento ou Aditivo</h3>
             <form id="addendum-form" class="space-y-4">
                 <input type="hidden" id="addendum-contract-id">
                 <div>
-                    <label for="addendum-type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                    <label for="addendum-type" class="block text-sm font-medium text-gray-700">Tipo Principal</label>
                     <select id="addendum-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                         <option value="">Selecione</option>
                         <option value="Apostilamento">Apostilamento</option>
@@ -379,39 +376,48 @@
 
                 <!-- Apostilamento Fields Container -->
                 <div id="apostilamento-options" class="hidden space-y-4">
-                    <h4 class="text-lg font-semibold text-gray-800">Opções de Apostilamento</h4>
+                    <h4 class="text-lg font-semibold text-gray-800">Detalhes do Apostilamento</h4>
                     <div>
                         <label for="apostilamento-number" class="block text-sm font-medium text-gray-700">Número do Apostilamento</label>
-                        <input type="text" id="apostilamento-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" readonly>
+                        <input type="text" id="apostilamento-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
-                    <!-- REMOVIDO: Número do SEI (Documento) -->
                     <div>
                         <label for="apostilamento-date" class="block text-sm font-medium text-gray-700">Data de Efetivação</label>
                         <input type="date" id="apostilamento-date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
 
-                    <!-- Nova DCO -->
-                    <div class="border p-4 rounded-md">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nova DCO (Unidades Participantes)</label>
-                        <div id="apostilamento-units-container" class="flex flex-wrap gap-2"></div>
-                        <input type="hidden" id="apostilamento-selected-units"> <!-- To store selected units -->
+                    <!-- Sub-opções de Apostilamento -->
+                    <div>
+                        <label for="apostilamento-sub-type" class="block text-sm font-medium text-gray-700">Tipo de Alteração</label>
+                        <select id="apostilamento-sub-type" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Selecione</option>
+                            <option value="Nova DCO">Nova DCO</option>
+                            <option value="Reajuste">Reajuste</option>
+                            <option value="Designacao Gestores Fiscais">Designação de Gestores e Fiscais</option>
+                            <option value="Remanejamento Cotas">Remanejamento de Cotas</option>
+                            <option value="Outros">Outros</option>
+                        </select>
                     </div>
 
-                    <!-- Reajuste -->
-                    <div class="border p-4 rounded-md">
+                    <!-- Sub-option sections for Apostilamento -->
+                    <div id="apostilamento-nova-dco-section" class="sub-option-section space-y-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nova DCO (Unidades Participantes)</label>
+                        <div id="apostilamento-units-container" class="flex flex-wrap gap-2"></div>
+                        <input type="hidden" id="apostilamento-selected-units">
+                    </div>
+
+                    <div id="apostilamento-reajuste-section" class="sub-option-section space-y-4">
                         <label for="apostilamento-reajuste-percentage" class="block text-sm font-medium text-gray-700">Reajuste (%)</label>
                         <input type="number" step="0.01" id="apostilamento-reajuste-percentage" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
 
-                    <!-- Designação de Gestores e Fiscais -->
-                    <div class="border p-4 rounded-md">
+                    <div id="apostilamento-designacao-gestores-fiscais-section" class="sub-option-section space-y-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Designação de Gestores e Fiscais (Unidades)</label>
                         <div id="apostilamento-designacao-units-container" class="flex flex-wrap gap-2"></div>
                         <input type="hidden" id="apostilamento-designacao-selected-units">
                     </div>
 
-                    <!-- Remanejamento de Cotas (Apostilamento) -->
-                    <div class="border p-4 rounded-md">
+                    <div id="apostilamento-remanejamento-cotas-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Remanejamento de Cotas</h5>
                         <div>
                             <label for="remanejamento-type-apostilamento" class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
@@ -431,8 +437,6 @@
                             <input type="text" id="receiving-unit-apostilamento" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
                             <div id="receiving-units-container-apostilamento" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
-
-                        <!-- Remanejamento Table -->
                         <div class="mt-4">
                             <h6 class="text-sm font-medium text-gray-700 mb-2">Itens de Remanejamento</h6>
                             <table class="min-w-full bg-white border border-gray-200 rounded-md">
@@ -467,8 +471,7 @@
                         </div>
                     </div>
 
-                    <!-- Outros -->
-                    <div class="border p-4 rounded-md">
+                    <div id="apostilamento-outros-section" class="sub-option-section space-y-4">
                         <label for="apostilamento-others-notes" class="block text-sm font-medium text-gray-700">Outros</label>
                         <textarea id="apostilamento-others-notes" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
                     </div>
@@ -476,19 +479,32 @@
 
                 <!-- Aditivo Fields Container -->
                 <div id="aditivo-options" class="hidden space-y-4">
-                    <h4 class="text-lg font-semibold text-gray-800">Opções de Aditivo</h4>
+                    <h4 class="text-lg font-semibold text-gray-800">Detalhes do Aditivo</h4>
                     <div>
                         <label for="aditivo-number" class="block text-sm font-medium text-gray-700">Número do Aditivo</label>
-                        <input type="text" id="aditivo-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" readonly>
+                        <input type="text" id="aditivo-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
-                    <!-- REMOVIDO: Número do SEI (Documento) -->
                     <div>
                         <label for="aditivo-date" class="block text-sm font-medium text-gray-700">Data de Efetivação</label>
                         <input type="date" id="aditivo-date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
 
-                    <!-- Remanejamento (Aditivo) -->
-                    <div class="border p-4 rounded-md">
+                    <!-- Sub-opções de Aditivo -->
+                    <div>
+                        <label for="aditivo-sub-type" class="block text-sm font-medium text-gray-700">Tipo de Alteração</label>
+                        <select id="aditivo-sub-type" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Selecione</option>
+                            <option value="Remanejamento Cotas">Remanejamento de Cotas</option>
+                            <option value="Reequilibrio">Reequilíbrio</option>
+                            <option value="Troca Marca">Troca de Marca</option>
+                            <option value="Acrescimo">Acréscimo</option>
+                            <option value="Supressao">Supressão</option>
+                            <option value="Renovacao">Renovação</option>
+                        </select>
+                    </div>
+
+                    <!-- Sub-option sections for Aditivo -->
+                    <div id="aditivo-remanejamento-cotas-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Remanejamento de Cotas</h5>
                         <div>
                             <label for="remanejamento-type-aditivo" class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
@@ -508,8 +524,6 @@
                             <input type="text" id="receiving-unit-aditivo" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
                             <div id="receiving-units-container-aditivo" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
-
-                        <!-- Remanejamento Table (Aditivo) -->
                         <div class="mt-4">
                             <h6 class="text-sm font-medium text-gray-700 mb-2">Itens de Remanejamento</h6>
                             <table class="min-w-full bg-white border border-gray-200 rounded-md">
@@ -544,20 +558,17 @@
                         </div>
                     </div>
 
-                    <!-- Reequilíbrio -->
-                    <div class="border p-4 rounded-md">
+                    <div id="aditivo-reequilibrio-section" class="sub-option-section space-y-4">
                         <label for="aditivo-reequilibrio-percentage" class="block text-sm font-medium text-gray-700">Reequilíbrio (%)</label>
                         <input type="number" step="0.01" id="aditivo-reequilibrio-percentage" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                     </div>
 
-                    <!-- Troca de Marca -->
-                    <div class="border p-4 rounded-md">
+                    <div id="aditivo-troca-marca-section" class="sub-option-section space-y-4">
                         <label for="aditivo-troca-marca-description" class="block text-sm font-medium text-gray-700">Troca de Marca (Descrição)</label>
                         <textarea id="aditivo-troca-marca-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
                     </div>
 
-                    <!-- Acréscimo -->
-                    <div class="border p-4 rounded-md">
+                    <div id="aditivo-acrescimo-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Acréscimo</h5>
                         <table class="min-w-full bg-white border border-gray-200 rounded-md">
                             <thead>
@@ -588,8 +599,7 @@
                         <button type="button" id="add-acrescimo-item" class="mt-2 py-1 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">Adicionar Item</button>
                     </div>
 
-                    <!-- Supressão -->
-                    <div class="border p-4 rounded-md">
+                    <div id="aditivo-supressao-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Supressão</h5>
                         <table class="min-w-full bg-white border border-gray-200 rounded-md">
                             <thead>
@@ -615,7 +625,32 @@
                         <button type="button" id="add-supressao-item" class="mt-2 py-1 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">Adicionar Item</button>
                     </div>
 
-                    <!-- REMOVIDO: Renovação (Aditivo) - Este bloco foi removido -->
+                    <div id="aditivo-renovacao-section" class="sub-option-section space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Detalhes da Renovação</h4>
+                        <div>
+                            <label for="renewal-duration-aditivo" class="block text-sm font-medium text-gray-700">Prazo de Renovação (meses)</label>
+                            <input type="number" id="renewal-duration-aditivo" min="1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mt-4">
+                            <label for="renewal-updated-value-aditivo" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato (R$)</label>
+                            <input type="text" id="renewal-updated-value-aditivo" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00">
+                        </div>
+
+                        <div id="checklist-items-container-aditivo" class="space-y-3 border p-4 rounded-md mt-4">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Itens do Checklist</h4>
+                            <!-- Itens do checklist serão gerados aqui -->
+                        </div>
+
+                        <div id="unit-concordance-container-aditivo" class="space-y-3 border p-4 rounded-md mt-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Concordância das Unidades</h4>
+                            <!-- Concordância das unidades será gerada aqui -->
+                        </div>
+
+                        <div class="flex justify-end space-x-3 mt-4">
+                            <button type="button" id="save-renewal-progress-button" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar Progresso</button>
+                            <button type="button" id="finalize-renewal-button-aditivo" class="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 opacity-50 cursor-not-allowed" disabled>Efetivar Renovação</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-span-full flex justify-end space-x-3 mt-4">
@@ -625,50 +660,6 @@
             </form>
         </div>
     </div>
-
-    <!-- Novo Modal para Checklist de Renovação -->
-    <div id="renewal-checklist-modal" class="modal">
-        <div class="modal-content max-w-2xl">
-            <span class="close-button" onclick="closeModal('renewal-checklist-modal')">&times;</span>
-            <h3 class="text-xl font-semibold mb-4">Checklist de Renovação</h3>
-            <p class="text-lg font-bold text-gray-800 mb-4">Contrato: <span id="checklist-contract-sei"></span> - <span id="checklist-contract-company"></span></p>
-            <p class="text-md text-red-600 font-semibold mb-4">Status: Em Renovação</p>
-
-            <form id="renewal-checklist-form" class="space-y-4">
-                <input type="hidden" id="checklist-contract-id">
-
-                <div id="checklist-items-container" class="space-y-3 border p-4 rounded-md">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Itens do Checklist</h4>
-                    <!-- Itens do checklist serão gerados aqui -->
-                </div>
-
-                <div id="unit-concordance-container" class="space-y-3 border p-4 rounded-md">
-                    <h4 class="text-lg font-semibold text-gray-800">Concordância das Unidades</h4>
-                    <!-- Concordância das unidades será gerada aqui -->
-                </div>
-
-                <div class="mt-6 border p-4 rounded-md">
-                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Detalhes da Renovação</h4>
-                    <div>
-                        <label for="renewal-duration-checklist" class="block text-sm font-medium text-gray-700">Prazo de Renovação (meses)</label>
-                        <input type="number" id="renewal-duration-checklist" min="1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
-                    <div class="mt-4">
-                        <label for="renewal-updated-value-checklist" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato (R$)</label>
-                        <input type="text" id="renewal-updated-value-checklist" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00">
-                    </div>
-                </div>
-
-
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button type="button" onclick="closeModal('renewal-checklist-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
-                    <button type="button" id="save-checklist-progress-button" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar Progresso</button>
-                    <button type="submit" id="finalize-renewal-button" class="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 opacity-50 cursor-not-allowed" disabled>Efetivar Renovação</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 
     <div id="reminder-form-modal" class="modal">
         <div class="modal-content max-w-xl">
@@ -841,24 +832,30 @@
             const unitsCheckboxContainer = document.getElementById('units-checkbox-container');
             const contractObservationsInput = document.getElementById('contract-observations');
 
-            // REMOVIDO: renewContractModal e seus elementos foram removidos.
-
             const addendumModal = document.getElementById('addendum-modal');
             const addendumForm = document.getElementById('addendum-form');
             const addendumContractIdInput = document.getElementById('addendum-contract-id');
             const addendumTypeSelect = document.getElementById('addendum-type');
-            const apostilamentoOptions = document.getElementById('apostilamento-options');
-            const aditivoOptions = document.getElementById('aditivo-options');
 
-            // Apostilamento specific fields
+            // Apostilamento general elements
+            const apostilamentoOptions = document.getElementById('apostilamento-options');
             const apostilamentoNumberInput = document.getElementById('apostilamento-number');
-            // REMOVIDO: apostilamentoSeiNumberInput
             const apostilamentoDateInput = document.getElementById('apostilamento-date');
+            const apostilamentoSubTypeSelect = document.getElementById('apostilamento-sub-type');
+
+            // Apostilamento sub-option sections
+            const apostilamentoNovaDCOSection = document.getElementById('apostilamento-nova-dco-section');
             const apostilamentoUnitsContainer = document.getElementById('apostilamento-units-container');
             const apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
+
+            const apostilamentoReajusteSection = document.getElementById('apostilamento-reajuste-section');
             const apostilamentoReajustePercentageInput = document.getElementById('apostilamento-reajuste-percentage');
+
+            const apostilamentoDesignacaoGestoresFiscaisSection = document.getElementById('apostilamento-designacao-gestores-fiscais-section');
             const apostilamentoDesignacaoUnitsContainer = document.getElementById('apostilamento-designacao-units-container');
             const apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units');
+
+            const apostilamentoRemanejamentoCotasSection = document.getElementById('apostilamento-remanejamento-cotas-section');
             const remanejamentoTypeApostilamentoSelect = document.getElementById('remanejamento-type-apostilamento');
             const cedingUnitApostilamentoInput = document.getElementById('ceding-unit-apostilamento');
             const cedingUnitsContainerApostilamento = document.getElementById('ceding-units-container-apostilamento');
@@ -868,12 +865,19 @@
             const remanejamentoTotalApostilamento = document.getElementById('remanejamento-total-apostilamento');
             const addRemanejamentoItemApostilamentoButton = document.getElementById('add-remanejamento-item-apostilamento');
             const remanejamentoNotesApostilamentoInput = document.getElementById('remanejamento-notes-apostilamento');
+
+            const apostilamentoOutrosSection = document.getElementById('apostilamento-outros-section');
             const apostilamentoOthersNotesInput = document.getElementById('apostilamento-others-notes');
 
-            // Aditivo specific fields
+
+            // Aditivo general elements
+            const aditivoOptions = document.getElementById('aditivo-options');
             const aditivoNumberInput = document.getElementById('aditivo-number');
-            // REMOVIDO: aditivoSeiNumberInput
             const aditivoDateInput = document.getElementById('aditivo-date');
+            const aditivoSubTypeSelect = document.getElementById('aditivo-sub-type');
+
+            // Aditivo sub-option sections
+            const aditivoRemanejamentoCotasSection = document.getElementById('aditivo-remanejamento-cotas-section');
             const remanejamentoTypeAditivoSelect = document.getElementById('remanejamento-type-aditivo');
             const cedingUnitAditivoInput = document.getElementById('ceding-unit-aditivo');
             const cedingUnitsContainerAditivo = document.getElementById('ceding-units-container-aditivo');
@@ -883,28 +887,30 @@
             const remanejamentoTotalAditivo = document.getElementById('remanejamento-total-aditivo');
             const addRemanejamentoItemAditivoButton = document.getElementById('add-remanejamento-item-aditivo');
             const remanejamentoNotesAditivoInput = document.getElementById('remanejamento-notes-aditivo');
+
+            const aditivoReequilibrioSection = document.getElementById('aditivo-reequilibrio-section');
             const aditivoReequilibrioPercentageInput = document.getElementById('aditivo-reequilibrio-percentage');
+
+            const aditivoTrocaMarcaSection = document.getElementById('aditivo-troca-marca-section');
             const aditivoTrocaMarcaDescriptionInput = document.getElementById('aditivo-troca-marca-description');
+
+            const aditivoAcrescimoSection = document.getElementById('aditivo-acrescimo-section');
             const acrescimoTableBody = document.getElementById('acrescimo-table-body');
             const acrescimoTotal = document.getElementById('acrescimo-total');
             const addAcrescimoItemButton = document.getElementById('add-acrescimo-item');
+
+            const aditivoSupressaoSection = document.getElementById('aditivo-supressao-section');
             const supressaoTableBody = document.getElementById('supressao-table-body');
             const supressaoTotal = document.getElementById('supressao-total');
             const addSupressaoItemButton = document.getElementById('add-supressao-item');
-            // REMOVIDO: triggerAditivoRenewalChecklistButton
 
-            // New Renewal Checklist Modal Elements
-            const renewalChecklistModal = document.getElementById('renewal-checklist-modal');
-            const renewalChecklistForm = document.getElementById('renewal-checklist-form');
-            const checklistContractIdInput = document.getElementById('checklist-contract-id');
-            const checklistContractSei = document.getElementById('checklist-contract-sei');
-            const checklistContractCompany = document.getElementById('checklist-contract-company');
-            const checklistItemsContainer = document.getElementById('checklist-items-container');
-            const unitConcordanceContainer = document.getElementById('unit-concordance-container');
-            const renewalDurationChecklistInput = document.getElementById('renewal-duration-checklist');
-            const renewalUpdatedValueChecklistInput = document.getElementById('renewal-updated-value-checklist');
-            const finalizeRenewalButton = document.getElementById('finalize-renewal-button');
-            const saveChecklistProgressButton = document.getElementById('save-checklist-progress-button');
+            const aditivoRenovacaoSection = document.getElementById('aditivo-renovacao-section');
+            const renewalDurationAditivoInput = document.getElementById('renewal-duration-aditivo');
+            const renewalUpdatedValueAditivoInput = document.getElementById('renewal-updated-value-aditivo');
+            const checklistItemsContainerAditivo = document.getElementById('checklist-items-container-aditivo');
+            const unitConcordanceContainerAditivo = document.getElementById('unit-concordance-container-aditivo');
+            const saveRenewalProgressButton = document.getElementById('save-renewal-progress-button');
+            const finalizeRenewalButtonAditivo = document.getElementById('finalize-renewal-button-aditivo');
 
 
             const reminderFormModal = document.getElementById('reminder-form-modal');
@@ -920,7 +926,6 @@
             let isAdmin = false;
             let unsubscribeContracts = null;
             let unsubscribeReminders = null;
-            let unsubscribeInRenewalContracts = null;
             let unsubscribeTerminatedContracts = null;
 
             // Updated list of units
@@ -933,7 +938,6 @@
                 "Ofício",
                 "Memorando-circular",
                 "Ofício da Empresa", // Special handling for company name
-                // "Concordância das unidades" - REMOVIDO daqui, agora é uma seção separada
                 "Anexo DCO",
                 "Memória de cálculo",
                 "Designação da Autoridade",
@@ -1090,7 +1094,7 @@
 
 
                 // Esconde/mostra botões de edição/exclusão/renovação nas cards
-                document.querySelectorAll('.edit-button, .delete-button, .addendum-button, .terminate-button, .renew-button, .delete-reminder-button, .continue-renewal-button').forEach(btn => {
+                document.querySelectorAll('.edit-button, .delete-button, .addendum-button, .terminate-button, .delete-reminder-button').forEach(btn => {
                     if (btn) {
                         if (isAdmin) {
                             btn.classList.remove('hidden');
@@ -1099,9 +1103,6 @@
                         }
                     }
                 });
-                console.log(`setAdminPermissions chamado. isAdmin: ${isAdmin}`);
-                console.log(`setAdminPermissions: Botão 'Adicionar Contrato' ${addContractBtn && addContractBtn.classList.contains('hidden') ? 'oculto' : 'visível'}. (isAdmin: ${isAdmin} , contracts-tab active: ${document.getElementById('contracts-tab') && document.getElementById('contracts-tab').classList.contains('active')} )`);
-                console.log(`setAdminPermissions: Botão 'Adicionar Lembrete' ${addReminderBtn && addReminderBtn.classList.contains('hidden') ? 'oculto' : 'visível'}. (isAdmin: ${isAdmin} , reminders-tab active: ${document.getElementById('reminders-tab') && document.getElementById('reminders-tab').classList.contains('active')} )`);
             }
 
             // --- Authentication ---
@@ -1111,8 +1112,6 @@
                     // Usuário logado
                     currentUserId = user.uid;
                     if (userIdDisplay) userIdDisplay.textContent = `UID: ${currentUserId}`;
-                    console.log('onAuthStateChanged: Usuário logado:', user.uid);
-                    console.log('onAuthStateChanged: App ID sendo usado para coleções Firestore:', APP_ID);
 
                     // Tenta obter o perfil do usuário para verificar o status de administrador
                     const userProfileRef = db.collection(USERS_COLLECTION_PATH).doc(currentUserId).collection('profile').doc('data');
@@ -1120,10 +1119,8 @@
                         const doc = await userProfileRef.get();
                         if (doc.exists && doc.data().isAdmin === true) {
                             isAdmin = true;
-                            console.log('onAuthStateChanged: Usuário é administrador.');
                         } else {
                             isAdmin = false;
-                            console.log('onAuthStateChanged: Usuário NÃO é administrador.');
                         }
                     } catch (error) {
                         console.error("Erro ao carregar perfil do usuário:", error);
@@ -1134,35 +1131,29 @@
                     setActiveTab('contracts'); // Define a aba padrão
                     loadContracts(); // Carrega contratos
                     loadReminders(); // Carrega lembretes
-                    loadInRenewalContracts(); // Load in-renewal contracts
                     loadTerminatedContracts(); // Carrega contratos encerrados
                     setAdminPermissions(isAdmin); // Aplica as permissões com base no status de administrador
 
                 } else {
                     // Nenhum usuário logado
-                    console.log('onAuthStateChanged: Nenhum usuário logado. Exibindo página de login.');
                     showPage('login-page'); // Garante que a página de login seja sempre exibida
                     // Limpa quaisquer listeners de dados se o usuário deslogou
                     if (unsubscribeContracts) unsubscribeContracts();
                     if (unsubscribeReminders) unsubscribeReminders();
-                    if (unsubscribeInRenewalContracts) unsubscribeInRenewalContracts();
                     if (unsubscribeTerminatedContracts) unsubscribeTerminatedContracts();
 
                     // Fetch elements locally to clear them
                     const contractsList = document.getElementById('contracts-list');
                     const remindersList = document.getElementById('reminders-list');
-                    const inRenewalContractsList = document.getElementById('in-renewal-contracts-list');
                     const terminatedContractsList = document.getElementById('terminated-contracts-list');
 
                     if (contractsList) contractsList.innerHTML = '';
                     if (remindersList) remindersList.innerHTML = '';
-                    if (inRenewalContractsList) inRenewalContractsList.innerHTML = '';
                     if (terminatedContractsList) terminatedContractsList.innerHTML = '';
 
                     currentUserId = null;
                     isAdmin = false;
                 }
-                console.log('onAuthStateChanged: Autenticação pronta. Carregando dados...');
             });
 
             showRegisterLink.addEventListener('click', (e) => {
@@ -1253,8 +1244,6 @@
             logoutButton.addEventListener('click', async () => {
                 try {
                     await auth.signOut();
-                    console.log("Usuário deslogado com sucesso.");
-                    // onAuthStateChanged irá lidar com a exibição da página e a limpeza dos listeners
                 } catch (error) {
                     console.error("Erro ao fazer logout:", error);
                     showMessageModal('Erro', 'Não foi possível fazer logout. Tente novamente.');
@@ -1264,7 +1253,6 @@
             // --- Contract Management ---
             async function loadContracts() {
                 if (!currentUserId) {
-                    console.log("loadContracts: Usuário não autenticado, não carregando contratos.");
                     const contractsList = document.getElementById('contracts-list');
                     const noContractsMessage = document.getElementById('no-contracts-message');
                     if (contractsList) contractsList.innerHTML = '<p class="text-center text-gray-500 col-span-full">Faça login para visualizar os contratos.</p>';
@@ -1272,18 +1260,15 @@
                     return;
                 }
                 if (unsubscribeContracts) unsubscribeContracts();
-                console.log('loadContracts: Tentando configurar listener para contratos. Coleção:', `${PUBLIC_COLLECTION_PATH}/contracts`);
                 unsubscribeContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`)
-                    .where('isInRenewal', '==', false) // Apenas contratos que NÃO estão em renovação
-                    .onSnapshot(async snapshot => { // Adicionado 'async' aqui
-                        const contractsList = document.getElementById('contracts-list'); // Fetch locally
+                    .onSnapshot(async snapshot => {
+                        const contractsList = document.getElementById('contracts-list');
                         if (contractsList) contractsList.innerHTML = '';
                         const contracts = [];
                         snapshot.forEach(doc => {
                             const contract = { id: doc.id, ...doc.data() };
                             contracts.push(contract);
                         });
-                        // Obtém a ordem salva dos grupos SEI antes de exibir
                         const savedSeiOrder = await getSeiGroupOrder();
                         displayContracts(contracts, savedSeiOrder);
                         checkEmptyState('contracts');
@@ -1293,39 +1278,8 @@
                     });
             }
 
-            async function loadInRenewalContracts() {
-                if (!currentUserId) {
-                    console.log("loadInRenewalContracts: Usuário não autenticado, não carregando contratos em renovação.");
-                    const inRenewalContractsList = document.getElementById('in-renewal-contracts-list');
-                    const noInRenewalContractsMessage = document.getElementById('no-in-renewal-contracts-message');
-                    if (inRenewalContractsList) inRenewalContractsList.innerHTML = '<p class="text-center text-gray-500 col-span-full">Faça login para visualizar os contratos em renovação.</p>';
-                    if (noInRenewalContractsMessage) noInRenewalContractsMessage.classList.add('hidden');
-                    return;
-                }
-                if (unsubscribeInRenewalContracts) unsubscribeInRenewalContracts();
-                console.log('loadInRenewalContracts: Tentando configurar listener para contratos em renovação. Coleção:', `${PUBLIC_COLLECTION_PATH}/contracts`);
-                unsubscribeInRenewalContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`)
-                    .where('isInRenewal', '==', true) // Apenas contratos que ESTÃO em renovação
-                    .onSnapshot(snapshot => {
-                        const inRenewalContractsList = document.getElementById('in-renewal-contracts-list'); // Fetch locally
-                        if (inRenewalContractsList) inRenewalContractsList.innerHTML = '';
-                        const contracts = [];
-                        snapshot.forEach(doc => {
-                            const contract = { id: doc.id, ...doc.data() };
-                            contracts.push(contract);
-                        });
-                        contracts.sort((a, b) => createLocalDate(a.currentValidityDate) - createLocalDate(b.currentValidityDate));
-                        displayInRenewalContracts(contracts);
-                        checkEmptyState('in-renewal'); // Pass 'in-renewal' as tabName
-                    }, error => {
-                        console.error("loadInRenewalContracts: Erro ao carregar contratos em renovação em tempo real:", error);
-                        showMessageModal('Erro', `Erro ao carregar contratos em renovação: ${error.message}. Verifique as permissões do Firestore.`);
-                    });
-            }
-
             async function loadTerminatedContracts() {
                 if (!currentUserId) {
-                    console.log("loadTerminatedContracts: Usuário não autenticado, não carregando contratos encerrados.");
                     const terminatedContractsList = document.getElementById('terminated-contracts-list');
                     const noTerminatedContractsMessage = document.getElementById('no-terminated-contracts-message');
                     if (terminatedContractsList) terminatedContractsList.innerHTML = '<p class="text-center text-gray-500 col-span-full">Faça login para visualizar os contratos encerrados.</p>';
@@ -1333,12 +1287,10 @@
                     return;
                 }
                 if (unsubscribeTerminatedContracts) unsubscribeTerminatedContracts();
-                console.log('loadTerminatedContracts: Tentando configurar listener para contratos encerrados. Coleção:', `${PUBLIC_COLLECTION_PATH}/terminated_contracts`);
                 unsubscribeTerminatedContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`)
                     .orderBy('terminationDate', 'desc')
                     .onSnapshot(snapshot => {
-                        console.log(`loadTerminatedContracts: onSnapshot received ${snapshot.docs.length} documents for terminated contracts.`); // Added log
-                        const terminatedContractsList = document.getElementById('terminated-contracts-list'); // Fetch locally
+                        const terminatedContractsList = document.getElementById('terminated-contracts-list');
                         if (terminatedContractsList) terminatedContractsList.innerHTML = '';
                         const terminatedContracts = [];
                         snapshot.forEach(doc => {
@@ -1544,9 +1496,6 @@
                                 <button class="addendum-button py-2 px-3 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
                                     <i class="fas fa-file-invoice mr-1"></i> Apost./Adit.
                                 </button>
-                                <button class="renew-button py-2 px-3 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
-                                    <i class="fas fa-sync-alt mr-1"></i> Renovar
-                                </button>
                                 <button class="edit-button py-2 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
                                     <i class="fas fa-edit mr-1"></i> Editar
                                 </button>
@@ -1566,9 +1515,6 @@
                 });
                 document.querySelectorAll('.addendum-button').forEach(button => {
                     button.addEventListener('click', (e) => openAddendumModal(e.currentTarget.dataset.id));
-                });
-                document.querySelectorAll('.renew-button').forEach(button => {
-                    button.addEventListener('click', (e) => initiateContractRenewal(e.currentTarget.dataset.id));
                 });
                 document.querySelectorAll('.terminate-button').forEach(button => {
                     button.addEventListener('click', (e) => terminateContract(e.currentTarget.dataset.id));
@@ -1607,7 +1553,6 @@
                         isStarred: newStarredStatus,
                         lastActivityDate: firebase.firestore.FieldValue.serverTimestamp() // Atualiza a data de atividade
                     });
-                    console.log(`Contrato ${contractId} status de estrela atualizado para ${newStarredStatus}`);
                 } catch (error) {
                     console.error("Erro ao alternar status de estrela:", error);
                     showMessageModal('Erro', `Não foi possível alterar o status de favorito: ${error.message}`);
@@ -1620,7 +1565,6 @@
                 try {
                     const userPrefsRef = db.collection(USERS_COLLECTION_PATH).doc(currentUserId).collection('preferences').doc('contractGroupOrder');
                     await userPrefsRef.set({ order: newOrder }, { merge: true });
-                    console.log("Ordem dos grupos SEI atualizada no Firestore.");
                 } catch (error) {
                     console.error("Erro ao salvar ordem dos grupos SEI:", error);
                 }
@@ -1642,69 +1586,9 @@
             }
 
 
-            function displayInRenewalContracts(contractsToDisplay) {
-                const inRenewalContractsList = document.getElementById('in-renewal-contracts-list'); // Fetch locally
-                const noInRenewalContractsMessage = document.getElementById('no-in-renewal-contracts-message'); // Fetch locally
-
-                if (!inRenewalContractsList || !noInRenewalContractsMessage) {
-                    console.warn("displayInRenewalContracts: Elementos 'inRenewalContractsList' ou 'noInRenewalContractsMessage' não encontrados.");
-                    return;
-                }
-
-                inRenewalContractsList.innerHTML = '';
-                if (contractsToDisplay.length === 0) {
-                    noInRenewalContractsMessage.classList.remove('hidden');
-                    return;
-                } else {
-                    noInRenewalContractsMessage.classList.add('hidden');
-                }
-
-                contractsToDisplay.forEach(contract => {
-                    const unitsDisplay = Array.isArray(contract.participatingUnits) && contract.participatingUnits.length > 0
-                        ? contract.participatingUnits.join(', ')
-                        : 'N/A';
-
-                    const contractCard = document.createElement('div');
-                    contractCard.className = `bg-yellow-100 rounded-lg shadow-md p-6 flex flex-col justify-between border-2 border-yellow-400`;
-                    contractCard.innerHTML = `
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center mb-2">
-                                <h3 class="text-xl font-semibold text-gray-800 truncate">${contract.companyName}</h3>
-                                <span class="text-sm font-bold px-3 py-1 rounded-full bg-yellow-500 text-gray-900">Em Renovação</span>
-                            </div>
-                            <p class="text-gray-600 text-sm"><strong>SEI:</strong> ${contract.seiNumber}</p>
-                            <p class="text-gray-600 text-sm"><strong>Contrato:</strong> ${contract.contractNumber}</p>
-                            <p class="text-gray-600 text-sm"><strong>Objeto:</strong> ${contract.contractObject}</p>
-                            <p class="text-gray-600 text-sm"><strong>Vigência Atual:</strong> ${createLocalDate(contract.currentValidityDate).toLocaleDateString('pt-BR')}</p>
-                            <p class="text-gray-600 text-sm"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
-                            <p class="text-gray-600 text-sm"><strong>Valor:</strong> ${formatCurrency(contract.contractValue)}</p>
-                            <p class="text-gray-600 text-sm"><strong>Lei:</strong> ${contract.lawType === '8666' ? '8.666/93' : '14.133/21'}</p>
-                            <p class="text-gray-600 text-sm"><strong>Unidades:</strong> ${unitsDisplay}</p>
-                            ${contract.observations ? `<p class="text-gray-600 text-sm"><strong>Obs:</strong> ${contract.observations}</p>` : ''}
-                        </div>
-                        <div class="mt-4 flex flex-wrap gap-2 justify-end">
-                            <button class="view-history-button py-2 px-3 bg-indigo-500 text-white rounded-md text-sm hover:bg-indigo-600 transition duration-200" data-id="${contract.id}">
-                                <i class="fas fa-history mr-1"></i> Histórico
-                            </button>
-                            <button class="continue-renewal-button py-2 px-3 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
-                                <i class="fas fa-play-circle mr-1"></i> Continuar Renovação
-                            </button>
-                        </div>
-                    `;
-                    inRenewalContractsList.appendChild(contractCard);
-                });
-                document.querySelectorAll('.view-history-button').forEach(button => {
-                    button.addEventListener('click', (e) => viewContractHistory(e.currentTarget.dataset.id));
-                });
-                document.querySelectorAll('.continue-renewal-button').forEach(button => {
-                    button.addEventListener('click', (e) => openRenewalChecklistModal(e.currentTarget.dataset.id));
-                });
-                setAdminPermissions(isAdmin);
-            }
-
             function displayTerminatedContracts(contractsToDisplay) {
-                const terminatedContractsList = document.getElementById('terminated-contracts-list'); // Fetch locally
-                const noTerminatedContractsMessage = document.getElementById('no-terminated-contracts-message'); // Fetch locally
+                const terminatedContractsList = document.getElementById('terminated-contracts-list');
+                const noTerminatedContractsMessage = document.getElementById('no-terminated-contracts-message');
 
                 if (!terminatedContractsList || !noTerminatedContractsMessage) {
                     console.warn("displayTerminatedContracts: Elementos 'terminatedContractsList' ou 'noTerminatedContractsMessage' não encontrados.");
@@ -1712,15 +1596,12 @@
                 }
 
                 terminatedContractsList.innerHTML = '';
-                console.log(`displayTerminatedContracts: Received ${contractsToDisplay.length} contracts to display.`);
 
                 if (contractsToDisplay.length === 0) {
                     noTerminatedContractsMessage.classList.remove('hidden');
-                    console.log("displayTerminatedContracts: No terminated contracts, showing empty message.");
                     return;
                 } else {
                     noTerminatedContractsMessage.classList.add('hidden');
-                    console.log("displayTerminatedContracts: Contracts found, hiding empty message.");
                 }
 
                 contractsToDisplay.forEach(contract => {
@@ -1749,10 +1630,7 @@
                         </div>
                     `;
                     terminatedContractsList.appendChild(terminatedCard);
-                    console.log(`displayTerminatedContracts: Appended contract card for ${contract.companyName}. Current children count: ${terminatedContractsList.children.length}`); // Added log
                 });
-
-                console.log(`displayTerminatedContracts: Final children count in terminatedContractsList: ${terminatedContractsList.children.length}`);
 
                 document.querySelectorAll('.view-history-button').forEach(button => {
                     button.addEventListener('click', (e) => viewContractHistory(e.currentTarget.dataset.id, 'terminated_contracts'));
@@ -1842,7 +1720,6 @@
                         contractValue,
                         participatingUnits,
                         observations,
-                        isInRenewal: false,
                         isStarred: false, // Novo contrato não é favoritado por padrão
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1996,18 +1873,57 @@
                 });
             }
 
-            // REMOVIDO: openRenewContractModal e renewForm foram removidos.
+            // --- Addendum/Apostilamento/Renovação Logic ---
 
+            // Function to show/hide sub-option sections
+            function showSubOptionSection(sectionId) {
+                document.querySelectorAll('.sub-option-section').forEach(section => {
+                    if (section.id === sectionId) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            }
+
+            // Event listener for main addendum type selection
             if (addendumTypeSelect) {
                 addendumTypeSelect.addEventListener('change', async () => {
                     const selectedType = addendumTypeSelect.value;
+                    // Hide all main option containers first
                     if (apostilamentoOptions) apostilamentoOptions.classList.add('hidden');
                     if (aditivoOptions) aditivoOptions.classList.add('hidden');
+                    // Hide all sub-option sections
+                    document.querySelectorAll('.sub-option-section').forEach(section => section.style.display = 'none');
 
                     if (selectedType === 'Apostilamento') {
                         if (apostilamentoOptions) apostilamentoOptions.classList.remove('hidden');
-                        const nextApostilamentoNumber = await getNextSequentialNumber(addendumContractIdInput.value, 'Apostilamento');
-                        if (apostilamentoNumberInput) apostilamentoNumberInput.value = `${nextApostilamentoNumber}º Apostilamento`;
+                        if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = ''; // Reset sub-type
+                        // No need to get next sequential number automatically, user will input
+                        // if (apostilamentoNumberInput) apostilamentoNumberInput.value = ''; // Clear for user input
+                        // if (apostilamentoDateInput) apostilamentoDateInput.value = ''; // Clear for user input
+
+                    } else if (selectedType === 'Aditivo') {
+                        if (aditivoOptions) aditivoOptions.classList.remove('hidden');
+                        if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = ''; // Reset sub-type
+                        // No need to get next sequential number automatically, user will input
+                        // if (aditivoNumberInput) aditivoNumberInput.value = ''; // Clear for user input
+                        // if (aditivoDateInput) aditivoDateInput.value = ''; // Clear for user input
+                    }
+                });
+            }
+
+            // Event listener for Apostilamento sub-type selection
+            if (apostilamentoSubTypeSelect) {
+                apostilamentoSubTypeSelect.addEventListener('change', async () => {
+                    const selectedSubType = apostilamentoSubTypeSelect.value;
+                    showSubOptionSection(`apostilamento-${selectedSubType.replace(/\s/g, '-').toLowerCase()}-section`);
+
+                    // Populate unit buttons for relevant sections
+                    const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(addendumContractIdInput.value).get();
+                    const currentContractUnits = contractDoc.exists ? (contractDoc.data().participatingUnits || []) : [];
+
+                    if (selectedSubType === 'Nova DCO') {
                         let apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
                         if (!apostilamentoSelectedUnitsInput) {
                             apostilamentoSelectedUnitsInput = document.createElement('input');
@@ -2015,6 +1931,8 @@
                             apostilamentoSelectedUnitsInput.id = 'apostilamento-selected-units';
                             apostilamentoUnitsContainer.appendChild(apostilamentoSelectedUnitsInput);
                         }
+                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, currentContractUnits);
+                    } else if (selectedSubType === 'Designacao Gestores Fiscais') {
                         let apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units');
                         if (!apostilamentoDesignacaoSelectedUnitsInput) {
                             apostilamentoDesignacaoSelectedUnitsInput = document.createElement('input');
@@ -2022,25 +1940,48 @@
                             apostilamentoDesignacaoSelectedUnitsInput.id = 'apostilamento-designacao-selected-units';
                             apostilamentoDesignacaoUnitsContainer.appendChild(apostilamentoDesignacaoSelectedUnitsInput);
                         }
-                        // Load current contract units for apostilamento forms if available
-                        const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(addendumContractIdInput.value).get();
-                        const currentContractUnits = contractDoc.exists ? (contractDoc.data().participatingUnits || []) : [];
-
-                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, currentContractUnits);
                         populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, currentContractUnits);
-
+                    } else if (selectedSubType === 'Remanejamento Cotas') {
                         if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
                         if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
-                    } else if (selectedType === 'Aditivo') {
-                        if (aditivoOptions) aditivoOptions.classList.remove('hidden');
-                        const nextAditivoNumber = await getNextSequentialNumber(addendumContractIdInput.value, 'Aditivo');
-                        if (aditivoNumberInput) aditivoNumberInput.value = `${nextAditivoNumber}º Aditivo`;
+                        // Populate unit buttons for ceding/receiving units if needed (for display only, not selection)
+                        populateUnitButtons(cedingUnitsContainerApostilamento, cedingUnitApostilamentoInput, []); // No actual selection for these fields
+                        populateUnitButtons(receivingUnitsContainerApostilamento, receivingUnitApostilamentoInput, []);
+                    }
+                });
+            }
+
+            // Event listener for Aditivo sub-type selection
+            if (aditivoSubTypeSelect) {
+                aditivoSubTypeSelect.addEventListener('change', async () => {
+                    const selectedSubType = aditivoSubTypeSelect.value;
+                    showSubOptionSection(`aditivo-${selectedSubType.replace(/\s/g, '-').toLowerCase()}-section`);
+
+                    // Populate unit buttons for relevant sections
+                    const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(addendumContractIdInput.value).get();
+                    const currentContractUnits = contractDoc.exists ? (contractDoc.data().participatingUnits || []) : [];
+
+                    if (selectedSubType === 'Remanejamento Cotas') {
                         if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
                         if (remanejamentoTotalAditivo) remanejamentoTotalAditivo.textContent = formatCurrency(0);
+                        populateUnitButtons(cedingUnitsContainerAditivo, cedingUnitAditivoInput, []);
+                        populateUnitButtons(receivingUnitsContainerAditivo, receivingUnitAditivoInput, []);
+                    } else if (selectedSubType === 'Acrescimo') {
                         if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
                         if (acrescimoTotal) acrescimoTotal.textContent = formatCurrency(0);
+                    } else if (selectedSubType === 'Supressao') {
                         if (supressaoTableBody) supressaoTableBody.innerHTML = '';
                         if (supressaoTotal) supressaoTotal.textContent = formatCurrency(0);
+                    } else if (selectedSubType === 'Renovacao') {
+                        // Load existing renewal data if any
+                        const contract = contractDoc.data();
+                        const renewalChecklistData = contract.renewalChecklist || {};
+                        if (renewalDurationAditivoInput) renewalDurationAditivoInput.value = renewalChecklistData.renewalDuration || '';
+                        if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.value = formatCurrency(renewalChecklistData.updatedValue || contract.contractValue).replace('R$', '').trim();
+
+                        renderChecklistItemsAditivo(contract.companyName, renewalChecklistData.items || {});
+                        renderUnitConcordanceAditivo(contract.participatingUnits || [], renewalChecklistData.unitConcordance || {});
+                        updateFinalRenewButtonStateAditivo();
                     }
                 });
             }
@@ -2052,30 +1993,60 @@
                     if (doc.exists) {
                         const contract = doc.data();
                         if (addendumContractIdInput) addendumContractIdInput.value = id;
-                        if (addendumTypeSelect) addendumTypeSelect.value = ''; // Limpa a seleção
+                        if (addendumTypeSelect) addendumTypeSelect.value = ''; // Limpa a seleção principal
+
+                        // Clear and hide all main and sub options
+                        if (apostilamentoOptions) apostilamentoOptions.classList.add('hidden');
+                        if (aditivoOptions) aditivoOptions.classList.add('hidden');
+                        document.querySelectorAll('.sub-option-section').forEach(section => section.style.display = 'none');
+
+                        // Clear all specific fields for Apostilamento
                         if (apostilamentoNumberInput) apostilamentoNumberInput.value = '';
-                        // REMOVIDO: apostilamentoSeiNumberInput.value = '';
                         if (apostilamentoDateInput) apostilamentoDateInput.value = '';
+                        if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = '';
                         if (apostilamentoReajustePercentageInput) apostilamentoReajustePercentageInput.value = '';
                         if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = '';
                         if (cedingUnitApostilamentoInput) cedingUnitApostilamentoInput.value = '';
                         if (receivingUnitApostilamentoInput) receivingUnitApostilamentoInput.value = '';
                         if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = '';
                         if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = '';
+                        if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
+                        if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
+                        // Clear unit button selections for apostilamento
+                        let apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
+                        if (apostilamentoSelectedUnitsInput) apostilamentoSelectedUnitsInput.value = '[]';
+                        let apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units');
+                        if (apostilamentoDesignacaoSelectedUnitsInput) apostilamentoDesignacaoSelectedUnitsInput.value = '[]';
+                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput || document.createElement('input'), []);
+                        populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput || document.createElement('input'), []);
 
+
+                        // Clear all specific fields for Aditivo
                         if (aditivoNumberInput) aditivoNumberInput.value = '';
-                        // REMOVIDO: aditivoSeiNumberInput.value = '';
                         if (aditivoDateInput) aditivoDateInput.value = '';
+                        if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = '';
                         if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = '';
                         if (cedingUnitAditivoInput) cedingUnitAditivoInput.value = '';
                         if (receivingUnitAditivoInput) receivingUnitAditivoInput.value = '';
                         if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = '';
                         if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = '';
                         if (aditivoTrocaMarcaDescriptionInput) aditivoTrocaMarcaDescriptionInput.value = '';
+                        if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
+                        if (acrescimoTotal) acrescimoTotal.textContent = formatCurrency(0);
+                        if (supressaoTableBody) supressaoTableBody.innerHTML = '';
+                        if (supressaoTotal) supressaoTotal.textContent = formatCurrency(0);
+                        if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
+                        if (remanejamentoTotalAditivo) remanejamentoTotalAditivo.textContent = formatCurrency(0);
 
-                        // Esconde ambos os containers de opções no início
-                        if (apostilamentoOptions) apostilamentoOptions.classList.add('hidden');
-                        if (aditivoOptions) aditivoOptions.classList.add('hidden');
+                        // Clear renewal specific fields
+                        if (renewalDurationAditivoInput) renewalDurationAditivoInput.value = '';
+                        if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.value = '';
+                        if (checklistItemsContainerAditivo) checklistItemsContainerAditivo.innerHTML = '';
+                        if (unitConcordanceContainerAditivo) unitConcordanceContainerAditivo.innerHTML = '';
+                        if (finalizeRenewalButtonAditivo) {
+                            finalizeRenewalButtonAditivo.classList.add('opacity-50', 'cursor-not-allowed');
+                            finalizeRenewalButtonAditivo.disabled = true;
+                        }
 
                         showModal(addendumModal);
                     } else {
@@ -2091,169 +2062,160 @@
                 addendumForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const contractId = addendumContractIdInput.value;
-                    const addendumType = addendumTypeSelect.value;
+                    const addendumType = addendumTypeSelect.value; // Apostilamento or Aditivo
+                    let subType = ''; // e.g., Nova DCO, Reajuste, Remanejamento Cotas, Renovacao
 
                     let historyEntry = {};
                     let updateData = {
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        lastActivityDate: firebase.firestore.FieldValue.serverTimestamp() // Atualiza data de atividade
+                        lastActivityDate: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
                     if (addendumType === 'Apostilamento') {
+                        subType = apostilamentoSubTypeSelect.value;
                         const apostilamentoNumber = apostilamentoNumberInput.value;
-                        // const seiNumber = apostilamentoSeiNumberInput.value; // REMOVIDO
                         const effectiveDate = apostilamentoDateInput.value;
-                        const reajustePercentage = parseFloat(apostilamentoReajustePercentageInput.value) || 0;
-                        // Ensure parsing from hidden input
-                        const newDCOUnits = JSON.parse(apostilamentoSelectedUnitsInput.value || '[]');
-                        const designacaoUnits = JSON.parse(apostilamentoDesignacaoSelectedUnitsInput.value || '[]');
-                        const remanejamentoType = remanejamentoTypeApostilamentoSelect.value;
-                        const cedingUnit = cedingUnitApostilamentoInput.value;
-                        const receivingUnit = receivingUnitApostilamentoInput.value;
-                        const remanejamentoNotes = remanejamentoNotesApostilamentoInput.value;
-                        const othersNotes = apostilamentoOthersNotesInput.value;
-
-                        const remanejamentoItems = Array.from(remanejamentoTableBodyApostilamento.rows).map(row => ({
-                            lote: row.querySelector('.remanejamento-lote')?.value,
-                            item: row.querySelector('.remanejamento-item')?.value,
-                            codigo: row.querySelector('.remanejamento-codigo')?.value,
-                            descricao: row.querySelector('.remanejamento-descricao')?.value,
-                            quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
-                            valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
-                            valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
-                        }));
-
-                        const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
-                        const doc = await contractRef.get();
-                        if (doc.exists) {
-                            const oldContract = doc.data();
-                            let updatedContractValue = oldContract.contractValue;
-
-                            if (reajustePercentage > 0) {
-                                updatedContractValue = (updatedContractValue || 0) * (1 + reajustePercentage / 100);
-                            }
-                            updateData.contractValue = updatedContractValue;
-                            updateData.participatingUnits = newDCOUnits; // Update participating units for the contract
-
-
-                            historyEntry = {
-                                type: `Apostilamento (${apostilamentoNumber})`,
-                                date: effectiveDate,
-                                notes: `Apostilamento (${apostilamentoNumber}). ` + // Removido SEI do documento
-                                    (reajustePercentage > 0 ? `Reajuste de ${reajustePercentage}%. ` : '') +
-                                    (newDCOUnits.length > 0 ? `Nova DCO para unidades: ${newDCOUnits.join(', ')}. ` : '') +
-                                    (designacaoUnits.length > 0 ? `Designação para unidades: ${designacaoUnits.join(', ')}. ` : '') +
-                                    (remanejamentoItems.length > 0 ? `Remanejamento (${remanejamentoType}): ${remanejamentoNotes}. Itens: ${JSON.stringify(remanejamentoItems)}. ` : '') +
-                                    (othersNotes ? `Outros: ${othersNotes}.` : ''),
-                                changedBy: currentUserId,
-                                // seiNumber: seiNumber, // REMOVIDO
-                                details: {
-                                    reajustePercentage: reajustePercentage,
-                                    newDCOUnits: newDCOUnits,
-                                    designacaoUnits: designacaoUnits,
-                                    remanejamento: remanejamentoItems.length > 0 ? {
-                                        type: remanejamentoType,
-                                        cedingUnit: cedingUnit,
-                                        receivingUnit: receivingUnit,
-                                        notes: remanejamentoNotes,
-                                        items: remanejamentoItems,
-                                        total: parseCurrency(remanejamentoTotalApostilamento.textContent)
-                                    } : null,
-                                    others: othersNotes
-                                }
-                            };
-                        } else {
-                            showMessageModal('Erro', 'Contrato não encontrado para apostilamento.');
-                            return;
-                        }
-                    } else if (addendumType === 'Aditivo') {
-                        const aditivoNumber = aditivoNumberInput.value;
-                        // const seiNumber = aditivoSeiNumberInput.value; // REMOVIDO
-                        const effectiveDate = aditivoDateInput.value;
-                        const reequilibrioPercentage = parseFloat(aditivoReequilibrioPercentageInput.value) || 0;
-                        const trocaMarcaDescription = aditivoTrocaMarcaDescriptionInput.value;
-                        const remanejamentoType = remanejamentoTypeAditivoSelect.value;
-                        const cedingUnit = cedingUnitAditivoInput.value;
-                        const receivingUnit = receivingUnitAditivoInput.value;
-                        const remanejamentoNotes = remanejamentoNotesAditivoInput.value;
-
-                        const remanejamentoItems = Array.from(remanejamentoTableBodyAditivo.rows).map(row => ({
-                            lote: row.querySelector('.remanejamento-lote')?.value,
-                            item: row.querySelector('.remanejamento-item')?.value,
-                            codigo: row.querySelector('.remanejamento-codigo')?.value,
-                            descricao: row.querySelector('.remanejamento-descricao')?.value,
-                            quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
-                            valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
-                            valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
-                        }));
-
-                        const acrescimoItems = Array.from(acrescimoTableBody.rows).map(row => ({
-                            lote: row.querySelector('.acrescimo-lote')?.value,
-                            item: row.querySelector('.acrescimo-item')?.value,
-                            codigo: row.querySelector('.acrescimo-codigo')?.value,
-                            unidades: JSON.parse(row.querySelector('.acrescimo-unidades-hidden')?.value || '[]'),
-                            descritivo: row.querySelector('.acrescimo-descritivo')?.value,
-                            quantidade: parseFloat(row.querySelector('.acrescimo-quantidade')?.value || 0),
-                            valorItem: parseCurrency(row.querySelector('.acrescimo-valor-item')?.value || '0,00'),
-                            valorTotal: parseCurrency(row.querySelector('.acrescimo-valor-total')?.textContent || '0,00'),
-                            porcentagem: parseFloat(row.querySelector('.acrescimo-porcentagem')?.value || 0)
-                        }));
-
-                        const supressaoItems = Array.from(supressaoTableBody.rows).map(row => ({
-                            unidadeSuprimida: JSON.parse(row.querySelector('.supressao-unidade-hidden')?.value || '[]'),
-                            lote: row.querySelector('.supressao-lote')?.value,
-                            valor: parseCurrency(row.querySelector('.supressao-valor')?.value || '0,00'),
-                            porcentagem: parseFloat(row.querySelector('.supressao-porcentagem')?.value || 0)
-                        }));
 
                         historyEntry = {
-                            type: `Aditivo (${aditivoNumber})`,
+                            type: `Apostilamento (${apostilamentoNumber}) - ${subType}`,
                             date: effectiveDate,
-                            notes: `Aditivo (${aditivoNumber}). ` + // Removido SEI do documento
-                                (reequilibrioPercentage > 0 ? `Reequilíbrio de ${reequilibrioPercentage}%. ` : '') +
-                                (trocaMarcaDescription ? `Troca de Marca: ${trocaMarcaDescription}. ` : '') +
-                                (remanejamentoItems.length > 0 ? `Remanejamento (${remanejamentoType}): ${remanejamentoNotes}. Itens: ${JSON.stringify(remanejamentoItems)}. ` : '') +
-                                (acrescimoItems.length > 0 ? `Acréscimo: ${JSON.stringify(acrescimoItems)}. ` : '') +
-                                (supressaoItems.length > 0 ? `Supressão: ${JSON.stringify(supressaoItems)}. ` : ''),
                             changedBy: currentUserId,
-                            // seiNumber: seiNumber, // REMOVIDO
-                            details: {
-                                reequilibrioPercentage: reequilibrioPercentage,
-                                trocaMarcaDescription: trocaMarcaDescription,
-                                remanejamento: remanejamentoItems.length > 0 ? {
-                                    type: remanejamentoType,
-                                    cedingUnit: cedingUnit,
-                                    receivingUnit: receivingUnit,
-                                    notes: remanejamentoNotes,
-                                    items: remanejamentoItems,
-                                    total: parseCurrency(remanejamentoTotalAditivo.textContent)
-                                } : null,
-                                acrescimo: acrescimoItems.length > 0 ? {
-                                    items: acrescimoItems,
-                                    total: parseCurrency(acrescimoTotal.textContent)
-                                } : null,
-                                supressao: supressaoItems.length > 0 ? {
-                                    items: supressaoItems,
-                                    total: parseCurrency(supressaoTotal.textContent)
-                                } : null
-                            }
+                            details: {}
                         };
+
+                        if (subType === 'Nova DCO') {
+                            const newDCOUnits = JSON.parse(apostilamentoSelectedUnitsInput.value || '[]');
+                            updateData.participatingUnits = newDCOUnits;
+                            historyEntry.notes = `Nova DCO para unidades: ${newDCOUnits.join(', ')}.`;
+                            historyEntry.details.newDCOUnits = newDCOUnits;
+                        } else if (subType === 'Reajuste') {
+                            const reajustePercentage = parseFloat(apostilamentoReajustePercentageInput.value) || 0;
+                            const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
+                            const doc = await contractRef.get();
+                            if (doc.exists) {
+                                const oldContract = doc.data();
+                                let updatedContractValue = (oldContract.contractValue || 0) * (1 + reajustePercentage / 100);
+                                updateData.contractValue = updatedContractValue;
+                                historyEntry.notes = `Reajuste de ${reajustePercentage}%. Valor atualizado para ${formatCurrency(updatedContractValue)}.`;
+                                historyEntry.details.reajustePercentage = reajustePercentage;
+                            }
+                        } else if (subType === 'Designacao Gestores Fiscais') {
+                            const designacaoUnits = JSON.parse(apostilamentoDesignacaoSelectedUnitsInput.value || '[]');
+                            historyEntry.notes = `Designação de Gestores e Fiscais para unidades: ${designacaoUnits.join(', ')}.`;
+                            historyEntry.details.designacaoUnits = designacaoUnits;
+                        } else if (subType === 'Remanejamento Cotas') {
+                            const remanejamentoType = remanejamentoTypeApostilamentoSelect.value;
+                            const cedingUnit = cedingUnitApostilamentoInput.value;
+                            const receivingUnit = receivingUnitApostilamentoInput.value;
+                            const remanejamentoNotes = remanejamentoNotesApostilamentoInput.value;
+                            const remanejamentoItems = Array.from(remanejamentoTableBodyApostilamento.rows).map(row => ({
+                                lote: row.querySelector('.remanejamento-lote')?.value,
+                                item: row.querySelector('.remanejamento-item')?.value,
+                                codigo: row.querySelector('.remanejamento-codigo')?.value,
+                                descricao: row.querySelector('.remanejamento-descricao')?.value,
+                                quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
+                                valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
+                                valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
+                            }));
+                            historyEntry.notes = `Remanejamento de Cotas (${remanejamentoType}). Unidade Cedente: ${cedingUnit}, Unidade Cessionária: ${receivingUnit}. Observações: ${remanejamentoNotes}.`;
+                            historyEntry.details.remanejamento = { type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(remanejamentoTotalApostilamento.textContent) };
+                        } else if (subType === 'Outros') {
+                            const othersNotes = apostilamentoOthersNotesInput.value;
+                            historyEntry.notes = `Outros: ${othersNotes}.`;
+                            historyEntry.details.others = othersNotes;
+                        } else {
+                            showMessageModal('Erro', 'Selecione um tipo de alteração para Apostilamento.');
+                            return;
+                        }
+
+                    } else if (addendumType === 'Aditivo') {
+                        subType = aditivoSubTypeSelect.value;
+                        const aditivoNumber = aditivoNumberInput.value;
+                        const effectiveDate = aditivoDateInput.value;
+
+                        historyEntry = {
+                            type: `Aditivo (${aditivoNumber}) - ${subType}`,
+                            date: effectiveDate,
+                            changedBy: currentUserId,
+                            details: {}
+                        };
+
+                        if (subType === 'Remanejamento Cotas') {
+                            const remanejamentoType = remanejamentoTypeAditivoSelect.value;
+                            const cedingUnit = cedingUnitAditivoInput.value;
+                            const receivingUnit = receivingUnitAditivoInput.value;
+                            const remanejamentoNotes = remanejamentoNotesAditivoInput.value;
+                            const remanejamentoItems = Array.from(remanejamentoTableBodyAditivo.rows).map(row => ({
+                                lote: row.querySelector('.remanejamento-lote')?.value,
+                                item: row.querySelector('.remanejamento-item')?.value,
+                                codigo: row.querySelector('.remanejamento-codigo')?.value,
+                                descricao: row.querySelector('.remanejamento-descricao')?.value,
+                                quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
+                                valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
+                                valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
+                            }));
+                            historyEntry.notes = `Remanejamento de Cotas (${remanejamentoType}). Unidade Cedente: ${cedingUnit}, Unidade Cessionária: ${receivingUnit}. Observações: ${remanejamentoNotes}.`;
+                            historyEntry.details.remanejamento = { type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(remanejamentoTotalAditivo.textContent) };
+                        } else if (subType === 'Reequilibrio') {
+                            const reequilibrioPercentage = parseFloat(aditivoReequilibrioPercentageInput.value) || 0;
+                            historyEntry.notes = `Reequilíbrio de ${reequilibrioPercentage}%.`;
+                            historyEntry.details.reequilibrioPercentage = reequilibrioPercentage;
+                        } else if (subType === 'Troca Marca') {
+                            const trocaMarcaDescription = aditivoTrocaMarcaDescriptionInput.value;
+                            historyEntry.notes = `Troca de Marca: ${trocaMarcaDescription}.`;
+                            historyEntry.details.trocaMarcaDescription = trocaMarcaDescription;
+                        } else if (subType === 'Acrescimo') {
+                            const acrescimoItems = Array.from(acrescimoTableBody.rows).map(row => ({
+                                lote: row.querySelector('.acrescimo-lote')?.value,
+                                item: row.querySelector('.acrescimo-item')?.value,
+                                codigo: row.querySelector('.acrescimo-codigo')?.value,
+                                unidades: JSON.parse(row.querySelector('.acrescimo-unidades-hidden')?.value || '[]'),
+                                descritivo: row.querySelector('.acrescimo-descritivo')?.value,
+                                quantidade: parseFloat(row.querySelector('.acrescimo-quantidade')?.value || 0),
+                                valorItem: parseCurrency(row.querySelector('.acrescimo-valor-item')?.value || '0,00'),
+                                valorTotal: parseCurrency(row.querySelector('.acrescimo-valor-total')?.textContent || '0,00'),
+                                porcentagem: parseFloat(row.querySelector('.acrescimo-porcentagem')?.value || 0)
+                            }));
+                            historyEntry.notes = `Acréscimo de itens.`;
+                            historyEntry.details.acrescimo = { items: acrescimoItems, total: parseCurrency(acrescimoTotal.textContent) };
+                        } else if (subType === 'Supressao') {
+                            const supressaoItems = Array.from(supressaoTableBody.rows).map(row => ({
+                                unidadeSuprimida: JSON.parse(row.querySelector('.supressao-unidade-hidden')?.value || '[]'),
+                                lote: row.querySelector('.supressao-lote')?.value,
+                                valor: parseCurrency(row.querySelector('.supressao-valor')?.value || '0,00'),
+                                porcentagem: parseFloat(row.querySelector('.supressao-porcentagem')?.value || 0)
+                            }));
+                            historyEntry.notes = `Supressão de itens.`;
+                            historyEntry.details.supressao = { items: supressaoItems, total: parseCurrency(supressaoTotal.textContent) };
+                        } else if (subType === 'Renovacao') {
+                            // This part is handled by finalizeRenewalButtonAditivo click listener
+                            // We should prevent the main form submission if 'Renovacao' is selected
+                            // and the finalize button hasn't been clicked yet.
+                            showMessageModal('Atenção', 'Para finalizar a Renovação, use o botão "Efetivar Renovação" dentro da seção de Renovação.');
+                            return; // Prevent main form submission
+                        } else {
+                            showMessageModal('Erro', 'Selecione um tipo de alteração para Aditivo.');
+                            return;
+                        }
                     } else {
-                        showMessageModal('Erro', 'Tipo de aditivo inválido.');
+                        showMessageModal('Erro', 'Tipo de aditivo/apostilamento inválido.');
                         return;
                     }
 
-                    try {
-                        const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
-                        await contractRef.update({
-                            ...updateData,
-                            contractHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry)
-                        });
-                        showMessageModal('Sucesso', `${addendumType} aplicado com sucesso!`);
-                        closeModal('addendum-modal');
-                    } catch (error) {
-                        console.error(`Erro ao aplicar ${addendumType}:`, error);
-                        showMessageModal('Erro', `Erro ao aplicar ${addendumType}: ${error.message}`);
+                    // Only update contract if it's not a renewal (renewal has its own update logic)
+                    if (subType !== 'Renovacao') {
+                        try {
+                            const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
+                            await contractRef.update({
+                                ...updateData,
+                                contractHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry)
+                            });
+                            showMessageModal('Sucesso', `${addendumType} - ${subType} aplicado com sucesso!`);
+                            closeModal('addendum-modal');
+                        } catch (error) {
+                            console.error(`Erro ao aplicar ${addendumType} - ${subType}:`, error);
+                            showMessageModal('Erro', `Erro ao aplicar ${addendumType} - ${subType}: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -2271,7 +2233,6 @@
                                     <li>
                                         <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}</p>
                                         <p class="text-sm text-gray-700">${entry.notes}</p>
-                                        ${entry.seiNumber ? `<p class="text-xs text-gray-500">SEI do Documento: ${entry.seiNumber}</p>` : ''}
                                         <p class="text-xs text-gray-500">Por: ${entry.changedBy || 'N/A'}</p>
                                     </li>
                                 `;
@@ -2295,7 +2256,6 @@
             // --- Reminder Management ---
             async function loadReminders() {
                 if (!currentUserId) {
-                    console.log("loadReminders: Usuário não autenticado, não carregando lembretes.");
                     const remindersList = document.getElementById('reminders-list');
                     const noRemindersMessage = document.getElementById('no-reminders-message');
                     if (remindersList) remindersList.innerHTML = '<p class="text-center text-gray-500 hidden">Faça login para visualizar os lembretes.</p>';
@@ -2303,12 +2263,10 @@
                     return;
                 }
                 if (unsubscribeReminders) unsubscribeReminders();
-                console.log('loadReminders: Tentando configurar listener para lembretes. Coleção:', `${PUBLIC_COLLECTION_PATH}/reminders`);
                 unsubscribeReminders = db.collection(`${PUBLIC_COLLECTION_PATH}/reminders`)
                     .orderBy('reminderDate', 'asc')
                     .onSnapshot(snapshot => {
-                        const remindersList = document.getElementById('reminders-list'); // Fetch locally
-                        console.log("Snapshot de lembretes recebido:", snapshot.docs.length, "documentos.");
+                        const remindersList = document.getElementById('reminders-list');
                         const reminders = [];
                         snapshot.forEach(doc => {
                             const reminder = { id: doc.id, ...doc.data() };
@@ -2323,8 +2281,8 @@
             }
 
             function displayReminders(remindersToDisplay) {
-                const remindersList = document.getElementById('reminders-list'); // Fetch locally
-                const noRemindersMessage = document.getElementById('no-reminders-message'); // Fetch locally
+                const remindersList = document.getElementById('reminders-list');
+                const noRemindersMessage = document.getElementById('no-reminders-message');
 
                 if (!remindersList || !noRemindersMessage) {
                     console.warn("displayReminders: Elementos 'remindersList' ou 'noRemindersMessage' não encontrados.");
@@ -2332,15 +2290,12 @@
                 }
 
                 remindersList.innerHTML = '';
-                console.log("displayReminders: Limpando a lista de lembretes. Reminders a exibir:", remindersToDisplay.length);
 
                 if (remindersToDisplay.length === 0) {
                     noRemindersMessage.classList.remove('hidden');
-                    console.log("displayReminders: Nenhuns lembretes para exibir, mostrando mensagem de vazio.");
                     return;
                 } else {
                     noRemindersMessage.classList.add('hidden');
-                    console.log("displayReminders: Lembretes encontrados, escondendo mensagem de vazio.");
                 }
 
                 remindersToDisplay.forEach(reminder => {
@@ -2388,7 +2343,6 @@
                         </div>
                     `;
                     remindersList.appendChild(reminderCard);
-                    console.log("displayReminders: Lembrete adicionado ao DOM:", reminder.title);
                 });
 
                 document.querySelectorAll('.edit-reminder-button').forEach(button => {
@@ -2404,7 +2358,6 @@
 
             if (addReminderButton) {
                 addReminderButton.addEventListener('click', () => {
-                    console.log("Botão 'Adicionar Lembrete' clicado. Abrindo modal.");
                     if (reminderForm) reminderForm.reset();
                     if (reminderIdInput) reminderIdInput.value = '';
                     if (reminderFormTitle) reminderFormTitle.textContent = 'Adicionar Novo Lembrete';
@@ -2416,7 +2369,6 @@
             if (reminderForm) {
                 reminderForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    console.log("Formulário de lembrete submetido. Coletando dados...");
 
                     const reminderId = reminderIdInput.value;
                     const title = reminderTitleInput.value;
@@ -2434,17 +2386,14 @@
 
                     try {
                         if (reminderId) {
-                            console.log("Atualizando lembrete existente no Firestore:", reminderId, reminderData);
                             await db.collection(`${PUBLIC_COLLECTION_PATH}/reminders`).doc(reminderId).update(reminderData);
                             showMessageModal('Sucesso', 'Lembrete atualizado com sucesso!');
                         } else {
-                            console.log("Adicionando novo lembrete ao Firestore:", reminderData);
                             await db.collection(`${PUBLIC_COLLECTION_PATH}/reminders`).add(reminderData);
                             showMessageModal('Sucesso', 'Lembrete adicionado com sucesso!');
                         }
                         closeModal('reminder-form-modal');
                         if (reminderForm) reminderForm.reset();
-                        console.log("Lembrete salvo no Firestore. onSnapshot deve disparar a atualização da UI.");
                     } catch (error) {
                         console.error("Erro ao salvar lembrete no Firestore:", error);
                         showMessageModal('Erro', `Erro ao salvar lembrete: ${error.message}`);
@@ -2686,20 +2635,6 @@
                 totalDisplay.textContent = formatCurrency(total);
             }
 
-            function getNextSequentialNumber(contractId, type) {
-                const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
-                return contractRef.get().then(doc => {
-                    if (doc.exists) {
-                        const contractData = doc.data();
-                        const history = contractData.contractHistory || [];
-                        const filteredHistory = history.filter(entry => entry.type.startsWith(type));
-                        return filteredHistory.length + 1;
-                    }
-                    return 1;
-                });
-            }
-
-
             if (initialProcessDateInput) initialProcessDateInput.addEventListener('change', calculateMaxContractTerm);
             if (lawTypeSelect) lawTypeSelect.addEventListener('change', calculateMaxContractTerm);
 
@@ -2770,8 +2705,6 @@
                     messageElement = document.getElementById('no-contracts-message');
                 } else if (tabName === 'reminders') {
                     messageElement = document.getElementById('no-reminders-message');
-                } else if (tabName === 'in-renewal') {
-                    messageElement = document.getElementById('no-in-renewal-contracts-message');
                 } else if (tabName === 'terminated-contracts') {
                     messageElement = document.getElementById('no-terminated-contracts-message');
                 } else {
@@ -2797,7 +2730,7 @@
             }
 
             // Centralized currency input formatting on blur
-            document.querySelectorAll('#contract-value, #renewal-updated-value-checklist').forEach(input => {
+            document.querySelectorAll('#contract-value, #renewal-updated-value-aditivo').forEach(input => {
                 input.addEventListener('blur', (e) => {
                     let value = parseCurrency(e.target.value);
                     e.target.value = value.toFixed(2).replace('.', ','); // Always show 2 decimals, use comma for decimal separator
@@ -2826,69 +2759,16 @@
                 addSupressaoItemButton.addEventListener('click', addSupressaoItem);
             }
 
-            // --- New Renewal Flow Logic ---
+            // --- Renewal Logic within Aditivo ---
 
             /**
-             * Inicia o processo de renovação para um contrato, marcando-o como 'em renovação'
-             * e abrindo o modal de checklist.
-             * @param {string} contractId - O ID do contrato a ser renovado.
-             */
-            async function initiateContractRenewal(contractId) {
-                try {
-                    const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
-                    await contractRef.update({
-                        isInRenewal: true,
-                        lastActivityDate: firebase.firestore.FieldValue.serverTimestamp() // Atualiza data de atividade
-                    });
-                    showMessageModal('Sucesso', 'Contrato movido para "Em Renovação". Você pode continuar o processo na aba "Em Renovação".');
-                    setActiveTab('in-renewal'); // Navega para a aba "Em Renovação"
-                    // openRenewalChecklistModal(contractId); // Pode abrir direto ou esperar o usuário clicar na aba
-                } catch (error) {
-                    console.error("Erro ao iniciar renovação do contrato:", error);
-                    showMessageModal('Erro', `Não foi possível iniciar a renovação: ${error.message}`);
-                }
-            }
-
-            /**
-             * Abre o modal de checklist de renovação e carrega os dados do contrato.
-             * @param {string} contractId - O ID do contrato.
-             */
-            async function openRenewalChecklistModal(contractId) {
-                try {
-                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-                    if (doc.exists) {
-                        const contract = doc.data();
-                        if (checklistContractIdInput) checklistContractIdInput.value = contractId;
-                        if (checklistContractSei) checklistContractSei.textContent = contract.seiNumber;
-                        if (checklistContractCompany) checklistContractCompany.textContent = contract.companyName;
-
-                        // Preencher dados do checklist se existirem
-                        const renewalChecklistData = contract.renewalChecklist || {};
-                        if (renewalDurationChecklistInput) renewalDurationChecklistInput.value = renewalChecklistData.renewalDuration || '';
-                        if (renewalUpdatedValueChecklistInput) renewalUpdatedValueChecklistInput.value = formatCurrency(renewalChecklistData.updatedValue || contract.contractValue).replace('R$', '').trim();
-
-                        renderChecklistItems(contract.companyName, renewalChecklistData.items || {});
-                        renderUnitConcordance(contract.participatingUnits || [], renewalChecklistData.unitConcordance || {});
-                        updateFinalRenewButtonState(); // Atualiza o estado do botão de finalização
-
-                        showModal(renewalChecklistModal);
-                    } else {
-                        showMessageModal('Erro', 'Contrato não encontrado para checklist de renovação.');
-                    }
-                } catch (error) {
-                    console.error("Erro ao abrir modal de checklist de renovação:", error);
-                    showMessageModal('Erro', `Erro ao carregar dados do contrato para checklist: ${error.message}`);
-                }
-            }
-
-            /**
-             * Renderiza os itens do checklist no modal.
+             * Renderiza os itens do checklist no modal de Aditivo (seção Renovação).
              * @param {string} companyName - Nome da empresa para itens específicos.
              * @param {object} savedItems - Objeto com o estado salvo dos itens do checklist.
              */
-            function renderChecklistItems(companyName, savedItems = {}) {
-                if (!checklistItemsContainer) return;
-                checklistItemsContainer.innerHTML = '';
+            function renderChecklistItemsAditivo(companyName, savedItems = {}) {
+                if (!checklistItemsContainerAditivo) return;
+                checklistItemsContainerAditivo.innerHTML = '';
                 renewalChecklistItems.forEach((item, index) => {
                     let itemText = item;
                     if (item === "Ofício da Empresa") {
@@ -2898,27 +2778,27 @@
                     const div = document.createElement('div');
                     div.className = 'flex items-center';
                     div.innerHTML = `
-                        <input type="checkbox" id="checklist-item-${index}" class="checklist-item h-4 w-4 text-blue-600 border-gray-300 rounded" ${savedItems[`item-${index}`] ? 'checked' : ''}>
-                        <label for="checklist-item-${index}" class="ml-2 text-sm font-medium text-gray-700">${itemText}</label>
+                        <input type="checkbox" id="checklist-item-aditivo-${index}" class="checklist-item-aditivo h-4 w-4 text-blue-600 border-gray-300 rounded" ${savedItems[`item-${index}`] ? 'checked' : ''}>
+                        <label for="checklist-item-aditivo-${index}" class="ml-2 text-sm font-medium text-gray-700">${itemText}</label>
                     `;
-                    checklistItemsContainer.appendChild(div);
+                    checklistItemsContainerAditivo.appendChild(div);
                 });
 
-                document.querySelectorAll('.checklist-item').forEach(checkbox => {
-                    checkbox.addEventListener('change', updateFinalRenewButtonState);
+                document.querySelectorAll('.checklist-item-aditivo').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateFinalRenewButtonStateAditivo);
                 });
             }
 
             /**
-             * Renderiza a seção de concordância das unidades.
+             * Renderiza a seção de concordância das unidades no modal de Aditivo (seção Renovação).
              * @param {Array<string>} participatingUnits - Unidades participantes do contrato.
              * @param {object} savedConcordance - Objeto com o estado salvo da concordância das unidades.
              */
-            function renderUnitConcordance(participatingUnits, savedConcordance = {}) {
-                if (!unitConcordanceContainer) return;
-                unitConcordanceContainer.innerHTML = '';
+            function renderUnitConcordanceAditivo(participatingUnits, savedConcordance = {}) {
+                if (!unitConcordanceContainerAditivo) return;
+                unitConcordanceContainerAditivo.innerHTML = '';
                 if (participatingUnits.length === 0) {
-                    unitConcordanceContainer.innerHTML = '<p class="text-sm text-gray-500">Nenhuma unidade participante para verificar.</p>';
+                    unitConcordanceContainerAditivo.innerHTML = '<p class="text-sm text-gray-500">Nenhuma unidade participante para verificar.</p>';
                     return;
                 }
 
@@ -2928,29 +2808,29 @@
                     div.innerHTML = `
                         <span class="text-sm font-medium text-gray-700">${unit}</span>
                         <div class="flex items-center space-x-4">
-                            <input type="radio" id="unit-concordance-${index}-yes" name="unit-concordance-${unit}" value="Sim" class="unit-concordance-radio h-4 w-4 text-green-600 border-gray-300 rounded" ${savedConcordance[unit] === 'Sim' ? 'checked' : ''}>
-                            <label for="unit-concordance-${index}-yes" class="text-sm text-gray-700">Sim</label>
-                            <input type="radio" id="unit-concordance-${index}-no" name="unit-concordance-${unit}" value="Não" class="unit-concordance-radio h-4 w-4 text-red-600 border-gray-300 rounded" ${savedConcordance[unit] === 'Não' ? 'checked' : ''}>
-                            <label for="unit-concordance-${index}-no" class="text-sm text-gray-700">Não</label>
+                            <input type="radio" id="unit-concordance-aditivo-${index}-yes" name="unit-concordance-aditivo-${unit}" value="Sim" class="unit-concordance-radio-aditivo h-4 w-4 text-green-600 border-gray-300 rounded" ${savedConcordance[unit] === 'Sim' ? 'checked' : ''}>
+                            <label for="unit-concordance-aditivo-${index}-yes" class="text-sm text-gray-700">Sim</label>
+                            <input type="radio" id="unit-concordance-aditivo-${index}-no" name="unit-concordance-aditivo-${unit}" value="Não" class="unit-concordance-radio-aditivo h-4 w-4 text-red-600 border-gray-300 rounded" ${savedConcordance[unit] === 'Não' ? 'checked' : ''}>
+                            <label for="unit-concordance-aditivo-${index}-no" class="text-sm text-gray-700">Não</label>
                         </div>
                     `;
-                    unitConcordanceContainer.appendChild(div);
+                    unitConcordanceContainerAditivo.appendChild(div);
                 });
 
-                document.querySelectorAll('.unit-concordance-radio').forEach(radio => {
-                    radio.addEventListener('change', updateFinalRenewButtonState);
+                document.querySelectorAll('.unit-concordance-radio-aditivo').forEach(radio => {
+                    radio.addEventListener('change', updateFinalRenewButtonStateAditivo);
                 });
             }
 
             /**
-             * Atualiza o estado do botão "Efetivar Renovação" com base no preenchimento do checklist.
+             * Atualiza o estado do botão "Efetivar Renovação" no modal de Aditivo.
              */
-            function updateFinalRenewButtonState() {
-                const allChecklistItems = document.querySelectorAll('.checklist-item');
-                const allUnitConcordanceRadios = document.querySelectorAll('.unit-concordance-radio');
-                const renewalDurationInput = document.getElementById('renewal-duration-checklist');
-                const renewalUpdatedValueInput = document.getElementById('renewal-updated-value-checklist');
-                const renewButton = document.getElementById('finalize-renewal-button');
+            function updateFinalRenewButtonStateAditivo() {
+                const allChecklistItems = document.querySelectorAll('.checklist-item-aditivo');
+                const allUnitConcordanceRadios = document.querySelectorAll('.unit-concordance-radio-aditivo');
+                const renewalDurationInput = document.getElementById('renewal-duration-aditivo');
+                const renewalUpdatedValueInput = document.getElementById('renewal-updated-value-aditivo');
+                const renewButton = document.getElementById('finalize-renewal-button-aditivo');
 
                 let allChecklistChecked = true;
                 allChecklistItems.forEach(item => {
@@ -2973,7 +2853,6 @@
                     }
                 });
 
-                // Verifica se os campos de duração e valor estão preenchidos e são válidos
                 const durationValid = renewalDurationInput && parseInt(renewalDurationInput.value) > 0;
                 const valueValid = renewalUpdatedValueInput && parseCurrency(renewalUpdatedValueInput.value) > 0;
 
@@ -2990,33 +2869,32 @@
                 }
             }
 
-            // Salvar progresso do checklist
-            if (saveChecklistProgressButton) {
-                saveChecklistProgressButton.addEventListener('click', async () => {
-                    const contractId = checklistContractIdInput.value;
-                    const renewalDuration = renewalDurationChecklistInput.value;
-                    const updatedValue = parseCurrency(renewalUpdatedValueChecklistInput.value);
+            // Salvar progresso do checklist de Renovação (dentro do Aditivo)
+            if (saveRenewalProgressButton) {
+                saveRenewalProgressButton.addEventListener('click', async () => {
+                    const contractId = addendumContractIdInput.value; // Use the main contract ID from addendum modal
+                    const renewalDuration = renewalDurationAditivoInput.value;
+                    const updatedValue = parseCurrency(renewalUpdatedValueAditivoInput.value);
 
                     const checklistItemsState = {};
-                    document.querySelectorAll('.checklist-item').forEach((item, index) => {
+                    document.querySelectorAll('.checklist-item-aditivo').forEach((item, index) => {
                         checklistItemsState[`item-${index}`] = item.checked;
                     });
 
                     const unitConcordanceState = {};
                     const uniqueUnitNames = new Set();
-                    document.querySelectorAll('.unit-concordance-radio').forEach(radio => {
-                        uniqueUnitNames.add(radio.name.replace('unit-concordance-', '')); // Get the actual unit name
+                    document.querySelectorAll('.unit-concordance-radio-aditivo').forEach(radio => {
+                        uniqueUnitNames.add(radio.name.replace('unit-concordance-aditivo-', ''));
                     });
                     uniqueUnitNames.forEach(unit => {
-                        const yesRadio = document.querySelector(`input[name="unit-concordance-${unit}"][value="Sim"]`);
-                        const noRadio = document.querySelector(`input[name="unit-concordance-${unit}"][value="Não"]`);
+                        const yesRadio = document.querySelector(`input[name="unit-concordance-aditivo-${unit}"][value="Sim"]`);
+                        const noRadio = document.querySelector(`input[name="unit-concordance-aditivo-${unit}"][value="Não"]`);
                         if (yesRadio && yesRadio.checked) {
                             unitConcordanceState[unit] = 'Sim';
                         } else if (noRadio && noRadio.checked) {
                             unitConcordanceState[unit] = 'Não';
                         }
                     });
-
 
                     const renewalChecklistData = {
                         renewalDuration: renewalDuration,
@@ -3032,25 +2910,22 @@
                             renewalChecklist: renewalChecklistData,
                             lastActivityDate: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                        showMessageModal('Sucesso', 'Progresso do checklist salvo com sucesso!');
+                        showMessageModal('Sucesso', 'Progresso da Renovação salvo com sucesso!');
+                        updateFinalRenewButtonStateAditivo(); // Re-evaluate button state after saving
                     } catch (error) {
-                        console.error("Erro ao salvar progresso do checklist:", error);
-                        showMessageModal('Erro', `Erro ao salvar progresso: ${error.message}`);
+                        console.error("Erro ao salvar progresso da renovação:", error);
+                        showMessageModal('Erro', `Erro ao salvar progresso da renovação: ${error.message}`);
                     }
                 });
             }
 
+            // Finalizar Renovação (dentro do Aditivo)
+            if (finalizeRenewalButtonAditivo) {
+                finalizeRenewalButtonAditivo.addEventListener('click', async () => { // Changed to 'click' as it's a button, not form submission
+                    const contractId = addendumContractIdInput.value;
+                    const renewalDuration = parseInt(renewalDurationAditivoInput.value);
+                    const updatedValue = parseCurrency(renewalUpdatedValueAditivoInput.value);
 
-            // Finalizar Renovação
-            if (finalizeRenewalButton) {
-                finalizeRenewalButton.addEventListener('submit', async (e) => { // Mudado para 'submit' do formulário
-                    e.preventDefault(); // Previne o envio padrão do formulário
-
-                    const contractId = checklistContractIdInput.value;
-                    const renewalDuration = parseInt(renewalDurationChecklistInput.value);
-                    const updatedValue = parseCurrency(renewalUpdatedValueChecklistInput.value);
-
-                    // Validação final antes de efetivar
                     if (isNaN(renewalDuration) || renewalDuration <= 0) {
                         showMessageModal('Erro', 'Por favor, insira um prazo de renovação válido em meses.');
                         return;
@@ -3069,9 +2944,9 @@
                             const newValidityDate = addMonths(oldContract.currentValidityDate, renewalDuration);
 
                             const historyEntry = {
-                                type: 'Renovação Efetivada (Checklist)',
+                                type: 'Renovação Efetivada',
                                 date: new Date().toISOString().split('T')[0],
-                                notes: `Contrato renovado via checklist por ${renewalDuration} meses. Nova vigência até ${createLocalDate(newValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
+                                notes: `Contrato renovado por ${renewalDuration} meses. Nova vigência até ${createLocalDate(newValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
                                 changedBy: currentUserId
                             };
 
@@ -3079,21 +2954,19 @@
                                 currentValidityDate: newValidityDate,
                                 renewalNumber: newRenewalNumber,
                                 contractValue: updatedValue,
-                                isInRenewal: false, // Remove do status 'em renovação'
                                 contractHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry),
                                 lastActivityDate: firebase.firestore.FieldValue.serverTimestamp(),
                                 updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                                 renewalChecklist: firebase.firestore.FieldValue.delete() // Limpa o checklist após finalizar
                             });
-                            showMessageModal('Sucesso', 'Contrato renovado com sucesso via Checklist!');
-                            closeModal('renewal-checklist-modal');
-                            setActiveTab('contracts'); // Volta para a aba de contratos ativos
+                            showMessageModal('Sucesso', 'Contrato renovado com sucesso!');
+                            closeModal('addendum-modal');
                         } else {
-                            showMessageModal('Erro', 'Contrato não encontrado para renovação via checklist.');
+                            showMessageModal('Erro', 'Contrato não encontrado para renovação.');
                         }
                     } catch (error) {
-                        console.error("Erro ao renovar contrato via checklist:", error);
-                        showMessageModal('Erro', `Erro ao renovar contrato via checklist: ${error.message}`);
+                        console.error("Erro ao renovar contrato:", error);
+                        showMessageModal('Erro', `Erro ao renovar contrato: ${error.message}`);
                     }
                 });
             }
