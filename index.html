@@ -216,7 +216,7 @@
             <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
                 <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 active-tab" data-tab="contracts">Contratos</button>
                 <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="reminders">Lembretes</button>
-                <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="in-renewal">Em Renovação</button> <!-- New Tab -->
+                <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="in-renewal">Em Renovação</button>
                 <button class="tab-button py-2 px-4 text-sm font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500" data-tab="terminated-contracts">Encerrados</button>
             </div>
 
@@ -360,48 +360,7 @@
         </div>
     </div>
 
-    <div id="renew-contract-modal" class="modal">
-        <div class="modal-content max-w-xl">
-            <span class="close-button" onclick="closeModal('renew-contract-modal')">&times;</span>
-            <h3 class="text-xl font-semibold mb-4">Renovar Contrato</h3>
-            <form id="renew-form" class="space-y-4">
-                <input type="hidden" id="renew-contract-id">
-                <div>
-                    <label for="renew-current-sei" class="block text-sm font-medium text-gray-700">Processo SEI</label>
-                    <input type="text" id="renew-current-sei" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
-                </div>
-                <div>
-                    <label for="renew-current-validity-date" class="block text-sm font-medium text-gray-700">Vigência Atual</label>
-                    <input type="date" id="renew-current-validity-date" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
-                </div>
-                <div>
-                    <label for="renew-next-validity-duration" class="block text-sm font-medium text-gray-700">Tempo de Vigência (meses)</label>
-                    <input type="number" id="renew-next-validity-duration" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label for="renew-next-validity-date" class="block text-sm font-medium text-gray-700">Próximo Vencimento</label>
-                    <input type="date" id="renew-next-validity-date" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
-                </div>
-                <div>
-                    <label for="renew-updated-value" class="block text-sm font-medium text-gray-700">Valor Atualizado (R$)</label>
-                    <input type="text" id="renew-updated-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00">
-                </div>
-                <div class="col-span-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Unidades para Renovação</label>
-                    <div id="renew-units-checkbox-container" class="flex flex-wrap gap-2">
-                        </div>
-                </div>
-                <div class="col-span-full">
-                    <label for="renew-history-notes" class="block text-sm font-medium text-gray-700">Histórico de Movimentações</label>
-                    <textarea id="renew-history-notes" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-                </div>
-                <div class="flex justify-end space-x-3 mt-4">
-                    <button type="button" onclick="closeModal('renew-contract-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
-                    <button type="submit" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Confirmar Renovação</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- REMOVIDO: renew-contract-modal foi substituído pelo fluxo de checklist -->
 
     <div id="addendum-modal" class="modal">
         <div class="modal-content max-w-2xl">
@@ -425,10 +384,7 @@
                         <label for="apostilamento-number" class="block text-sm font-medium text-gray-700">Número do Apostilamento</label>
                         <input type="text" id="apostilamento-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" readonly>
                     </div>
-                    <div>
-                        <label for="apostilamento-sei-number" class="block text-sm font-medium text-gray-700">Número do SEI (Documento)</label>
-                        <input type="text" id="apostilamento-sei-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
+                    <!-- REMOVIDO: Número do SEI (Documento) -->
                     <div>
                         <label for="apostilamento-date" class="block text-sm font-medium text-gray-700">Data de Efetivação</label>
                         <input type="date" id="apostilamento-date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
@@ -525,10 +481,7 @@
                         <label for="aditivo-number" class="block text-sm font-medium text-gray-700">Número do Aditivo</label>
                         <input type="text" id="aditivo-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" readonly>
                     </div>
-                    <div>
-                        <label for="aditivo-sei-number" class="block text-sm font-medium text-gray-700">Número do SEI (Documento)</label>
-                        <input type="text" id="aditivo-sei-number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
+                    <!-- REMOVIDO: Número do SEI (Documento) -->
                     <div>
                         <label for="aditivo-date" class="block text-sm font-medium text-gray-700">Data de Efetivação</label>
                         <input type="date" id="aditivo-date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
@@ -662,13 +615,7 @@
                         <button type="button" id="add-supressao-item" class="mt-2 py-1 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">Adicionar Item</button>
                     </div>
 
-                    <!-- Renovação (Aditivo) - This will trigger the checklist modal -->
-                    <div class="border p-4 rounded-md">
-                        <h5 class="text-md font-semibold text-gray-800 mb-2">Renovação</h5>
-                        <button type="button" id="trigger-aditivo-renewal-checklist" class="py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200">
-                            Abrir Checklist de Renovação
-                        </button>
-                    </div>
+                    <!-- REMOVIDO: Renovação (Aditivo) - Este bloco foi removido -->
                 </div>
 
                 <div class="col-span-full flex justify-end space-x-3 mt-4">
@@ -679,38 +626,44 @@
         </div>
     </div>
 
-    <!-- Novo Modal para Checklist de Renovação de Aditivo -->
-    <div id="aditivo-renewal-checklist-modal" class="modal">
+    <!-- Novo Modal para Checklist de Renovação -->
+    <div id="renewal-checklist-modal" class="modal">
         <div class="modal-content max-w-2xl">
-            <span class="close-button" onclick="closeModal('aditivo-renewal-checklist-modal')">&times;</span>
-            <h3 class="text-xl font-semibold mb-4">Aditivo: Checklist de Renovação</h3>
+            <span class="close-button" onclick="closeModal('renewal-checklist-modal')">&times;</span>
+            <h3 class="text-xl font-semibold mb-4">Checklist de Renovação</h3>
             <p class="text-lg font-bold text-gray-800 mb-4">Contrato: <span id="checklist-contract-sei"></span> - <span id="checklist-contract-company"></span></p>
             <p class="text-md text-red-600 font-semibold mb-4">Status: Em Renovação</p>
 
-            <form id="aditivo-renewal-checklist-form" class="space-y-4">
+            <form id="renewal-checklist-form" class="space-y-4">
                 <input type="hidden" id="checklist-contract-id">
 
-                <div id="checklist-items-container" class="space-y-3">
+                <div id="checklist-items-container" class="space-y-3 border p-4 rounded-md">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Itens do Checklist</h4>
                     <!-- Itens do checklist serão gerados aqui -->
                 </div>
 
-                <div id="unit-concordance-container" class="space-y-3 border-t pt-4 mt-4 border-gray-200">
+                <div id="unit-concordance-container" class="space-y-3 border p-4 rounded-md">
                     <h4 class="text-lg font-semibold text-gray-800">Concordância das Unidades</h4>
                     <!-- Concordância das unidades será gerada aqui -->
                 </div>
 
-                <div class="mt-6">
-                    <label for="renewal-duration-aditivo" class="block text-sm font-medium text-gray-700">Prazo de Renovação (meses)</label>
-                    <input type="number" id="renewal-duration-aditivo" min="1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
-                </div>
-                <div class="mt-4">
-                    <label for="renewal-updated-value-aditivo" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato (R$)</label>
-                    <input type="text" id="renewal-updated-value-aditivo" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00" disabled>
+                <div class="mt-6 border p-4 rounded-md">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Detalhes da Renovação</h4>
+                    <div>
+                        <label for="renewal-duration-checklist" class="block text-sm font-medium text-gray-700">Prazo de Renovação (meses)</label>
+                        <input type="number" id="renewal-duration-checklist" min="1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="mt-4">
+                        <label for="renewal-updated-value-checklist" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato (R$)</label>
+                        <input type="text" id="renewal-updated-value-checklist" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00">
+                    </div>
                 </div>
 
+
                 <div class="flex justify-end space-x-3 mt-4">
-                    <button type="button" onclick="closeModal('aditivo-renewal-checklist-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
-                    <button type="submit" id="final-renew-button" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 opacity-50 cursor-not-allowed" disabled>Efetivar Renovação</button>
+                    <button type="button" onclick="closeModal('renewal-checklist-modal')" class="py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                    <button type="button" id="save-checklist-progress-button" class="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar Progresso</button>
+                    <button type="submit" id="finalize-renewal-button" class="py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 opacity-50 cursor-not-allowed" disabled>Efetivar Renovação</button>
                 </div>
             </form>
         </div>
@@ -888,16 +841,7 @@
             const unitsCheckboxContainer = document.getElementById('units-checkbox-container');
             const contractObservationsInput = document.getElementById('contract-observations');
 
-            const renewContractModal = document.getElementById('renew-contract-modal');
-            const renewForm = document.getElementById('renew-form');
-            const renewContractIdInput = document.getElementById('renew-contract-id');
-            const renewCurrentSeiInput = document.getElementById('renew-current-sei');
-            const renewCurrentValidityDateInput = document.getElementById('renew-current-validity-date');
-            const renewNextValidityDurationInput = document.getElementById('renew-next-validity-duration');
-            const renewNextValidityDateInput = document.getElementById('renew-next-validity-date');
-            const renewUpdatedValueInput = document.getElementById('renew-updated-value');
-            const renewUnitsCheckboxContainer = document.getElementById('renew-units-checkbox-container');
-            const renewHistoryNotesInput = document.getElementById('renew-history-notes');
+            // REMOVIDO: renewContractModal e seus elementos foram removidos.
 
             const addendumModal = document.getElementById('addendum-modal');
             const addendumForm = document.getElementById('addendum-form');
@@ -908,7 +852,7 @@
 
             // Apostilamento specific fields
             const apostilamentoNumberInput = document.getElementById('apostilamento-number');
-            const apostilamentoSeiNumberInput = document.getElementById('apostilamento-sei-number');
+            // REMOVIDO: apostilamentoSeiNumberInput
             const apostilamentoDateInput = document.getElementById('apostilamento-date');
             const apostilamentoUnitsContainer = document.getElementById('apostilamento-units-container');
             const apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
@@ -928,7 +872,7 @@
 
             // Aditivo specific fields
             const aditivoNumberInput = document.getElementById('aditivo-number');
-            const aditivoSeiNumberInput = document.getElementById('aditivo-sei-number');
+            // REMOVIDO: aditivoSeiNumberInput
             const aditivoDateInput = document.getElementById('aditivo-date');
             const remanejamentoTypeAditivoSelect = document.getElementById('remanejamento-type-aditivo');
             const cedingUnitAditivoInput = document.getElementById('ceding-unit-aditivo');
@@ -947,20 +891,20 @@
             const supressaoTableBody = document.getElementById('supressao-table-body');
             const supressaoTotal = document.getElementById('supressao-total');
             const addSupressaoItemButton = document.getElementById('add-supressao-item');
-            const triggerAditivoRenewalChecklistButton = document.getElementById('trigger-aditivo-renewal-checklist');
+            // REMOVIDO: triggerAditivoRenewalChecklistButton
 
-
-            // New Aditivo Renewal Checklist Modal Elements
-            const aditivoRenewalChecklistModal = document.getElementById('aditivo-renewal-checklist-modal');
-            const aditivoRenewalChecklistForm = document.getElementById('aditivo-renewal-checklist-form');
+            // New Renewal Checklist Modal Elements
+            const renewalChecklistModal = document.getElementById('renewal-checklist-modal');
+            const renewalChecklistForm = document.getElementById('renewal-checklist-form');
             const checklistContractIdInput = document.getElementById('checklist-contract-id');
             const checklistContractSei = document.getElementById('checklist-contract-sei');
             const checklistContractCompany = document.getElementById('checklist-contract-company');
             const checklistItemsContainer = document.getElementById('checklist-items-container');
             const unitConcordanceContainer = document.getElementById('unit-concordance-container');
-            const renewalDurationAditivoInput = document.getElementById('renewal-duration-aditivo');
-            const renewalUpdatedValueAditivoInput = document.getElementById('renewal-updated-value-aditivo');
-            const finalRenewButton = document.getElementById('final-renew-button');
+            const renewalDurationChecklistInput = document.getElementById('renewal-duration-checklist');
+            const renewalUpdatedValueChecklistInput = document.getElementById('renewal-updated-value-checklist');
+            const finalizeRenewalButton = document.getElementById('finalize-renewal-button');
+            const saveChecklistProgressButton = document.getElementById('save-checklist-progress-button');
 
 
             const reminderFormModal = document.getElementById('reminder-form-modal');
@@ -985,17 +929,17 @@
             ].sort(); // Sort alphabetically
 
             // Checklist items for Aditivo renewal
-            const aditivoChecklistItems = [
+            const renewalChecklistItems = [
                 "Ofício",
                 "Memorando-circular",
                 "Ofício da Empresa", // Special handling for company name
-                "Concordância das unidades", // Special handling for units
+                // "Concordância das unidades" - REMOVIDO daqui, agora é uma seção separada
                 "Anexo DCO",
                 "Memória de cálculo",
                 "Designação da Autoridade",
                 "Autorização da autoridade competente",
                 "Justificativa de Ausência de ETP",
-                "Liberação da Procuradoria", // New checklist item
+                "Liberação da Procuradoria",
                 "Memorando/Justificativa",
                 "Check List"
             ];
@@ -1146,7 +1090,7 @@
 
 
                 // Esconde/mostra botões de edição/exclusão/renovação nas cards
-                document.querySelectorAll('.edit-button, .delete-button, .addendum-button, .terminate-button, .delete-reminder-button').forEach(btn => {
+                document.querySelectorAll('.edit-button, .delete-button, .addendum-button, .terminate-button, .renew-button, .delete-reminder-button, .continue-renewal-button').forEach(btn => {
                     if (btn) {
                         if (isAdmin) {
                             btn.classList.remove('hidden');
@@ -1330,7 +1274,7 @@
                 if (unsubscribeContracts) unsubscribeContracts();
                 console.log('loadContracts: Tentando configurar listener para contratos. Coleção:', `${PUBLIC_COLLECTION_PATH}/contracts`);
                 unsubscribeContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`)
-                    .where('isInRenewal', '==', false)
+                    .where('isInRenewal', '==', false) // Apenas contratos que NÃO estão em renovação
                     .onSnapshot(async snapshot => { // Adicionado 'async' aqui
                         const contractsList = document.getElementById('contracts-list'); // Fetch locally
                         if (contractsList) contractsList.innerHTML = '';
@@ -1361,7 +1305,7 @@
                 if (unsubscribeInRenewalContracts) unsubscribeInRenewalContracts();
                 console.log('loadInRenewalContracts: Tentando configurar listener para contratos em renovação. Coleção:', `${PUBLIC_COLLECTION_PATH}/contracts`);
                 unsubscribeInRenewalContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`)
-                    .where('isInRenewal', '==', true)
+                    .where('isInRenewal', '==', true) // Apenas contratos que ESTÃO em renovação
                     .onSnapshot(snapshot => {
                         const inRenewalContractsList = document.getElementById('in-renewal-contracts-list'); // Fetch locally
                         if (inRenewalContractsList) inRenewalContractsList.innerHTML = '';
@@ -1441,7 +1385,7 @@
                     if (diffDays >= 0) {
                         activeCount++;
                         // Changed expiring threshold from 30 to 180 days
-                        if (diffDays <= 180) { 
+                        if (diffDays <= 180) {
                             expiringCount++;
                         }
                     } else {
@@ -1550,7 +1494,7 @@
                         let validityHighlightClass = '';
 
                         // Updated expiring threshold from 30 to 180 days
-                        if (diffDays <= 180 && diffDays >= 0) { 
+                        if (diffDays <= 180 && diffDays >= 0) {
                             statusClass = 'bg-red-500 text-white flashing';
                             statusText = `Vence em ${diffDays} dias!`;
                             validityHighlightClass = 'text-red-600 font-bold flashing';
@@ -1600,6 +1544,9 @@
                                 <button class="addendum-button py-2 px-3 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
                                     <i class="fas fa-file-invoice mr-1"></i> Apost./Adit.
                                 </button>
+                                <button class="renew-button py-2 px-3 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
+                                    <i class="fas fa-sync-alt mr-1"></i> Renovar
+                                </button>
                                 <button class="edit-button py-2 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
                                     <i class="fas fa-edit mr-1"></i> Editar
                                 </button>
@@ -1619,6 +1566,9 @@
                 });
                 document.querySelectorAll('.addendum-button').forEach(button => {
                     button.addEventListener('click', (e) => openAddendumModal(e.currentTarget.dataset.id));
+                });
+                document.querySelectorAll('.renew-button').forEach(button => {
+                    button.addEventListener('click', (e) => initiateContractRenewal(e.currentTarget.dataset.id));
                 });
                 document.querySelectorAll('.terminate-button').forEach(button => {
                     button.addEventListener('click', (e) => terminateContract(e.currentTarget.dataset.id));
@@ -1747,7 +1697,7 @@
                     button.addEventListener('click', (e) => viewContractHistory(e.currentTarget.dataset.id));
                 });
                 document.querySelectorAll('.continue-renewal-button').forEach(button => {
-                    button.addEventListener('click', (e) => openAditivoRenewalChecklistModal(e.currentTarget.dataset.id));
+                    button.addEventListener('click', (e) => openRenewalChecklistModal(e.currentTarget.dataset.id));
                 });
                 setAdminPermissions(isAdmin);
             }
@@ -2046,108 +1996,7 @@
                 });
             }
 
-
-            async function openRenewContractModal(id) {
-                try {
-                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).get();
-                    if (doc.exists) {
-                        const contract = doc.data();
-                        if (renewContractIdInput) renewContractIdInput.value = id;
-                        if (renewCurrentSeiInput) renewCurrentSeiInput.value = contract.seiNumber;
-                        if (renewCurrentValidityDateInput) renewCurrentValidityDateInput.value = contract.currentValidityDate;
-                        // Format value for display when opening renew modal
-                        if (renewUpdatedValueInput) renewUpdatedValueInput.value = formatCurrency(contract.contractValue).replace('R$', '').trim();
-                        if (renewNextValidityDurationInput) renewNextValidityDurationInput.value = '';
-                        if (renewNextValidityDateInput) renewNextValidityDateInput.value = '';
-
-                        let renewSelectedUnitsInput = document.getElementById('renew-selected-units');
-                        if (!renewSelectedUnitsInput) {
-                            renewSelectedUnitsInput = document.createElement('input');
-                            renewSelectedUnitsInput.type = 'hidden';
-                            renewSelectedUnitsInput.id = 'renew-selected-units';
-                            renewUnitsCheckboxContainer.appendChild(renewSelectedUnitsInput);
-                        }
-                        // Pass existing participatingUnits to populateUnitButtons for renewal
-                        populateUnitButtons(renewUnitsCheckboxContainer, renewSelectedUnitsInput, contract.participatingUnits || []);
-                        if (renewHistoryNotesInput) renewHistoryNotesInput.value = contract.contractHistory.map(entry =>
-                            `${createLocalDate(entry.date).toLocaleDateString('pt-BR')} - ${entry.type}: ${entry.notes}`
-                        ).join('\n\n') || 'Nenhum histórico anterior.';
-
-                        showModal(renewContractModal);
-                    } else {
-                        showMessageModal('Erro', 'Contrato não encontrado para renovação.');
-                    }
-                }
-                catch (error) {
-                    console.error("Erro ao abrir modal de renovação:", error);
-                    showMessageModal('Erro', `Erro ao carregar dados do contrato para renovação: ${error.message}`);
-                }
-            }
-
-            if (renewNextValidityDurationInput) {
-                renewNextValidityDurationInput.addEventListener('input', () => {
-                    const currentValidityDate = renewCurrentValidityDateInput.value;
-                    const duration = parseInt(renewNextValidityDurationInput.value);
-                    if (currentValidityDate && !isNaN(duration) && duration > 0) {
-                        if (renewNextValidityDateInput) renewNextValidityDateInput.value = addMonths(currentValidityDate, duration);
-                    } else {
-                        if (renewNextValidityDateInput) renewNextValidityDateInput.value = '';
-                    }
-                });
-            }
-
-
-            if (renewForm) {
-                renewForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const contractId = renewContractIdInput.value;
-                    const nextValidityDuration = parseInt(renewNextValidityDurationInput.value);
-                    const nextValidityDate = renewNextValidityDateInput.value;
-                    // Parse currency value from input field before saving
-                    const updatedValue = parseCurrency(renewUpdatedValueInput.value);
-
-                    // Ensure renewedParticipatingUnits is correctly parsed from the hidden input
-                    const renewedParticipatingUnits = JSON.parse(document.getElementById('renew-selected-units')?.value || '[]');
-
-                    if (!nextValidityDate || isNaN(nextValidityDuration) || nextValidityDuration <= 0) {
-                        showMessageModal('Erro', 'Por favor, insira uma duração de vigência válida para a renovação.');
-                        return;
-                    }
-
-                    try {
-                        const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
-                        const doc = await contractRef.get();
-                        if (doc.exists) {
-                            const oldContract = doc.data();
-                            const newRenewalNumber = (oldContract.renewalNumber || 0) + 1;
-
-                            const newHistoryEntry = {
-                                type: 'Renovação',
-                                date: new Date().toISOString().split('T')[0],
-                                notes: `Contrato renovado por ${nextValidityDuration} meses. Nova vigência até ${createLocalDate(nextValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
-                                changedBy: currentUserId
-                            };
-
-                            await contractRef.update({
-                                currentValidityDate: newValidityDate, // Corrigido para usar nextValidityDate
-                                renewalNumber: newRenewalNumber,
-                                contractValue: updatedValue,
-                                participatingUnits: renewedParticipatingUnits,
-                                contractHistory: firebase.firestore.FieldValue.arrayUnion(newHistoryEntry),
-                                lastActivityDate: firebase.firestore.FieldValue.serverTimestamp(), // Atualiza data de atividade
-                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                            showMessageModal('Sucesso', 'Contrato renovado com sucesso!');
-                            closeModal('renew-contract-modal');
-                        } else {
-                            showMessageModal('Erro', 'Contrato não encontrado para renovação.');
-                        }
-                    } catch (error) {
-                        console.error("Erro ao renovar contrato:", error);
-                        showMessageModal('Erro', `Erro ao renovar contrato: ${error.message}`);
-                    }
-                });
-            }
+            // REMOVIDO: openRenewContractModal e renewForm foram removidos.
 
             if (addendumTypeSelect) {
                 addendumTypeSelect.addEventListener('change', async () => {
@@ -2203,9 +2052,9 @@
                     if (doc.exists) {
                         const contract = doc.data();
                         if (addendumContractIdInput) addendumContractIdInput.value = id;
-                        if (addendumTypeSelect) addendumTypeSelect.value = '';
+                        if (addendumTypeSelect) addendumTypeSelect.value = ''; // Limpa a seleção
                         if (apostilamentoNumberInput) apostilamentoNumberInput.value = '';
-                        if (apostilamentoSeiNumberInput) apostilamentoSeiNumberInput.value = '';
+                        // REMOVIDO: apostilamentoSeiNumberInput.value = '';
                         if (apostilamentoDateInput) apostilamentoDateInput.value = '';
                         if (apostilamentoReajustePercentageInput) apostilamentoReajustePercentageInput.value = '';
                         if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = '';
@@ -2215,7 +2064,7 @@
                         if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = '';
 
                         if (aditivoNumberInput) aditivoNumberInput.value = '';
-                        if (aditivoSeiNumberInput) aditivoSeiNumberInput.value = '';
+                        // REMOVIDO: aditivoSeiNumberInput.value = '';
                         if (aditivoDateInput) aditivoDateInput.value = '';
                         if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = '';
                         if (cedingUnitAditivoInput) cedingUnitAditivoInput.value = '';
@@ -2224,6 +2073,7 @@
                         if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = '';
                         if (aditivoTrocaMarcaDescriptionInput) aditivoTrocaMarcaDescriptionInput.value = '';
 
+                        // Esconde ambos os containers de opções no início
                         if (apostilamentoOptions) apostilamentoOptions.classList.add('hidden');
                         if (aditivoOptions) aditivoOptions.classList.add('hidden');
 
@@ -2251,7 +2101,7 @@
 
                     if (addendumType === 'Apostilamento') {
                         const apostilamentoNumber = apostilamentoNumberInput.value;
-                        const seiNumber = apostilamentoSeiNumberInput.value;
+                        // const seiNumber = apostilamentoSeiNumberInput.value; // REMOVIDO
                         const effectiveDate = apostilamentoDateInput.value;
                         const reajustePercentage = parseFloat(apostilamentoReajustePercentageInput.value) || 0;
                         // Ensure parsing from hidden input
@@ -2289,14 +2139,14 @@
                             historyEntry = {
                                 type: `Apostilamento (${apostilamentoNumber})`,
                                 date: effectiveDate,
-                                notes: `SEI: ${seiNumber}. ` +
+                                notes: `Apostilamento (${apostilamentoNumber}). ` + // Removido SEI do documento
                                     (reajustePercentage > 0 ? `Reajuste de ${reajustePercentage}%. ` : '') +
                                     (newDCOUnits.length > 0 ? `Nova DCO para unidades: ${newDCOUnits.join(', ')}. ` : '') +
                                     (designacaoUnits.length > 0 ? `Designação para unidades: ${designacaoUnits.join(', ')}. ` : '') +
                                     (remanejamentoItems.length > 0 ? `Remanejamento (${remanejamentoType}): ${remanejamentoNotes}. Itens: ${JSON.stringify(remanejamentoItems)}. ` : '') +
                                     (othersNotes ? `Outros: ${othersNotes}.` : ''),
                                 changedBy: currentUserId,
-                                seiNumber: seiNumber,
+                                // seiNumber: seiNumber, // REMOVIDO
                                 details: {
                                     reajustePercentage: reajustePercentage,
                                     newDCOUnits: newDCOUnits,
@@ -2318,7 +2168,7 @@
                         }
                     } else if (addendumType === 'Aditivo') {
                         const aditivoNumber = aditivoNumberInput.value;
-                        const seiNumber = aditivoSeiNumberInput.value;
+                        // const seiNumber = aditivoSeiNumberInput.value; // REMOVIDO
                         const effectiveDate = aditivoDateInput.value;
                         const reequilibrioPercentage = parseFloat(aditivoReequilibrioPercentageInput.value) || 0;
                         const trocaMarcaDescription = aditivoTrocaMarcaDescriptionInput.value;
@@ -2359,14 +2209,14 @@
                         historyEntry = {
                             type: `Aditivo (${aditivoNumber})`,
                             date: effectiveDate,
-                            notes: `SEI: ${seiNumber}. ` +
+                            notes: `Aditivo (${aditivoNumber}). ` + // Removido SEI do documento
                                 (reequilibrioPercentage > 0 ? `Reequilíbrio de ${reequilibrioPercentage}%. ` : '') +
                                 (trocaMarcaDescription ? `Troca de Marca: ${trocaMarcaDescription}. ` : '') +
                                 (remanejamentoItems.length > 0 ? `Remanejamento (${remanejamentoType}): ${remanejamentoNotes}. Itens: ${JSON.stringify(remanejamentoItems)}. ` : '') +
                                 (acrescimoItems.length > 0 ? `Acréscimo: ${JSON.stringify(acrescimoItems)}. ` : '') +
                                 (supressaoItems.length > 0 ? `Supressão: ${JSON.stringify(supressaoItems)}. ` : ''),
                             changedBy: currentUserId,
-                            seiNumber: seiNumber,
+                            // seiNumber: seiNumber, // REMOVIDO
                             details: {
                                 reequilibrioPercentage: reequilibrioPercentage,
                                 trocaMarcaDescription: trocaMarcaDescription,
@@ -2947,7 +2797,7 @@
             }
 
             // Centralized currency input formatting on blur
-            document.querySelectorAll('#contract-value, #renew-updated-value, #renewal-updated-value-aditivo').forEach(input => {
+            document.querySelectorAll('#contract-value, #renewal-updated-value-checklist').forEach(input => {
                 input.addEventListener('blur', (e) => {
                     let value = parseCurrency(e.target.value);
                     e.target.value = value.toFixed(2).replace('.', ','); // Always show 2 decimals, use comma for decimal separator
@@ -2976,27 +2826,34 @@
                 addSupressaoItemButton.addEventListener('click', addSupressaoItem);
             }
 
+            // --- New Renewal Flow Logic ---
 
-            if (triggerAditivoRenewalChecklistButton) {
-                triggerAditivoRenewalChecklistButton.addEventListener('click', async () => {
-                    const contractId = addendumContractIdInput.value;
-                    try {
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-                            isInRenewal: true,
-                            lastActivityDate: firebase.firestore.FieldValue.serverTimestamp() // Atualiza data de atividade
-                        });
-                        console.log(`Contrato ${contractId} marcado como 'em renovação'.`);
-                    } catch (error) {
-                        console.error("Erro ao marcar contrato como 'em renovação':", error);
-                        showMessageModal('Erro', `Não foi possível marcar o contrato como 'em renovação': ${error.message}`);
-                        return;
-                    }
-                    openAditivoRenewalChecklistModal(contractId);
-                    closeModal('addendum-modal');
-                });
+            /**
+             * Inicia o processo de renovação para um contrato, marcando-o como 'em renovação'
+             * e abrindo o modal de checklist.
+             * @param {string} contractId - O ID do contrato a ser renovado.
+             */
+            async function initiateContractRenewal(contractId) {
+                try {
+                    const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
+                    await contractRef.update({
+                        isInRenewal: true,
+                        lastActivityDate: firebase.firestore.FieldValue.serverTimestamp() // Atualiza data de atividade
+                    });
+                    showMessageModal('Sucesso', 'Contrato movido para "Em Renovação". Você pode continuar o processo na aba "Em Renovação".');
+                    setActiveTab('in-renewal'); // Navega para a aba "Em Renovação"
+                    // openRenewalChecklistModal(contractId); // Pode abrir direto ou esperar o usuário clicar na aba
+                } catch (error) {
+                    console.error("Erro ao iniciar renovação do contrato:", error);
+                    showMessageModal('Erro', `Não foi possível iniciar a renovação: ${error.message}`);
+                }
             }
 
-            async function openAditivoRenewalChecklistModal(contractId) {
+            /**
+             * Abre o modal de checklist de renovação e carrega os dados do contrato.
+             * @param {string} contractId - O ID do contrato.
+             */
+            async function openRenewalChecklistModal(contractId) {
                 try {
                     const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
                     if (doc.exists) {
@@ -3005,39 +2862,43 @@
                         if (checklistContractSei) checklistContractSei.textContent = contract.seiNumber;
                         if (checklistContractCompany) checklistContractCompany.textContent = contract.companyName;
 
-                        if (renewalDurationAditivoInput) renewalDurationAditivoInput.value = '';
-                        if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.value = formatCurrency(contract.contractValue).replace('R$', '').trim(); // Format for display
+                        // Preencher dados do checklist se existirem
+                        const renewalChecklistData = contract.renewalChecklist || {};
+                        if (renewalDurationChecklistInput) renewalDurationChecklistInput.value = renewalChecklistData.renewalDuration || '';
+                        if (renewalUpdatedValueChecklistInput) renewalUpdatedValueChecklistInput.value = formatCurrency(renewalChecklistData.updatedValue || contract.contractValue).replace('R$', '').trim();
 
-                        renderChecklistItems(contract.companyName);
-                        renderUnitConcordance(contract.participatingUnits || []);
-                        updateFinalRenewButtonState();
+                        renderChecklistItems(contract.companyName, renewalChecklistData.items || {});
+                        renderUnitConcordance(contract.participatingUnits || [], renewalChecklistData.unitConcordance || {});
+                        updateFinalRenewButtonState(); // Atualiza o estado do botão de finalização
 
-                        showModal(aditivoRenewalChecklistModal);
+                        showModal(renewalChecklistModal);
                     } else {
-                        showMessageModal('Erro', 'Contrato não encontrado para checklist de aditivo.');
+                        showMessageModal('Erro', 'Contrato não encontrado para checklist de renovação.');
                     }
                 } catch (error) {
-                    console.error("Erro ao abrir modal de checklist de aditivo:", error);
+                    console.error("Erro ao abrir modal de checklist de renovação:", error);
                     showMessageModal('Erro', `Erro ao carregar dados do contrato para checklist: ${error.message}`);
                 }
             }
 
-            function renderChecklistItems(companyName) {
+            /**
+             * Renderiza os itens do checklist no modal.
+             * @param {string} companyName - Nome da empresa para itens específicos.
+             * @param {object} savedItems - Objeto com o estado salvo dos itens do checklist.
+             */
+            function renderChecklistItems(companyName, savedItems = {}) {
                 if (!checklistItemsContainer) return;
                 checklistItemsContainer.innerHTML = '';
-                aditivoChecklistItems.forEach((item, index) => {
+                renewalChecklistItems.forEach((item, index) => {
                     let itemText = item;
                     if (item === "Ofício da Empresa") {
                         itemText = `Ofício da Empresa - ${companyName}`;
-                    }
-                    if (item === "Concordância das unidades") {
-                        return;
                     }
 
                     const div = document.createElement('div');
                     div.className = 'flex items-center';
                     div.innerHTML = `
-                        <input type="checkbox" id="checklist-item-${index}" class="checklist-item h-4 w-4 text-blue-600 border-gray-300 rounded">
+                        <input type="checkbox" id="checklist-item-${index}" class="checklist-item h-4 w-4 text-blue-600 border-gray-300 rounded" ${savedItems[`item-${index}`] ? 'checked' : ''}>
                         <label for="checklist-item-${index}" class="ml-2 text-sm font-medium text-gray-700">${itemText}</label>
                     `;
                     checklistItemsContainer.appendChild(div);
@@ -3048,7 +2909,12 @@
                 });
             }
 
-            function renderUnitConcordance(participatingUnits) {
+            /**
+             * Renderiza a seção de concordância das unidades.
+             * @param {Array<string>} participatingUnits - Unidades participantes do contrato.
+             * @param {object} savedConcordance - Objeto com o estado salvo da concordância das unidades.
+             */
+            function renderUnitConcordance(participatingUnits, savedConcordance = {}) {
                 if (!unitConcordanceContainer) return;
                 unitConcordanceContainer.innerHTML = '';
                 if (participatingUnits.length === 0) {
@@ -3062,9 +2928,9 @@
                     div.innerHTML = `
                         <span class="text-sm font-medium text-gray-700">${unit}</span>
                         <div class="flex items-center space-x-4">
-                            <input type="radio" id="unit-concordance-${index}-yes" name="unit-concordance-${index}" value="Sim" class="unit-concordance-radio h-4 w-4 text-green-600 border-gray-300 rounded">
+                            <input type="radio" id="unit-concordance-${index}-yes" name="unit-concordance-${unit}" value="Sim" class="unit-concordance-radio h-4 w-4 text-green-600 border-gray-300 rounded" ${savedConcordance[unit] === 'Sim' ? 'checked' : ''}>
                             <label for="unit-concordance-${index}-yes" class="text-sm text-gray-700">Sim</label>
-                            <input type="radio" id="unit-concordance-${index}-no" name="unit-concordance-${index}" value="Não" class="unit-concordance-radio h-4 w-4 text-red-600 border-gray-300 rounded">
+                            <input type="radio" id="unit-concordance-${index}-no" name="unit-concordance-${unit}" value="Não" class="unit-concordance-radio h-4 w-4 text-red-600 border-gray-300 rounded" ${savedConcordance[unit] === 'Não' ? 'checked' : ''}>
                             <label for="unit-concordance-${index}-no" class="text-sm text-gray-700">Não</label>
                         </div>
                     `;
@@ -3076,12 +2942,15 @@
                 });
             }
 
+            /**
+             * Atualiza o estado do botão "Efetivar Renovação" com base no preenchimento do checklist.
+             */
             function updateFinalRenewButtonState() {
                 const allChecklistItems = document.querySelectorAll('.checklist-item');
                 const allUnitConcordanceRadios = document.querySelectorAll('.unit-concordance-radio');
-                const renewalDurationInput = document.getElementById('renewal-duration-aditivo');
-                const renewalUpdatedValueInput = document.getElementById('renewal-updated-value-aditivo');
-                const renewButton = document.getElementById('final-renew-button');
+                const renewalDurationInput = document.getElementById('renewal-duration-checklist');
+                const renewalUpdatedValueInput = document.getElementById('renewal-updated-value-checklist');
+                const renewButton = document.getElementById('finalize-renewal-button');
 
                 let allChecklistChecked = true;
                 allChecklistItems.forEach(item => {
@@ -3104,32 +2973,90 @@
                     }
                 });
 
-                if (allChecklistChecked && allUnitsConcorded) {
+                // Verifica se os campos de duração e valor estão preenchidos e são válidos
+                const durationValid = renewalDurationInput && parseInt(renewalDurationInput.value) > 0;
+                const valueValid = renewalUpdatedValueInput && parseCurrency(renewalUpdatedValueInput.value) > 0;
+
+                if (allChecklistChecked && allUnitsConcorded && durationValid && valueValid) {
                     if (renewButton) {
                         renewButton.classList.remove('opacity-50', 'cursor-not-allowed');
                         renewButton.disabled = false;
                     }
-                    if (renewalDurationInput) renewalDurationInput.disabled = false;
-                    if (renewalUpdatedValueInput) renewalUpdatedValueInput.disabled = false;
                 } else {
                     if (renewButton) {
                         renewButton.classList.add('opacity-50', 'cursor-not-allowed');
                         renewButton.disabled = true;
                     }
-                    if (renewalDurationInput) renewalDurationInput.disabled = true;
-                    if (renewalUpdatedValueInput) renewalUpdatedValueInput.disabled = true;
                 }
             }
 
-            if (aditivoRenewalChecklistForm) {
-                aditivoRenewalChecklistForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+            // Salvar progresso do checklist
+            if (saveChecklistProgressButton) {
+                saveChecklistProgressButton.addEventListener('click', async () => {
                     const contractId = checklistContractIdInput.value;
-                    const renewalDuration = parseInt(renewalDurationAditivoInput.value);
-                    const updatedValue = parseCurrency(renewalUpdatedValueAditivoInput.value); // Parse currency
+                    const renewalDuration = renewalDurationChecklistInput.value;
+                    const updatedValue = parseCurrency(renewalUpdatedValueChecklistInput.value);
 
+                    const checklistItemsState = {};
+                    document.querySelectorAll('.checklist-item').forEach((item, index) => {
+                        checklistItemsState[`item-${index}`] = item.checked;
+                    });
+
+                    const unitConcordanceState = {};
+                    const uniqueUnitNames = new Set();
+                    document.querySelectorAll('.unit-concordance-radio').forEach(radio => {
+                        uniqueUnitNames.add(radio.name.replace('unit-concordance-', '')); // Get the actual unit name
+                    });
+                    uniqueUnitNames.forEach(unit => {
+                        const yesRadio = document.querySelector(`input[name="unit-concordance-${unit}"][value="Sim"]`);
+                        const noRadio = document.querySelector(`input[name="unit-concordance-${unit}"][value="Não"]`);
+                        if (yesRadio && yesRadio.checked) {
+                            unitConcordanceState[unit] = 'Sim';
+                        } else if (noRadio && noRadio.checked) {
+                            unitConcordanceState[unit] = 'Não';
+                        }
+                    });
+
+
+                    const renewalChecklistData = {
+                        renewalDuration: renewalDuration,
+                        updatedValue: updatedValue,
+                        items: checklistItemsState,
+                        unitConcordance: unitConcordanceState,
+                        lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    try {
+                        const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
+                        await contractRef.update({
+                            renewalChecklist: renewalChecklistData,
+                            lastActivityDate: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        showMessageModal('Sucesso', 'Progresso do checklist salvo com sucesso!');
+                    } catch (error) {
+                        console.error("Erro ao salvar progresso do checklist:", error);
+                        showMessageModal('Erro', `Erro ao salvar progresso: ${error.message}`);
+                    }
+                });
+            }
+
+
+            // Finalizar Renovação
+            if (finalizeRenewalButton) {
+                finalizeRenewalButton.addEventListener('submit', async (e) => { // Mudado para 'submit' do formulário
+                    e.preventDefault(); // Previne o envio padrão do formulário
+
+                    const contractId = checklistContractIdInput.value;
+                    const renewalDuration = parseInt(renewalDurationChecklistInput.value);
+                    const updatedValue = parseCurrency(renewalUpdatedValueChecklistInput.value);
+
+                    // Validação final antes de efetivar
                     if (isNaN(renewalDuration) || renewalDuration <= 0) {
                         showMessageModal('Erro', 'Por favor, insira um prazo de renovação válido em meses.');
+                        return;
+                    }
+                    if (updatedValue <= 0) {
+                        showMessageModal('Erro', 'Por favor, insira um valor atualizado válido para o contrato.');
                         return;
                     }
 
@@ -3142,9 +3069,9 @@
                             const newValidityDate = addMonths(oldContract.currentValidityDate, renewalDuration);
 
                             const historyEntry = {
-                                type: 'Aditivo - Renovação Efetivada',
+                                type: 'Renovação Efetivada (Checklist)',
                                 date: new Date().toISOString().split('T')[0],
-                                notes: `Contrato renovado via Aditivo por ${renewalDuration} meses. Nova vigência até ${createLocalDate(newValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
+                                notes: `Contrato renovado via checklist por ${renewalDuration} meses. Nova vigência até ${createLocalDate(newValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
                                 changedBy: currentUserId
                             };
 
@@ -3152,19 +3079,21 @@
                                 currentValidityDate: newValidityDate,
                                 renewalNumber: newRenewalNumber,
                                 contractValue: updatedValue,
-                                isInRenewal: false,
+                                isInRenewal: false, // Remove do status 'em renovação'
                                 contractHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry),
-                                lastActivityDate: firebase.firestore.FieldValue.serverTimestamp(), // Atualiza data de atividade
-                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                lastActivityDate: firebase.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                renewalChecklist: firebase.firestore.FieldValue.delete() // Limpa o checklist após finalizar
                             });
-                            showMessageModal('Sucesso', 'Contrato renovado via Aditivo com sucesso!');
-                            closeModal('aditivo-renewal-checklist-modal');
+                            showMessageModal('Sucesso', 'Contrato renovado com sucesso via Checklist!');
+                            closeModal('renewal-checklist-modal');
+                            setActiveTab('contracts'); // Volta para a aba de contratos ativos
                         } else {
-                            showMessageModal('Erro', 'Contrato não encontrado para renovação via aditivo.');
+                            showMessageModal('Erro', 'Contrato não encontrado para renovação via checklist.');
                         }
                     } catch (error) {
-                        console.error("Erro ao renovar contrato via aditivo:", error);
-                        showMessageModal('Erro', `Erro ao renovar contrato via aditivo: ${error.message}`);
+                        console.error("Erro ao renovar contrato via checklist:", error);
+                        showMessageModal('Erro', `Erro ao renovar contrato via checklist: ${error.message}`);
                     }
                 });
             }
