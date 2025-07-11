@@ -1564,6 +1564,11 @@
                             validityHighlightClass = 'text-green-600 font-bold';
                         }
 
+                        // Ensure participatingUnits is an array and join it for display
+                        const unitsDisplay = Array.isArray(contract.participatingUnits) && contract.participatingUnits.length > 0
+                            ? contract.participatingUnits.join(', ')
+                            : 'N/A';
+
                         const contractCard = document.createElement('div');
                         contractCard.className = `contract-card-in-group bg-white rounded-lg shadow-sm p-6 flex flex-col justify-between relative`; // Adicionado relative para posicionamento da estrela
                         contractCard.setAttribute('data-id', contract.id); // Necessário para Sortable.js se for reordenar cards individuais
@@ -1580,7 +1585,7 @@
                                 <p class="text-gray-600 text-sm"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
                                 <p class="text-gray-600 text-sm"><strong>Valor:</strong> ${formatCurrency(contract.contractValue)}</p>
                                 <p class="text-gray-600 text-sm"><strong>Lei:</strong> ${contract.lawType === '8666' ? '8.666/93' : '14.133/21'}</p>
-                                <p class="text-gray-600 text-sm"><strong>Unidades:</strong> ${contract.participatingUnits ? contract.participatingUnits.join(', ') : 'N/A'}</p>
+                                <p class="text-gray-600 text-sm"><strong>Unidades:</strong> ${unitsDisplay}</p>
                                 ${contract.observations ? `<p class="text-gray-600 text-sm"><strong>Obs:</strong> ${contract.observations}</p>` : ''}
                             </div>
                             <!-- Ícone de estrela para favoritar -->
@@ -1705,6 +1710,10 @@
                 }
 
                 contractsToDisplay.forEach(contract => {
+                    const unitsDisplay = Array.isArray(contract.participatingUnits) && contract.participatingUnits.length > 0
+                        ? contract.participatingUnits.join(', ')
+                        : 'N/A';
+
                     const contractCard = document.createElement('div');
                     contractCard.className = `bg-yellow-100 rounded-lg shadow-md p-6 flex flex-col justify-between border-2 border-yellow-400`;
                     contractCard.innerHTML = `
@@ -1720,7 +1729,7 @@
                             <p class="text-gray-600 text-sm"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
                             <p class="text-gray-600 text-sm"><strong>Valor:</strong> ${formatCurrency(contract.contractValue)}</p>
                             <p class="text-gray-600 text-sm"><strong>Lei:</strong> ${contract.lawType === '8666' ? '8.666/93' : '14.133/21'}</p>
-                            <p class="text-gray-600 text-sm"><strong>Unidades:</strong> ${contract.participatingUnits ? contract.participatingUnits.join(', ') : 'N/A'}</p>
+                            <p class="text-gray-600 text-sm"><strong>Unidades:</strong> ${unitsDisplay}</p>
                             ${contract.observations ? `<p class="text-gray-600 text-sm"><strong>Obs:</strong> ${contract.observations}</p>` : ''}
                         </div>
                         <div class="mt-4 flex flex-wrap gap-2 justify-end">
@@ -2120,7 +2129,7 @@
                             };
 
                             await contractRef.update({
-                                currentValidityDate: nextValidityDate, // Corrigido para usar nextValidityDate
+                                currentValidityDate: newValidityDate, // Corrigido para usar nextValidityDate
                                 renewalNumber: newRenewalNumber,
                                 contractValue: updatedValue,
                                 participatingUnits: renewedParticipatingUnits,
@@ -2640,6 +2649,7 @@
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.textContent = unit;
+                    // Check if the unit is in the selectedUnits array to set the 'selected' class
                     button.className = `unit-button ${selectedUnits.includes(unit) ? 'selected' : ''}`;
                     button.addEventListener('click', () => {
                         button.classList.toggle('selected');
