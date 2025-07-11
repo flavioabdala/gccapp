@@ -338,7 +338,7 @@
                 </div>
                 <div>
                     <label for="contract-value" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato</label>
-                    <input type="text" id="contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="R$ 0.000,00">
+                    <input type="text" id="contract-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00">
                 </div>
 
                 <div class="col-span-full">
@@ -384,7 +384,7 @@
                 </div>
                 <div>
                     <label for="renew-updated-value" class="block text-sm font-medium text-gray-700">Valor Atualizado (R$)</label>
-                    <input type="text" id="renew-updated-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="R$ 0.000,00">
+                    <input type="text" id="renew-updated-value" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00">
                 </div>
                 <div class="col-span-full">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Unidades para Renovação</label>
@@ -705,7 +705,7 @@
                 </div>
                 <div class="mt-4">
                     <label for="renewal-updated-value-aditivo" class="block text-sm font-medium text-gray-700">Valor Atualizado do Contrato (R$)</label>
-                    <input type="text" id="renewal-updated-value-aditivo" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="R$ 0.000,00" disabled>
+                    <input type="text" id="renewal-updated-value-aditivo" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0,00" disabled>
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-4">
@@ -813,6 +813,20 @@
             }
 
             showModal(messageModal);
+        }
+
+        /**
+         * Cria um objeto Date que representa a meia-noite do dia no fuso horário local
+         * a partir de uma string "AAAA-MM-DD".
+         * @param {string} dateString - A string da data no formato "AAAA-MM-DD".
+         * @returns {Date} Um objeto Date local.
+         */
+        function createLocalDate(dateString) {
+            const parts = dateString.split('-');
+            // Mês é 0-indexado no construtor Date (janeiro é 0, fevereiro é 1, etc.)
+            const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            date.setHours(0, 0, 0, 0); // Garante que seja meia-noite local
+            return date;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1025,9 +1039,9 @@
 
             // Format currency
             function formatCurrency(value) {
-                if (!value) return '';
-                // Remove R$, spaces, and replace comma with dot for parsing
-                const numericValue = parseFloat(value.toString().replace('R$', '').replace(/\./g, '').replace(',', '.'));
+                if (value === null || value === undefined || isNaN(value)) return '';
+                // Ensure value is a number before formatting
+                const numericValue = parseFloat(value);
                 if (isNaN(numericValue)) return '';
                 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numericValue);
             }
@@ -1036,14 +1050,21 @@
             function parseCurrency(value) {
                 if (!value) return 0;
                 // Remove R$, espaços, pontos de milhar e substitui vírgula por ponto decimal
-                return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.'));
+                // Handles both "R$ 1.234,56" and "1234,56"
+                let cleanedValue = value.replace(/[R$\s.]/g, '').replace(',', '.');
+                const parsed = parseFloat(cleanedValue);
+                return isNaN(parsed) ? 0 : parsed;
             }
 
             // Date utility to add months
-            function addMonths(date, months) {
-                const d = new Date(date);
+            function addMonths(dateString, months) {
+                // Parse the input date string as a local date
+                const d = createLocalDate(dateString);
+
                 d.setMonth(d.getMonth() + months);
-                return d.toISOString().split('T')[0]; // Return in 'YYYY-MM-DD' format
+
+                // Retorna como uma string YYYY-MM-DD
+                return d.toISOString().split('T')[0];
             }
 
             // --- UI State Management ---
@@ -1349,7 +1370,7 @@
                             const contract = { id: doc.id, ...doc.data() };
                             contracts.push(contract);
                         });
-                        contracts.sort((a, b) => new Date(a.currentValidityDate) - new Date(b.currentValidityDate));
+                        contracts.sort((a, b) => createLocalDate(a.currentValidityDate) - createLocalDate(b.currentValidityDate));
                         displayInRenewalContracts(contracts);
                         checkEmptyState('in-renewal'); // Pass 'in-renewal' as tabName
                     }, error => {
@@ -1412,7 +1433,7 @@
                 today.setHours(0, 0, 0, 0);
 
                 contractsToDisplay.forEach(contract => {
-                    const validityDate = new Date(contract.currentValidityDate);
+                    const validityDate = createLocalDate(contract.currentValidityDate); // Use createLocalDate
                     validityDate.setHours(0, 0, 0, 0);
                     const diffTime = validityDate.getTime() - today.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -1518,7 +1539,7 @@
                     groupContainer.appendChild(groupHeader);
 
                     group.contracts.forEach(contract => {
-                        const validityDate = new Date(contract.currentValidityDate);
+                        const validityDate = createLocalDate(contract.currentValidityDate); // Use createLocalDate
                         validityDate.setHours(0, 0, 0, 0);
 
                         const diffTime = validityDate.getTime() - today.getTime();
@@ -1555,7 +1576,7 @@
                                 <p class="text-gray-600 text-sm"><strong>SEI:</strong> ${contract.seiNumber}</p>
                                 <p class="text-gray-600 text-sm"><strong>Contrato:</strong> ${contract.contractNumber}</p>
                                 <p class="text-gray-600 text-sm"><strong>Objeto:</strong> ${contract.contractObject}</p>
-                                <p class="text-gray-600 text-sm"><strong>Vigência Atual:</strong> <span class="${validityHighlightClass}">${new Date(contract.currentValidityDate).toLocaleDateString('pt-BR')}</span></p>
+                                <p class="text-gray-600 text-sm"><strong>Vigência Atual:</strong> <span class="${validityHighlightClass}">${createLocalDate(contract.currentValidityDate).toLocaleDateString('pt-BR')}</span></p>
                                 <p class="text-gray-600 text-sm"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
                                 <p class="text-gray-600 text-sm"><strong>Valor:</strong> ${formatCurrency(contract.contractValue)}</p>
                                 <p class="text-gray-600 text-sm"><strong>Lei:</strong> ${contract.lawType === '8666' ? '8.666/93' : '14.133/21'}</p>
@@ -1695,7 +1716,7 @@
                             <p class="text-gray-600 text-sm"><strong>SEI:</strong> ${contract.seiNumber}</p>
                             <p class="text-gray-600 text-sm"><strong>Contrato:</strong> ${contract.contractNumber}</p>
                             <p class="text-gray-600 text-sm"><strong>Objeto:</strong> ${contract.contractObject}</p>
-                            <p class="text-gray-600 text-sm"><strong>Vigência Atual:</strong> ${new Date(contract.currentValidityDate).toLocaleDateString('pt-BR')}</p>
+                            <p class="text-gray-600 text-sm"><strong>Vigência Atual:</strong> ${createLocalDate(contract.currentValidityDate).toLocaleDateString('pt-BR')}</p>
                             <p class="text-gray-600 text-sm"><strong>Renovação:</strong> ${contract.renewalNumber}ª</p>
                             <p class="text-gray-600 text-sm"><strong>Valor:</strong> ${formatCurrency(contract.contractValue)}</p>
                             <p class="text-gray-600 text-sm"><strong>Lei:</strong> ${contract.lawType === '8666' ? '8.666/93' : '14.133/21'}</p>
@@ -1754,8 +1775,8 @@
                             </div>
                             <p class="text-gray-600 text-sm"><strong>SEI:</strong> ${contract.seiNumber}</p>
                             <p class="text-gray-600 text-sm"><strong>Contrato:</strong> ${contract.contractNumber}</p>
-                            <p class="text-gray-600 text-sm"><strong>Vigência Final:</strong> ${new Date(contract.currentValidityDate).toLocaleDateString('pt-BR')}</p>
-                            <p class="text-gray-600 text-sm"><strong>Data de Encerramento:</strong> ${new Date(contract.terminationDate).toLocaleDateString('pt-BR')}</p>
+                            <p class="text-gray-600 text-sm"><strong>Vigência Final:</strong> ${createLocalDate(contract.currentValidityDate).toLocaleDateString('pt-BR')}</p>
+                            <p class="text-gray-600 text-sm"><strong>Data de Encerramento:</strong> ${createLocalDate(contract.terminationDate).toLocaleDateString('pt-BR')}</p>
                             ${contract.terminationNotes ? `<p class="text-gray-600 text-sm"><strong>Motivo:</strong> ${contract.terminationNotes}</p>` : ''}
                             ${contract.contractHistory ? `<p class="text-gray-600 text-sm"><strong>Última Movimentação:</strong> ${contract.contractHistory[contract.contractHistory.length - 1]?.notes || 'N/A'}</p>` : ''}
                         </div>
@@ -1824,7 +1845,7 @@
                     }
                     populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, []);
                     if (maxContractTermInput) maxContractTermInput.value = '';
-                    if (contractValueInput) contractValueInput.value = '';
+                    if (contractValueInput) contractValueInput.value = ''; // Clear value, not format
                     showModal(contractFormModal);
                 });
             }
@@ -1843,9 +1864,11 @@
                     const lawType = lawTypeSelect.value;
                     const currentValidityDate = currentValidityDateInput.value;
                     const renewalNumber = parseInt(renewalNumberSelect.value);
+                    // Parse currency value from input field before saving
                     const contractValue = parseCurrency(contractValueInput.value);
                     const observations = contractObservationsInput.value;
 
+                    // Ensure participatingUnits is correctly parsed from the hidden input
                     const participatingUnits = JSON.parse(document.getElementById('contract-selected-units')?.value || '[]');
 
                     const contractData = {
@@ -1944,7 +1967,8 @@
                         if (lawTypeSelect) lawTypeSelect.value = contract.lawType;
                         if (currentValidityDateInput) currentValidityDateInput.value = contract.currentValidityDate;
                         if (renewalNumberSelect) renewalNumberSelect.value = contract.renewalNumber;
-                        if (contractValueInput) contractValueInput.value = formatCurrency(contract.contractValue);
+                        // Format value for display when editing
+                        if (contractValueInput) contractValueInput.value = formatCurrency(contract.contractValue).replace('R$', '').trim(); // Remove R$ for input field
                         if (contractObservationsInput) contractObservationsInput.value = contract.observations || '';
 
                         calculateMaxContractTerm();
@@ -1955,6 +1979,7 @@
                             contractSelectedUnitsInput.id = 'contract-selected-units';
                             unitsCheckboxContainer.appendChild(contractSelectedUnitsInput);
                         }
+                        // Pass existing participatingUnits to populateUnitButtons
                         populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, contract.participatingUnits || []);
                         showModal(contractFormModal);
                     } else {
@@ -2004,7 +2029,8 @@
                     try {
                         await db.collection(`${PUBLIC_COLLECTION_PATH}/${collectionName}`).doc(id).delete();
                         showMessageModal('Sucesso', 'Contrato excluído permanentemente.');
-                    } catch (error) {
+                    }
+                    catch (error) {
                         console.error(`Erro ao excluir contrato da coleção ${collectionName}:`, error);
                         showMessageModal('Erro', `Erro ao excluir contrato: ${error.message}`);
                     }
@@ -2020,7 +2046,8 @@
                         if (renewContractIdInput) renewContractIdInput.value = id;
                         if (renewCurrentSeiInput) renewCurrentSeiInput.value = contract.seiNumber;
                         if (renewCurrentValidityDateInput) renewCurrentValidityDateInput.value = contract.currentValidityDate;
-                        if (renewUpdatedValueInput) renewUpdatedValueInput.value = formatCurrency(contract.contractValue);
+                        // Format value for display when opening renew modal
+                        if (renewUpdatedValueInput) renewUpdatedValueInput.value = formatCurrency(contract.contractValue).replace('R$', '').trim();
                         if (renewNextValidityDurationInput) renewNextValidityDurationInput.value = '';
                         if (renewNextValidityDateInput) renewNextValidityDateInput.value = '';
 
@@ -2031,9 +2058,10 @@
                             renewSelectedUnitsInput.id = 'renew-selected-units';
                             renewUnitsCheckboxContainer.appendChild(renewSelectedUnitsInput);
                         }
+                        // Pass existing participatingUnits to populateUnitButtons for renewal
                         populateUnitButtons(renewUnitsCheckboxContainer, renewSelectedUnitsInput, contract.participatingUnits || []);
                         if (renewHistoryNotesInput) renewHistoryNotesInput.value = contract.contractHistory.map(entry =>
-                            `${new Date(entry.date).toLocaleDateString('pt-BR')} - ${entry.type}: ${entry.notes}`
+                            `${createLocalDate(entry.date).toLocaleDateString('pt-BR')} - ${entry.type}: ${entry.notes}`
                         ).join('\n\n') || 'Nenhum histórico anterior.';
 
                         showModal(renewContractModal);
@@ -2066,8 +2094,10 @@
                     const contractId = renewContractIdInput.value;
                     const nextValidityDuration = parseInt(renewNextValidityDurationInput.value);
                     const nextValidityDate = renewNextValidityDateInput.value;
+                    // Parse currency value from input field before saving
                     const updatedValue = parseCurrency(renewUpdatedValueInput.value);
 
+                    // Ensure renewedParticipatingUnits is correctly parsed from the hidden input
                     const renewedParticipatingUnits = JSON.parse(document.getElementById('renew-selected-units')?.value || '[]');
 
                     if (!nextValidityDate || isNaN(nextValidityDuration) || nextValidityDuration <= 0) {
@@ -2085,12 +2115,12 @@
                             const newHistoryEntry = {
                                 type: 'Renovação',
                                 date: new Date().toISOString().split('T')[0],
-                                notes: `Contrato renovado por ${nextValidityDuration} meses. Nova vigência até ${new Date(nextValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
+                                notes: `Contrato renovado por ${nextValidityDuration} meses. Nova vigência até ${createLocalDate(nextValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
                                 changedBy: currentUserId
                             };
 
                             await contractRef.update({
-                                currentValidityDate: newValidityDate, // Corrigido para usar nextValidityDate
+                                currentValidityDate: nextValidityDate, // Corrigido para usar nextValidityDate
                                 renewalNumber: newRenewalNumber,
                                 contractValue: updatedValue,
                                 participatingUnits: renewedParticipatingUnits,
@@ -2134,8 +2164,13 @@
                             apostilamentoDesignacaoSelectedUnitsInput.id = 'apostilamento-designacao-selected-units';
                             apostilamentoDesignacaoUnitsContainer.appendChild(apostilamentoDesignacaoSelectedUnitsInput);
                         }
-                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput);
-                        populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput);
+                        // Load current contract units for apostilamento forms if available
+                        const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(addendumContractIdInput.value).get();
+                        const currentContractUnits = contractDoc.exists ? (contractDoc.data().participatingUnits || []) : [];
+
+                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, currentContractUnits);
+                        populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, currentContractUnits);
+
                         if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
                         if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
                     } else if (selectedType === 'Aditivo') {
@@ -2210,6 +2245,7 @@
                         const seiNumber = apostilamentoSeiNumberInput.value;
                         const effectiveDate = apostilamentoDateInput.value;
                         const reajustePercentage = parseFloat(apostilamentoReajustePercentageInput.value) || 0;
+                        // Ensure parsing from hidden input
                         const newDCOUnits = JSON.parse(apostilamentoSelectedUnitsInput.value || '[]');
                         const designacaoUnits = JSON.parse(apostilamentoDesignacaoSelectedUnitsInput.value || '[]');
                         const remanejamentoType = remanejamentoTypeApostilamentoSelect.value;
@@ -2224,8 +2260,8 @@
                             codigo: row.querySelector('.remanejamento-codigo')?.value,
                             descricao: row.querySelector('.remanejamento-descricao')?.value,
                             quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
-                            valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || 'R$ 0,00'),
-                            valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || 'R$ 0,00')
+                            valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
+                            valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
                         }));
 
                         const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
@@ -2238,6 +2274,8 @@
                                 updatedContractValue = (updatedContractValue || 0) * (1 + reajustePercentage / 100);
                             }
                             updateData.contractValue = updatedContractValue;
+                            updateData.participatingUnits = newDCOUnits; // Update participating units for the contract
+
 
                             historyEntry = {
                                 type: `Apostilamento (${apostilamentoNumber})`,
@@ -2286,8 +2324,8 @@
                             codigo: row.querySelector('.remanejamento-codigo')?.value,
                             descricao: row.querySelector('.remanejamento-descricao')?.value,
                             quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
-                            valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || 'R$ 0,00'),
-                            valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || 'R$ 0,00')
+                            valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
+                            valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
                         }));
 
                         const acrescimoItems = Array.from(acrescimoTableBody.rows).map(row => ({
@@ -2297,15 +2335,15 @@
                             unidades: JSON.parse(row.querySelector('.acrescimo-unidades-hidden')?.value || '[]'),
                             descritivo: row.querySelector('.acrescimo-descritivo')?.value,
                             quantidade: parseFloat(row.querySelector('.acrescimo-quantidade')?.value || 0),
-                            valorItem: parseCurrency(row.querySelector('.acrescimo-valor-item')?.value || 'R$ 0,00'),
-                            valorTotal: parseCurrency(row.querySelector('.acrescimo-valor-total')?.textContent || 'R$ 0,00'),
+                            valorItem: parseCurrency(row.querySelector('.acrescimo-valor-item')?.value || '0,00'),
+                            valorTotal: parseCurrency(row.querySelector('.acrescimo-valor-total')?.textContent || '0,00'),
                             porcentagem: parseFloat(row.querySelector('.acrescimo-porcentagem')?.value || 0)
                         }));
 
                         const supressaoItems = Array.from(supressaoTableBody.rows).map(row => ({
                             unidadeSuprimida: JSON.parse(row.querySelector('.supressao-unidade-hidden')?.value || '[]'),
                             lote: row.querySelector('.supressao-lote')?.value,
-                            valor: parseCurrency(row.querySelector('.supressao-valor')?.value || 'R$ 0,00'),
+                            valor: parseCurrency(row.querySelector('.supressao-valor')?.value || '0,00'),
                             porcentagem: parseFloat(row.querySelector('.supressao-porcentagem')?.value || 0)
                         }));
 
@@ -2372,7 +2410,7 @@
                             contract.contractHistory.forEach(entry => {
                                 historyHtml += `
                                     <li>
-                                        <p class="font-semibold">${entry.type} em ${new Date(entry.date).toLocaleDateString('pt-BR')}</p>
+                                        <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}</p>
                                         <p class="text-sm text-gray-700">${entry.notes}</p>
                                         ${entry.seiNumber ? `<p class="text-xs text-gray-500">SEI do Documento: ${entry.seiNumber}</p>` : ''}
                                         <p class="text-xs text-gray-500">Por: ${entry.changedBy || 'N/A'}</p>
@@ -2448,9 +2486,10 @@
 
                 remindersToDisplay.forEach(reminder => {
                     const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const reminderDate = new Date(reminder.reminderDate);
-                    reminderDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0); // Meia-noite local para hoje
+
+                    const reminderDate = createLocalDate(reminder.reminderDate); // Use createLocalDate
+                    reminderDate.setHours(0, 0, 0, 0); // Garante que seja meia-noite local para o lembrete
 
                     const diffTime = reminderDate.getTime() - today.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -2478,7 +2517,7 @@
                             <h4 class="text-lg font-semibold text-gray-800">${reminder.title}</h4>
                             <span class="text-xs font-bold px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
                         </div>
-                        <p class="text-gray-600 text-sm mb-2">Data: ${new Date(reminder.reminderDate).toLocaleDateString('pt-BR')}</p>
+                        <p class="text-gray-600 text-sm mb-2">Data: ${createLocalDate(reminder.reminderDate).toLocaleDateString('pt-BR')}</p>
                         <p class="text-gray-700 text-sm flex-grow">${reminder.description || 'Nenhuma descrição.'}</p>
                         <div class="mt-3 flex justify-end space-x-2">
                             <button class="edit-reminder-button py-1 px-3 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 ${isAdmin ? '' : 'hidden'}" data-id="${reminder.id}">
@@ -2609,6 +2648,7 @@
                     });
                     containerElement.appendChild(button);
                 });
+                // Ensure the hidden input always reflects the initial selected units
                 targetInput.value = JSON.stringify(selectedUnits);
             }
 
@@ -2624,7 +2664,7 @@
                     <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-codigo"></td>
                     <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-descricao"></td>
                     <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border-none bg-transparent text-xs remanejamento-quantidade"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-valor-unitario" placeholder="R$ 0,00"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-valor-unitario" placeholder="0,00"></td>
                     <td class="py-2 px-4 border-b remanejamento-valor-total text-xs">R$ 0,00</td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
                 `;
@@ -2637,17 +2677,9 @@
                     if (input) {
                         input.addEventListener('input', () => calculateRemanejamentoTotal(tableBodyId, totalDisplayId));
                         if (input.classList.contains('remanejamento-valor-unitario')) {
-                            input.addEventListener('input', (e) => {
-                                let value = e.target.value;
-                                value = value.replace(/\D/g, '');
-                                if (value === '') {
-                                    e.target.value = '';
-                                    return;
-                                }
-                                value = (parseInt(value) / 100).toFixed(2);
-                                value = value.replace('.', ',');
-                                value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                                e.target.value = `R$ ${value}`;
+                            input.addEventListener('blur', (e) => { // Format on blur
+                                let value = parseCurrency(e.target.value);
+                                e.target.value = value.toFixed(2).replace('.', ','); // Display with 2 decimals
                             });
                         }
                     }
@@ -2669,7 +2701,7 @@
                 let total = 0;
                 Array.from(tableBody.rows).forEach(row => {
                     const quantity = parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0);
-                    const unitValue = parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || 'R$ 0,00');
+                    const unitValue = parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00');
                     const rowTotal = quantity * unitValue;
                     row.querySelector('.remanejamento-valor-total').textContent = formatCurrency(rowTotal);
                     total += rowTotal;
@@ -2692,7 +2724,7 @@
                     </td>
                     <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-descritivo"></td>
                     <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border-none bg-transparent text-xs acrescimo-quantidade"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-valor-item" placeholder="R$ 0,00"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-valor-item" placeholder="0,00"></td>
                     <td class="py-2 px-4 border-b acrescimo-valor-total text-xs">R$ 0,00</td>
                     <td class="py-2 px-4 border-b"><input type="number" step="0.01" class="w-full border-none bg-transparent text-xs acrescimo-porcentagem"></td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
@@ -2710,17 +2742,9 @@
                     if (input) {
                         input.addEventListener('input', calculateAcrescimoTotal);
                         if (input.classList.contains('acrescimo-valor-item')) {
-                            input.addEventListener('input', (e) => {
-                                let value = e.target.value;
-                                value = value.replace(/\D/g, '');
-                                if (value === '') {
-                                    e.target.value = '';
-                                    return;
-                                }
-                                value = (parseInt(value) / 100).toFixed(2);
-                                value = value.replace('.', ',');
-                                value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                                e.target.value = `R$ ${value}`;
+                            input.addEventListener('blur', (e) => { // Format on blur
+                                let value = parseCurrency(e.target.value);
+                                e.target.value = value.toFixed(2).replace('.', ','); // Display with 2 decimals
                             });
                         }
                     }
@@ -2742,7 +2766,7 @@
                 let total = 0;
                 Array.from(tableBody.rows).forEach(row => {
                     const quantity = parseFloat(row.querySelector('.acrescimo-quantidade')?.value || 0);
-                    const itemValue = parseCurrency(row.querySelector('.acrescimo-valor-item')?.value || 'R$ 0,00');
+                    const itemValue = parseCurrency(row.querySelector('.acrescimo-valor-item')?.value || '0,00');
                     const rowTotal = quantity * itemValue;
                     row.querySelector('.acrescimo-valor-total').textContent = formatCurrency(rowTotal);
                     total += rowTotal;
@@ -2761,7 +2785,7 @@
                         <div class="supressao-units-container flex flex-wrap gap-1 mt-1"></div>
                     </td>
                     <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs supressao-lote"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs supressao-valor" placeholder="R$ 0,00"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs supressao-valor" placeholder="0,00"></td>
                     <td class="py-2 px-4 border-b"><input type="number" step="0.01" class="w-full border-none bg-transparent text-xs supressao-porcentagem"></td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
                 `;
@@ -2775,17 +2799,9 @@
 
                 if (valueInput) {
                     valueInput.addEventListener('input', calculateSupressaoTotal);
-                    valueInput.addEventListener('input', (e) => {
-                        let value = e.target.value;
-                        value = value.replace(/\D/g, '');
-                        if (value === '') {
-                            e.target.value = '';
-                            return;
-                        }
-                        value = (parseInt(value) / 100).toFixed(2);
-                        value = value.replace('.', ',');
-                        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                        e.target.value = `R$ ${value}`;
+                    valueInput.addEventListener('blur', (e) => { // Format on blur
+                        let value = parseCurrency(e.target.value);
+                        e.target.value = value.toFixed(2).replace('.', ','); // Display with 2 decimals
                     });
                 }
 
@@ -2804,7 +2820,7 @@
 
                 let total = 0;
                 Array.from(tableBody.rows).forEach(row => {
-                    const value = parseCurrency(row.querySelector('.supressao-valor')?.value || 'R$ 0,00');
+                    const value = parseCurrency(row.querySelector('.supressao-valor')?.value || '0,00');
                     total += value;
                 });
                 totalDisplay.textContent = formatCurrency(total);
@@ -2841,7 +2857,7 @@
                     return;
                 }
 
-                const initialDate = new Date(initialDateStr);
+                const initialDate = createLocalDate(initialDateStr); // Use createLocalDate
                 let maxTermMonths = 0;
 
                 if (lawType === '8666') {
@@ -2873,7 +2889,7 @@
                     }
                     populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, []);
                     if (maxContractTermInput) maxContractTermInput.value = '';
-                    if (contractValueInput) contractValueInput.value = '';
+                    if (contractValueInput) contractValueInput.value = ''; // Clear value, not format
                     showModal(contractFormModal);
                 });
             }
@@ -2920,51 +2936,19 @@
                 }
             }
 
-            if (contractValueInput) {
-                contractValueInput.addEventListener('input', (e) => {
-                    let value = e.target.value;
-                    value = value.replace(/\D/g, '');
-                    if (value === '') {
-                        e.target.value = '';
-                        return;
-                    }
-                    value = (parseInt(value) / 100).toFixed(2);
-                    value = value.replace('.', ',');
-                    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                    e.target.value = `R$ ${value}`;
+            // Centralized currency input formatting on blur
+            document.querySelectorAll('#contract-value, #renew-updated-value, #renewal-updated-value-aditivo').forEach(input => {
+                input.addEventListener('blur', (e) => {
+                    let value = parseCurrency(e.target.value);
+                    e.target.value = value.toFixed(2).replace('.', ','); // Always show 2 decimals, use comma for decimal separator
                 });
-            }
-
-
-            if (renewUpdatedValueInput) {
-                renewUpdatedValueInput.addEventListener('input', (e) => {
-                    let value = e.target.value;
-                    value = value.replace(/\D/g, '');
-                    if (value === '') {
-                        e.target.value = '';
-                        return;
-                    }
-                    value = (parseInt(value) / 100).toFixed(2);
-                    value = value.replace('.', ',');
-                    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                    e.target.value = `R$ ${value}`;
+                // When the modal opens, if there's a pre-filled value, format it
+                input.addEventListener('focus', (e) => {
+                    // Remove formatting when focusing to allow raw input
+                    e.target.value = parseCurrency(e.target.value).toString();
                 });
-            }
+            });
 
-            if (renewalUpdatedValueAditivoInput) {
-                renewalUpdatedValueAditivoInput.addEventListener('input', (e) => {
-                    let value = e.target.value;
-                    value = value.replace(/\D/g, '');
-                    if (value === '') {
-                        e.target.value = '';
-                        return;
-                    }
-                    value = (parseInt(value) / 100).toFixed(2);
-                    value = value.replace('.', ',');
-                    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                    e.target.value = `R$ ${value}`;
-                });
-            }
 
             if (addRemanejamentoItemApostilamentoButton) {
                 addRemanejamentoItemApostilamentoButton.addEventListener('click', () => addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento'));
@@ -3012,7 +2996,7 @@
                         if (checklistContractCompany) checklistContractCompany.textContent = contract.companyName;
 
                         if (renewalDurationAditivoInput) renewalDurationAditivoInput.value = '';
-                        if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.value = formatCurrency(contract.contractValue);
+                        if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.value = formatCurrency(contract.contractValue).replace('R$', '').trim(); // Format for display
 
                         renderChecklistItems(contract.companyName);
                         renderUnitConcordance(contract.participatingUnits || []);
@@ -3116,14 +3100,14 @@
                         renewButton.disabled = false;
                     }
                     if (renewalDurationInput) renewalDurationInput.disabled = false;
-                    if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.disabled = false;
+                    if (renewalUpdatedValueInput) renewalUpdatedValueInput.disabled = false;
                 } else {
                     if (renewButton) {
                         renewButton.classList.add('opacity-50', 'cursor-not-allowed');
                         renewButton.disabled = true;
                     }
                     if (renewalDurationInput) renewalDurationInput.disabled = true;
-                    if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.disabled = true;
+                    if (renewalUpdatedValueInput) renewalUpdatedValueInput.disabled = true;
                 }
             }
 
@@ -3132,7 +3116,7 @@
                     e.preventDefault();
                     const contractId = checklistContractIdInput.value;
                     const renewalDuration = parseInt(renewalDurationAditivoInput.value);
-                    const updatedValue = parseCurrency(renewalUpdatedValueAditivoInput.value);
+                    const updatedValue = parseCurrency(renewalUpdatedValueAditivoInput.value); // Parse currency
 
                     if (isNaN(renewalDuration) || renewalDuration <= 0) {
                         showMessageModal('Erro', 'Por favor, insira um prazo de renovação válido em meses.');
@@ -3150,7 +3134,7 @@
                             const historyEntry = {
                                 type: 'Aditivo - Renovação Efetivada',
                                 date: new Date().toISOString().split('T')[0],
-                                notes: `Contrato renovado via Aditivo por ${renewalDuration} meses. Nova vigência até ${new Date(newValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
+                                notes: `Contrato renovado via Aditivo por ${renewalDuration} meses. Nova vigência até ${createLocalDate(newValidityDate).toLocaleDateString('pt-BR')}. Valor atualizado para ${formatCurrency(updatedValue)}.`,
                                 changedBy: currentUserId
                             };
 
