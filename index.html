@@ -345,6 +345,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Unidades Participantes</label>
                     <div id="units-checkbox-container" class="flex flex-wrap gap-2">
                         </div>
+                    <input type="hidden" id="contract-selected-units">
                 </div>
 
                 <div class="col-span-full">
@@ -840,6 +841,7 @@
             const contractValueInput = document.getElementById('contract-value');
             const unitsCheckboxContainer = document.getElementById('units-checkbox-container');
             const contractObservationsInput = document.getElementById('contract-observations');
+            const contractSelectedUnitsInput = document.getElementById('contract-selected-units'); // Permanent hidden input
 
             const addendumModal = document.getElementById('addendum-modal');
             const addendumForm = document.getElementById('addendum-form');
@@ -855,14 +857,14 @@
             // Apostilamento sub-option sections
             const apostilamentoNovaDCOSection = document.getElementById('apostilamento-nova-dco-section');
             const apostilamentoUnitsContainer = document.getElementById('apostilamento-units-container');
-            const apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
+            const apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units'); // Permanent hidden input
 
             const apostilamentoReajusteSection = document.getElementById('apostilamento-reajuste-section');
             const apostilamentoReajustePercentageInput = document.getElementById('apostilamento-reajuste-percentage');
 
             const apostilamentoDesignacaoGestoresFiscaisSection = document.getElementById('apostilamento-designacao-gestores-fiscais-section');
             const apostilamentoDesignacaoUnitsContainer = document.getElementById('apostilamento-designacao-units-container');
-            const apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units');
+            const apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units'); // Permanent hidden input
 
             const apostilamentoRemanejamentoCotasSection = document.getElementById('apostilamento-remanejamento-cotas-section');
             const remanejamentoTypeApostilamentoSelect = document.getElementById('remanejamento-type-apostilamento');
@@ -1275,6 +1277,8 @@
                         allContractsData = []; // Clear previous data
                         snapshot.forEach(doc => {
                             const contract = { id: doc.id, ...doc.data() };
+                            // Debugging: Log participatingUnits when retrieved from Firestore
+                            console.log(`[loadContracts] Contract ID: ${contract.id}, Retrieved participatingUnits:`, contract.participatingUnits);
                             allContractsData.push(contract);
                         });
 
@@ -1484,8 +1488,8 @@
                     groupContainer.appendChild(groupHeader);
 
                     group.contracts.forEach(contract => {
-                        // Debugging: Log participatingUnits to console
-                        console.log(`Contract ID: ${contract.id}, Participating Units on display:`, contract.participatingUnits);
+                        // Debugging: Log participatingUnits when rendering the card
+                        console.log(`[displayContracts] Contract ID: ${contract.id}, Participating Units for display:`, contract.participatingUnits);
 
                         const validityDate = createLocalDate(contract.currentValidityDate); // Use createLocalDate
                         validityDate.setHours(0, 0, 0, 0);
@@ -1713,13 +1717,8 @@
                     if (contractForm) contractForm.reset();
                     if (contractForm) contractForm.dataset.id = '';
                     if (contractFormTitle) contractFormTitle.textContent = 'Adicionar Novo Contrato';
-                    let contractSelectedUnitsInput = document.getElementById('contract-selected-units');
-                    if (!contractSelectedUnitsInput) {
-                        contractSelectedUnitsInput = document.createElement('input');
-                        contractSelectedUnitsInput.type = 'hidden';
-                        contractSelectedUnitsInput.id = 'contract-selected-units';
-                        unitsCheckboxContainer.appendChild(contractSelectedUnitsInput);
-                    }
+                    // The hidden input is now permanent in HTML, just get reference
+                    if (contractSelectedUnitsInput) contractSelectedUnitsInput.value = '[]'; // Clear previous selection
                     populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, []);
                     if (maxContractTermInput) maxContractTermInput.value = '';
                     if (contractValueInput) contractValueInput.value = ''; // Clear value, not format
@@ -1746,8 +1745,8 @@
                     const observations = contractObservationsInput.value;
 
                     // Ensure participatingUnits is correctly parsed from the hidden input
-                    const participatingUnits = JSON.parse(document.getElementById('contract-selected-units')?.value || '[]');
-                    console.log("Units selected for saving:", participatingUnits); // Debugging line
+                    const participatingUnits = JSON.parse(contractSelectedUnitsInput.value || '[]');
+                    console.log("[contractForm submit] Units selected for saving:", participatingUnits); // Debugging line
 
                     const contractData = {
                         seiNumber,
@@ -1758,7 +1757,7 @@
                         lawType,
                         currentValidityDate,
                         renewalNumber,
-                        participatingUnits,
+                        participatingUnits, // This is where it's assigned
                         observations,
                         isStarred: false, // Novo contrato não é favoritado por padrão
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1832,7 +1831,7 @@
                     const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).get();
                     if (doc.exists) {
                         const contract = doc.data();
-                        console.log("Units loaded for editing:", contract.participatingUnits); // Debugging line
+                        console.log("[editContract] Units loaded for editing:", contract.participatingUnits); // Debugging line
                         if (contractForm) contractForm.dataset.id = id;
                         if (contractFormTitle) contractFormTitle.textContent = 'Editar Contrato';
 
@@ -1849,13 +1848,7 @@
                         if (contractObservationsInput) contractObservationsInput.value = contract.observations || '';
 
                         calculateMaxContractTerm();
-                        let contractSelectedUnitsInput = document.getElementById('contract-selected-units');
-                        if (!contractSelectedUnitsInput) {
-                            contractSelectedUnitsInput = document.createElement('input');
-                            contractSelectedUnitsInput.type = 'hidden';
-                            contractSelectedUnitsInput.id = 'contract-selected-units';
-                            unitsCheckboxContainer.appendChild(contractSelectedUnitsInput);
-                        }
+                        // The hidden input is now permanent in HTML, just get reference
                         // Pass existing participatingUnits to populateUnitButtons
                         populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, contract.participatingUnits || []);
                         showModal(contractFormModal);
@@ -1965,22 +1958,12 @@
                     const currentContractUnits = contractDoc.exists ? (contractDoc.data().participatingUnits || []) : [];
 
                     if (selectedSubType === 'Nova DCO') {
-                        let apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
-                        if (!apostilamentoSelectedUnitsInput) {
-                            apostilamentoSelectedUnitsInput = document.createElement('input');
-                            apostilamentoSelectedUnitsInput.type = 'hidden';
-                            apostilamentoSelectedUnitsInput.id = 'apostilamento-selected-units';
-                            apostilamentoUnitsContainer.appendChild(apostilamentoSelectedUnitsInput);
-                        }
+                        // The hidden input is now permanent in HTML, just get reference
+                        if (apostilamentoSelectedUnitsInput) apostilamentoSelectedUnitsInput.value = '[]'; // Clear previous selection
                         populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, currentContractUnits);
                     } else if (selectedSubType === 'Designacao Gestores Fiscais') {
-                        let apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units');
-                        if (!apostilamentoDesignacaoSelectedUnitsInput) {
-                            apostilamentoDesignacaoSelectedUnitsInput = document.createElement('input');
-                            apostilamentoDesignacaoSelectedUnitsInput.type = 'hidden';
-                            apostilamentoDesignacaoSelectedUnitsInput.id = 'apostilamento-designacao-selected-units';
-                            apostilamentoDesignacaoUnitsContainer.appendChild(apostilamentoDesignacaoSelectedUnitsInput);
-                        }
+                        // The hidden input is now permanent in HTML, just get reference
+                        if (apostilamentoDesignacaoSelectedUnitsInput) apostilamentoDesignacaoSelectedUnitsInput.value = '[]'; // Clear previous selection
                         populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, currentContractUnits);
                     } else if (selectedSubType === 'Remanejamento Cotas') {
                         if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
@@ -2054,12 +2037,10 @@
                         if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
                         if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
                         // Clear unit button selections for apostilamento
-                        let apostilamentoSelectedUnitsInput = document.getElementById('apostilamento-selected-units');
                         if (apostilamentoSelectedUnitsInput) apostilamentoSelectedUnitsInput.value = '[]';
-                        let apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units');
                         if (apostilamentoDesignacaoSelectedUnitsInput) apostilamentoDesignacaoSelectedUnitsInput.value = '[]';
-                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput || document.createElement('input'), []);
-                        populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput || document.createElement('input'), []);
+                        populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, []);
+                        populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, []);
 
 
                         // Clear all specific fields for Aditivo
@@ -2484,7 +2465,7 @@
                     return;
                 }
                 containerElement.innerHTML = '';
-                console.log("Populating unit buttons with selected units:", selectedUnits); // Debugging line
+                console.log("[populateUnitButtons] Initial selected units received:", selectedUnits); // Debugging line
 
                 allUnits.forEach(unit => {
                     const button = document.createElement('button');
@@ -2496,12 +2477,13 @@
                         button.classList.toggle('selected');
                         const currentlySelected = Array.from(containerElement.querySelectorAll('.unit-button.selected')).map(btn => btn.textContent);
                         targetInput.value = JSON.stringify(currentlySelected);
-                        console.log("Units selected (after click):", currentlySelected); // Debugging line
+                        console.log("[populateUnitButtons] Units selected (after click):", currentlySelected); // Debugging line
                     });
                     containerElement.appendChild(button);
                 });
                 // Ensure the hidden input always reflects the initial selected units
                 targetInput.value = JSON.stringify(selectedUnits);
+                console.log("[populateUnitButtons] Hidden input value set to:", targetInput.value); // Debugging line
             }
 
             // --- Dynamic Table Row Functions ---
@@ -2718,13 +2700,8 @@
                     if (contractForm) contractForm.reset();
                     if (contractForm) contractForm.dataset.id = '';
                     if (contractFormTitle) contractFormTitle.textContent = 'Adicionar Novo Contrato';
-                    let contractSelectedUnitsInput = document.getElementById('contract-selected-units');
-                    if (!contractSelectedUnitsInput) {
-                        contractSelectedUnitsInput = document.createElement('input');
-                        contractSelectedUnitsInput.type = 'hidden';
-                        contractSelectedUnitsInput.id = 'contract-selected-units';
-                        unitsCheckboxContainer.appendChild(contractSelectedUnitsInput);
-                    }
+                    // The hidden input is now permanent in HTML, just get reference
+                    if (contractSelectedUnitsInput) contractSelectedUnitsInput.value = '[]'; // Clear previous selection
                     populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, []);
                     if (maxContractTermInput) maxContractTermInput.value = '';
                     if (contractValueInput) contractValueInput.value = ''; // Clear value, not format
