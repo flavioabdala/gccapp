@@ -2468,11 +2468,30 @@
                                     const editButtonHtml = isEditable && isAdmin ? `<button class="edit-history-item-button py-1 px-2 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 ml-2" data-contract-id="${id}" data-history-index="${index}"><i class="fas fa-edit"></i> Editar</button>` : '';
                                     const deleteButtonHtml = isEditable && isAdmin ? `<button class="delete-history-item-button py-1 px-2 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 ml-2" data-contract-id="${id}" data-history-index="${index}"><i class="fas fa-trash-alt"></i> Excluir</button>` : '';
 
-
-                                    let displayNotes = entry.notes;
+                                    let displayNotes = '';
                                     let tooltipText = ''; // This will be the detailed tooltip
 
-                                    if (isEditable) {
+                                    if (isEditable) { // Only for Apostilamento and Aditivo
+                                        const mainType = entry.type.startsWith('Apostilamento') ? 'Apostilamento' : 'Aditivo';
+                                        const numberMatch = entry.type.match(/\(([^)]+)\)/);
+                                        const docNumber = numberMatch ? numberMatch[1] : 'N/A';
+
+                                        displayNotes = `${mainType} (${docNumber})`;
+
+                                        if (entry.details && entry.details.remanejamento) {
+                                            const remanejamento = entry.details.remanejamento;
+                                            // Include remanejamento type in display notes
+                                            displayNotes += ` - Remanejamento ${remanejamento.type ? remanejamento.type.toLowerCase() : ''} de ${remanejamento.cedingUnit || 'N/A'} para ${remanejamento.receivingUnit || 'N/A'}`;
+                                        } else {
+                                            // For other types, just append the sub-type if available
+                                            const subTypeMatch = entry.type.match(/-\s*([^)]+)$/);
+                                            const subType = subTypeMatch ? subTypeMatch[1].trim() : '';
+                                            if (subType && subType !== 'Renovação Efetivada') { // Avoid duplicating 'Renovação Efetivada' as it's already in the main type
+                                                displayNotes += ` - ${subType}`;
+                                            }
+                                        }
+
+                                        // Construct the detailed tooltip text
                                         tooltipText = `Detalhes do ${entry.type}:\n`;
                                         if (entry.details) {
                                             for (const detailKey in entry.details) {
@@ -2518,7 +2537,7 @@
                                                     } else if (detailKey === 'newDCOUnits' || detailKey === 'designacaoUnits') {
                                                         tooltipText += `  Unidades: ${(detailValue || []).join(', ')}\n`;
                                                     } else {
-                                                        tooltipText += `  ${detailKey}: ${JSON.stringify(detailValue)}\n`;
+                                                        tooltipText += `  ${detailKey}: ${detailValue}\n`;
                                                     }
                                                 } else {
                                                     tooltipText += `  ${detailKey}: ${detailValue}\n`;
@@ -2529,8 +2548,7 @@
 
                                     historyHtml += `
                                         <li title="${tooltipText.trim()}">
-                                            <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}${editButtonHtml}${deleteButtonHtml}</p>
-                                            <p class="text-sm text-gray-700">${displayNotes}</p>
+                                            <p class="font-semibold">${displayNotes} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}${editButtonHtml}${deleteButtonHtml}</p>
                                             <p class="text-xs text-gray-500">Por: ${entry.changedBy || 'N/A'}</p>
                                         </li>
                                     `;
