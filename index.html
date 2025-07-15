@@ -364,9 +364,10 @@
     <div id="addendum-modal" class="modal">
         <div class="modal-content max-w-3xl"> <!-- Increased max-width for better layout -->
             <span class="close-button" onclick="closeModal('addendum-modal')">&times;</span>
-            <h3 class="text-xl font-semibold mb-4">Apostilamento ou Aditivo</h3>
+            <h3 class="text-xl font-semibold mb-4" id="addendum-modal-title">Apostilamento ou Aditivo</h3>
             <form id="addendum-form" class="space-y-4">
                 <input type="hidden" id="addendum-contract-id">
+                <input type="hidden" id="addendum-history-index"> <!-- Hidden input for history index -->
                 <div>
                     <label for="addendum-type" class="block text-sm font-medium text-gray-700">Tipo Principal</label>
                     <select id="addendum-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
@@ -846,6 +847,8 @@
             const addendumModal = document.getElementById('addendum-modal');
             const addendumForm = document.getElementById('addendum-form');
             const addendumContractIdInput = document.getElementById('addendum-contract-id');
+            const addendumHistoryIndexInput = document.getElementById('addendum-history-index'); // New hidden input for history index
+            const addendumModalTitle = document.getElementById('addendum-modal-title'); // Title for addendum modal
             const addendumTypeSelect = document.getElementById('addendum-type');
 
             // Apostilamento general elements
@@ -1107,6 +1110,17 @@
 
                 // Esconde/mostra botões de edição/exclusão/renovação nas cards
                 document.querySelectorAll('.edit-button, .delete-button, .addendum-button, .terminate-button, .delete-reminder-button').forEach(btn => {
+                    if (btn) {
+                        if (isAdmin) {
+                            btn.classList.remove('hidden');
+                        } else {
+                            btn.classList.add('hidden');
+                        }
+                    }
+                });
+
+                // Controla a visibilidade dos botões de edição no histórico
+                document.querySelectorAll('.edit-history-item-button').forEach(btn => {
                     if (btn) {
                         if (isAdmin) {
                             btn.classList.remove('hidden');
@@ -2017,6 +2031,8 @@
                     if (doc.exists) {
                         const contract = doc.data();
                         if (addendumContractIdInput) addendumContractIdInput.value = id;
+                        if (addendumHistoryIndexInput) addendumHistoryIndexInput.value = ''; // Clear history index for new entry
+                        if (addendumModalTitle) addendumModalTitle.textContent = 'Apostilamento ou Aditivo'; // Reset title for new entry
                         if (addendumTypeSelect) addendumTypeSelect.value = ''; // Limpa a seleção principal
 
                         // Clear and hide all main and sub options
@@ -2084,6 +2100,9 @@
                 addendumForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const contractId = addendumContractIdInput.value;
+                    const historyIndex = addendumHistoryIndexInput.value; // Get the history index
+                    const isEditing = historyIndex !== ''; // Check if we are editing an existing entry
+
                     const addendumType = addendumTypeSelect.value; // Apostilamento or Aditivo
                     let subType = ''; // e.g., Nova DCO, Reajuste, Remanejamento Cotas, Renovacao
 
@@ -2228,9 +2247,20 @@
                     if (subType !== 'Renovacao') {
                         try {
                             const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
+                            const contractDoc = await contractRef.get();
+                            let contractHistory = contractDoc.data().contractHistory || [];
+
+                            if (isEditing) {
+                                // Update existing entry
+                                contractHistory[historyIndex] = historyEntry;
+                            } else {
+                                // Add new entry
+                                contractHistory.push(historyEntry);
+                            }
+
                             await contractRef.update({
                                 ...updateData,
-                                contractHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry)
+                                contractHistory: contractHistory // Set the entire updated array
                             });
                             showMessageModal('Sucesso', `${addendumType} - ${subType} aplicado com sucesso!`);
                             closeModal('addendum-modal');
@@ -2250,10 +2280,14 @@
                         const contract = doc.data();
                         let historyHtml = '<ul class="list-disc pl-5 space-y-2">';
                         if (contract.contractHistory && contract.contractHistory.length > 0) {
-                            contract.contractHistory.forEach(entry => {
+                            contract.contractHistory.forEach((entry, index) => {
+                                // Check if the entry is an Apostilamento or Aditivo
+                                const isEditable = entry.type && (entry.type.startsWith('Apostilamento') || entry.type.startsWith('Aditivo'));
+                                const editButtonHtml = isEditable && isAdmin ? `<button class="edit-history-item-button py-1 px-2 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 ml-2" data-contract-id="${id}" data-history-index="${index}"><i class="fas fa-edit"></i> Editar</button>` : '';
+
                                 historyHtml += `
                                     <li>
-                                        <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}</p>
+                                        <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}${editButtonHtml}</p>
                                         <p class="text-sm text-gray-700">${entry.notes}</p>
                                         <p class="text-xs text-gray-500">Por: ${entry.changedBy || 'N/A'}</p>
                                     </li>
@@ -2265,12 +2299,177 @@
                         historyHtml += '</ul>';
 
                         showMessageModal(`Histórico do Contrato: ${contract.seiNumber}`, historyHtml);
+
+                        // Add event listeners for the new edit buttons in the history modal
+                        document.querySelectorAll('.edit-history-item-button').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                const contractId = e.currentTarget.dataset.contractId;
+                                const historyIndex = parseInt(e.currentTarget.dataset.historyIndex);
+                                editHistoryItem(contractId, historyIndex);
+                            });
+                        });
+                        setAdminPermissions(isAdmin); // Re-apply permissions for new buttons
                     } else {
                         showMessageModal('Erro', 'Contrato não encontrado para visualizar histórico.');
                     }
                 } catch (error) {
                     console.error("Erro ao visualizar histórico:", error);
                     showMessageModal('Erro', `Erro ao carregar histórico: ${error.message}`);
+                }
+            }
+
+            async function editHistoryItem(contractId, historyIndex) {
+                try {
+                    const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+                    if (!contractDoc.exists) {
+                        showMessageModal('Erro', 'Contrato não encontrado.');
+                        return;
+                    }
+                    const contract = contractDoc.data();
+                    const historyEntry = contract.contractHistory[historyIndex];
+
+                    if (!historyEntry) {
+                        showMessageModal('Erro', 'Entrada de histórico não encontrada.');
+                        return;
+                    }
+
+                    // Pre-fill the addendum modal
+                    if (addendumContractIdInput) addendumContractIdInput.value = contractId;
+                    if (addendumHistoryIndexInput) addendumHistoryIndexInput.value = historyIndex; // Set the history index for editing
+                    if (addendumModalTitle) addendumModalTitle.textContent = 'Editar Apostilamento/Aditivo'; // Change modal title
+
+                    // Determine main type (Apostilamento or Aditivo)
+                    const mainType = historyEntry.type.startsWith('Apostilamento') ? 'Apostilamento' : 'Aditivo';
+                    if (addendumTypeSelect) addendumTypeSelect.value = mainType;
+
+                    // Show/hide main sections
+                    if (apostilamentoOptions) apostilamentoOptions.classList.add('hidden');
+                    if (aditivoOptions) aditivoOptions.classList.add('hidden');
+                    document.querySelectorAll('.sub-option-section').forEach(section => section.style.display = 'none'); // Hide all sub-sections
+
+                    if (mainType === 'Apostilamento') {
+                        if (apostilamentoOptions) apostilamentoOptions.classList.remove('hidden');
+                        if (apostilamentoNumberInput) apostilamentoNumberInput.value = historyEntry.type.match(/\(([^)]+)\)/)?.[1] || ''; // Extract number from title
+                        if (apostilamentoDateInput) apostilamentoDateInput.value = historyEntry.date;
+
+                        const subType = Object.keys(historyEntry.details)[0]; // Get the subType key
+                        const formattedSubType = subType ? subType.replace(/([A-Z])/g, ' $1').trim() : ''; // Convert camelCase to "Space Case"
+                        if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = formattedSubType;
+                        showSubOptionSection(`apostilamento-${formattedSubType.replace(/\s/g, '-').toLowerCase()}-section`);
+
+                        // Populate sub-type specific fields
+                        if (formattedSubType === 'Nova DCO') {
+                            populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, historyEntry.details.newDCOUnits || []);
+                        } else if (formattedSubType === 'Reajuste') {
+                            if (apostilamentoReajustePercentageInput) apostilamentoReajustePercentageInput.value = historyEntry.details.reajustePercentage || '';
+                        } else if (formattedSubType === 'Designacao Gestores Fiscais') {
+                            populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, historyEntry.details.designacaoUnits || []);
+                        } else if (formattedSubType === 'Remanejamento Cotas') {
+                            const remanejamento = historyEntry.details.remanejamento || {};
+                            if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = remanejamento.type || '';
+                            if (cedingUnitApostilamentoInput) cedingUnitApostilamentoInput.value = remanejamento.cedingUnit || '';
+                            if (receivingUnitApostilamentoInput) receivingUnitApostilamentoInput.value = remanejamento.receivingUnit || '';
+                            if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = remanejamento.notes || '';
+                            // Populate remanejamento table
+                            if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
+                            (remanejamento.items || []).forEach(item => {
+                                addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
+                                const lastRow = remanejamentoTableBodyApostilamento.lastElementChild;
+                                if (lastRow) {
+                                    lastRow.querySelector('.remanejamento-lote').value = item.lote || '';
+                                    lastRow.querySelector('.remanejamento-item').value = item.item || '';
+                                    lastRow.querySelector('.remanejamento-codigo').value = item.codigo || '';
+                                    lastRow.querySelector('.remanejamento-descricao').value = item.descricao || '';
+                                    lastRow.querySelector('.remanejamento-quantidade').value = item.quantidade || '';
+                                    lastRow.querySelector('.remanejamento-valor-unitario').value = (item.valorUnitario || 0).toFixed(2).replace('.', ',');
+                                }
+                            });
+                            calculateRemanejamentoTotal('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
+                        } else if (formattedSubType === 'Outros') {
+                            if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = historyEntry.details.others || '';
+                        }
+
+                    } else if (mainType === 'Aditivo') {
+                        if (aditivoOptions) aditivoOptions.classList.remove('hidden');
+                        if (aditivoNumberInput) aditivoNumberInput.value = historyEntry.type.match(/\(([^)]+)\)/)?.[1] || ''; // Extract number from title
+                        if (aditivoDateInput) aditivoDateInput.value = historyEntry.date;
+
+                        const subType = Object.keys(historyEntry.details)[0]; // Get the subType key
+                        const formattedSubType = subType ? subType.replace(/([A-Z])/g, ' $1').trim() : ''; // Convert camelCase to "Space Case"
+                        if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = formattedSubType;
+                        showSubOptionSection(`aditivo-${formattedSubType.replace(/\s/g, '-').toLowerCase()}-section`);
+
+                        // Populate sub-type specific fields
+                        if (formattedSubType === 'Remanejamento Cotas') {
+                            const remanejamento = historyEntry.details.remanejamento || {};
+                            if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = remanejamento.type || '';
+                            if (cedingUnitAditivoInput) cedingUnitAditivoInput.value = remanejamento.cedingUnit || '';
+                            if (receivingUnitAditivoInput) receivingUnitAditivoInput.value = remanejamento.receivingUnit || '';
+                            if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = remanejamento.notes || '';
+                            // Populate remanejamento table
+                            if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
+                            (remanejamento.items || []).forEach(item => {
+                                addRemanejamentoItem('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo');
+                                const lastRow = remanejamentoTableBodyAditivo.lastElementChild;
+                                if (lastRow) {
+                                    lastRow.querySelector('.remanejamento-lote').value = item.lote || '';
+                                    lastRow.querySelector('.remanejamento-item').value = item.item || '';
+                                    lastRow.querySelector('.remanejamento-codigo').value = item.codigo || '';
+                                    lastRow.querySelector('.remanejamento-descricao').value = item.descricao || '';
+                                    lastRow.querySelector('.remanejamento-quantidade').value = item.quantidade || '';
+                                    lastRow.querySelector('.remanejamento-valor-unitario').value = (item.valorUnitario || 0).toFixed(2).replace('.', ',');
+                                }
+                            });
+                            calculateRemanejamentoTotal('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo');
+                        } else if (formattedSubType === 'Reequilibrio') {
+                            if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = historyEntry.details.reequilibrionPercentage || '';
+                        } else if (formattedSubType === 'Troca Marca') {
+                            if (aditivoTrocaMarcaDescriptionInput) aditivoTrocaMarcaDescriptionInput.value = historyEntry.details.trocaMarcaDescription || '';
+                        } else if (formattedSubType === 'Acrescimo') {
+                            if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
+                            (historyEntry.details.acrescimo?.items || []).forEach(item => {
+                                addAcrescimoItem();
+                                const lastRow = acrescimoTableBody.lastElementChild;
+                                if (lastRow) {
+                                    lastRow.querySelector('.acrescimo-lote').value = item.lote || '';
+                                    lastRow.querySelector('.acrescimo-item').value = item.item || '';
+                                    lastRow.querySelector('.acrescimo-codigo').value = item.codigo || '';
+                                    lastRow.querySelector('.acrescimo-descritivo').value = item.descritivo || '';
+                                    lastRow.querySelector('.acrescimo-quantidade').value = item.quantidade || '';
+                                    lastRow.querySelector('.acrescimo-valor-item').value = (item.valorItem || 0).toFixed(2).replace('.', ',');
+                                    lastRow.querySelector('.acrescimo-porcentagem').value = item.porcentagem || '';
+                                    // Populate units for acrescimo item
+                                    populateUnitButtons(lastRow.querySelector('.acrescimo-units-container'), lastRow.querySelector('.acrescimo-unidades-hidden'), item.unidades || []);
+                                }
+                            });
+                            calculateAcrescimoTotal();
+                        } else if (formattedSubType === 'Supressao') {
+                            if (supressaoTableBody) supressaoTableBody.innerHTML = '';
+                            (historyEntry.details.supressao?.items || []).forEach(item => {
+                                addSupressaoItem();
+                                const lastRow = supressaoTableBody.lastElementChild;
+                                if (lastRow) {
+                                    lastRow.querySelector('.supressao-lote').value = item.lote || '';
+                                    lastRow.querySelector('.supressao-valor').value = (item.valor || 0).toFixed(2).replace('.', ',');
+                                    lastRow.querySelector('.supressao-porcentagem').value = item.porcentagem || '';
+                                    // Populate units for supressao item
+                                    populateUnitButtons(lastRow.querySelector('.supressao-units-container'), lastRow.querySelector('.supressao-unidade-hidden'), item.unidadeSuprimida || []);
+                                }
+                            });
+                            calculateSupressaoTotal();
+                        } else if (formattedSubType === 'Renovacao') {
+                            // This part is handled by finalizeRenewalButtonAditivo click listener
+                            // We should prevent the main form submission if 'Renovacao' is selected
+                            // and the finalize button hasn't been clicked yet.
+                            showMessageModal('Atenção', 'Para finalizar a Renovação, use o botão "Efetivar Renovação" dentro da seção de Renovação.');
+                            return; // Prevent main form submission
+                        }
+                    }
+                    closeModal('message-modal'); // Close the history modal
+                    showModal(addendumModal); // Open the addendum modal
+                } catch (error) {
+                    console.error("Erro ao editar item do histórico:", error);
+                    showMessageModal('Erro', `Erro ao carregar dados do histórico para edição: ${error.message}`);
                 }
             }
 
@@ -2487,7 +2686,7 @@
             }
 
             // --- Dynamic Table Row Functions ---
-            function addRemanejamentoItem(tableBodyId, totalDisplayId) {
+            function addRemanejamentoItem(tableBodyId, totalDisplayId, itemData = {}) {
                 console.log(`addRemanejamentoItem called for tableBodyId: ${tableBodyId}`); // Debug log
                 const tableBody = document.getElementById(tableBodyId);
                 if (!tableBody) {
@@ -2498,12 +2697,12 @@
                 const newRow = tableBody.insertRow();
                 // Changed classes for input fields to make them visible and editable
                 newRow.innerHTML = `
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-lote"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-item"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-codigo"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-descricao"></td>
-                    <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border border-gray-300 rounded-md text-xs remanejamento-quantidade"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-valor-unitario" placeholder="0,00"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-lote" value="${itemData.lote || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-item" value="${itemData.item || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-codigo" value="${itemData.codigo || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-descricao" value="${itemData.descricao || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border border-gray-300 rounded-md text-xs remanejamento-quantidade" value="${itemData.quantidade || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-valor-unitario" placeholder="0,00" value="${(itemData.valorUnitario || 0).toFixed(2).replace('.', ',')}"></td>
                     <td class="py-2 px-4 border-b remanejamento-valor-total text-xs">R$ 0,00</td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
                 `;
@@ -2530,6 +2729,7 @@
                         calculateRemanejamentoTotal(tableBodyId, totalDisplayId);
                     });
                 }
+                calculateRemanejamentoTotal(tableBodyId, totalDisplayId); // Calculate initially for pre-filled data
             }
 
             function calculateRemanejamentoTotal(tableBodyId, totalDisplayId) {
@@ -2548,24 +2748,24 @@
                 totalDisplay.textContent = formatCurrency(total);
             }
 
-            function addAcrescimoItem() {
+            function addAcrescimoItem(itemData = {}) {
                 const tableBody = document.getElementById('acrescimo-table-body');
                 if (!tableBody) return;
 
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-lote"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-item"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-codigo"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs acrescimo-lote" value="${itemData.lote || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs acrescimo-item" value="${itemData.item || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs acrescimo-codigo" value="${itemData.codigo || ''}"></td>
                     <td class="py-2 px-4 border-b">
                         <input type="hidden" class="acrescimo-unidades-hidden">
                         <div class="acrescimo-units-container flex flex-wrap gap-1 mt-1"></div>
                     </td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-descritivo"></td>
-                    <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border-none bg-transparent text-xs acrescimo-quantidade"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs acrescimo-valor-item" placeholder="0,00"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs acrescimo-descritivo" value="${itemData.descritivo || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border border-gray-300 rounded-md text-xs acrescimo-quantidade" value="${itemData.quantidade || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs acrescimo-valor-item" placeholder="0,00" value="${(itemData.valorItem || 0).toFixed(2).replace('.', ',')}"></td>
                     <td class="py-2 px-4 border-b acrescimo-valor-total text-xs">R$ 0,00</td>
-                    <td class="py-2 px-4 border-b"><input type="number" step="0.01" class="w-full border-none bg-transparent text-xs acrescimo-porcentagem"></td>
+                    <td class="py-2 px-4 border-b"><input type="number" step="0.01" class="w-full border border-gray-300 rounded-md text-xs acrescimo-porcentagem" value="${itemData.porcentagem || ''}"></td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
                 `;
 
@@ -2575,7 +2775,7 @@
                 const unitsHiddenInput = newRow.querySelector('.acrescimo-unidades-hidden');
                 const unitsContainer = newRow.querySelector('.acrescimo-units-container');
 
-                populateUnitButtons(unitsContainer, unitsHiddenInput);
+                populateUnitButtons(unitsContainer, unitsHiddenInput, itemData.unidades || []);
 
                 [quantityInput, itemValueInput].forEach(input => {
                     if (input) {
@@ -2595,6 +2795,7 @@
                         calculateAcrescimoTotal();
                     });
                 }
+                calculateAcrescimoTotal(); // Calculate initially for pre-filled data
             }
 
             function calculateAcrescimoTotal() {
@@ -2613,7 +2814,7 @@
                 totalDisplay.textContent = formatCurrency(total);
             }
 
-            function addSupressaoItem() {
+            function addSupressaoItem(itemData = {}) {
                 const tableBody = document.getElementById('supressao-table-body');
                 if (!tableBody) return;
 
@@ -2623,9 +2824,9 @@
                         <input type="hidden" class="supressao-unidade-hidden">
                         <div class="supressao-units-container flex flex-wrap gap-1 mt-1"></div>
                     </td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs supressao-lote"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs supressao-valor" placeholder="0,00"></td>
-                    <td class="py-2 px-4 border-b"><input type="number" step="0.01" class="w-full border-none bg-transparent text-xs supressao-porcentagem"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs supressao-lote" value="${itemData.lote || ''}"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs supressao-valor" placeholder="0,00" value="${(itemData.valor || 0).toFixed(2).replace('.', ',')}"></td>
+                    <td class="py-2 px-4 border-b"><input type="number" step="0.01" class="w-full border border-gray-300 rounded-md text-xs supressao-porcentagem" value="${itemData.porcentagem || ''}"></td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
                 `;
 
@@ -2634,7 +2835,7 @@
                 const unitsContainer = newRow.querySelector('.supressao-units-container');
                 const valueInput = newRow.querySelector('.supressao-valor');
 
-                populateUnitButtons(unitsContainer, unitsHiddenInput);
+                populateUnitButtons(unitsContainer, unitsHiddenInput, itemData.unidadeSuprimida || []);
 
                 if (valueInput) {
                     valueInput.addEventListener('input', calculateSupressaoTotal);
@@ -2650,6 +2851,7 @@
                         calculateSupressaoTotal();
                     });
                 }
+                calculateSupressaoTotal(); // Calculate initially for pre-filled data
             }
 
             function calculateSupressaoTotal() {
