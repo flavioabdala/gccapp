@@ -942,7 +942,7 @@
 
             // Updated list of units including HJK and HCM
             const allUnits = [
-                'CHB', 'CHPB', 'CSPD', 'CSSFA', 'CSSFE', 'CSSI', 'HAC', 'HEM', 'HIJPII', 'HJXXIII', 'HMAL', 'HRAD', 'HRBJA', 'HRJP', 'IRS', 'MOV', 'HJK', 'HCM'
+                'CHB', 'CHPB', 'CSPD', 'CSSFA', 'CSSFE', 'CSSI', 'HAC', 'HCM', 'HEM', 'HIJPII', 'HJXXIII', 'HMAL', 'HRAD', 'HRBJA', 'HRJP', 'IRS', 'MOV', 'HJK'
             ].sort(); // Sort alphabetically
 
             // Checklist items for Aditivo renewal
@@ -2181,7 +2181,7 @@
                         } else if (subType === 'Reequilibrio') {
                             const reequilibrioPercentage = parseFloat(aditivoReequilibrioPercentageInput.value) || 0;
                             historyEntry.notes = `Reequilíbrio de ${reequilibrioPercentage}%.`;
-                            historyEntry.details.reequilibrioPercentage = reequilibrioPercentage;
+                            historyEntry.details.reequilibrionPercentage = reequilibrioPercentage;
                         } else if (subType === 'Troca Marca') {
                             const trocaMarcaDescription = aditivoTrocaMarcaDescriptionInput.value;
                             historyEntry.notes = `Troca de Marca: ${trocaMarcaDescription}.`;
@@ -2488,17 +2488,22 @@
 
             // --- Dynamic Table Row Functions ---
             function addRemanejamentoItem(tableBodyId, totalDisplayId) {
+                console.log(`addRemanejamentoItem called for tableBodyId: ${tableBodyId}`); // Debug log
                 const tableBody = document.getElementById(tableBodyId);
-                if (!tableBody) return;
+                if (!tableBody) {
+                    console.error(`Table body with ID ${tableBodyId} not found.`); // Debug log
+                    return;
+                }
 
                 const newRow = tableBody.insertRow();
+                // Changed classes for input fields to make them visible and editable
                 newRow.innerHTML = `
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-lote"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-item"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-codigo"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-descricao"></td>
-                    <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border-none bg-transparent text-xs remanejamento-quantidade"></td>
-                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border-none bg-transparent text-xs remanejamento-valor-unitario" placeholder="0,00"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-lote"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-item"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-codigo"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-descricao"></td>
+                    <td class="py-2 px-4 border-b"><input type="number" min="0" class="w-full border border-gray-300 rounded-md text-xs remanejamento-quantidade"></td>
+                    <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-valor-unitario" placeholder="0,00"></td>
                     <td class="py-2 px-4 border-b remanejamento-valor-total text-xs">R$ 0,00</td>
                     <td class="py-2 px-4 border-b"><button type="button" class="remove-item-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-trash-alt"></i></button></td>
                 `;
@@ -2767,7 +2772,13 @@
 
 
             if (addRemanejamentoItemApostilamentoButton) {
-                addRemanejamentoItemApostilamentoButton.addEventListener('click', () => addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento'));
+                console.log("addRemanejamentoItemApostilamentoButton found."); // Debug log
+                addRemanejamentoItemApostilamentoButton.addEventListener('click', () => {
+                    console.log("addRemanejamentoItemApostilamentoButton clicked!"); // Debug log
+                    addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
+                });
+            } else {
+                console.error("addRemanejamentoItemApostilamentoButton NOT found."); // Debug log
             }
 
             if (addRemanejamentoItemAditivoButton) {
