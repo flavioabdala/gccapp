@@ -125,6 +125,37 @@
             border-radius: 0.5rem;
             margin-top: 1rem;
         }
+        /* Style for the options dropdown */
+        .options-dropdown {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            right: 0;
+            top: 40px; /* Adjust as needed to appear below the button */
+            min-width: 120px;
+            overflow: hidden; /* Ensures rounded corners apply to children */
+        }
+        .options-dropdown button {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            text-align: left;
+            font-size: 0.875rem;
+            color: #374151;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .options-dropdown button:hover {
+            background-color: #f3f4f6;
+        }
+        .options-dropdown button:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -207,6 +238,11 @@
         </div>
 
         <div id="main-page" class="hidden w-full h-full flex flex-col bg-white rounded-xl shadow-lg p-4 md:p-8">
+            <!-- Offline Status Message -->
+            <div id="offline-status-message" class="hidden fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 z-50 text-sm">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Modo Offline: Verifique sua conexão com a internet. Tentando reconectar...
+            </div>
+
             <div class="bg-purple-700 text-white p-4 rounded-t-xl mb-6 flex flex-col md:flex-row justify-between items-center">
                 <h2 class="text-3xl font-bold text-white mb-4 md:mb-0">Gestão de Contratos</h2>
                 <!-- Contador de Contratos Ativos, Vencendo e Vencidos -->
@@ -423,7 +459,7 @@
                     <div id="apostilamento-remanejamento-cotas-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Remanejamento de Cotas</h5>
                         <div>
-                            <label for="remanejamento-type-apostilamento" class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
                             <select id="remanejamento-type-apostilamento" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                                 <option value="">Selecione</option>
                                 <option value="Definitivo">Definitivo</option>
@@ -431,13 +467,13 @@
                             </select>
                         </div>
                         <div class="mb-4">
-                            <label for="ceding-unit-apostilamento" class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
-                            <input type="text" id="ceding-unit-apostilamento" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                            <label class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
+                            <input type="hidden" id="ceding-selected-unit-apostilamento">
                             <div id="ceding-units-container-apostilamento" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
                         <div class="mb-4">
-                            <label for="receiving-unit-apostilamento" class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
-                            <input type="text" id="receiving-unit-apostilamento" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                            <label class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
+                            <input type="hidden" id="receiving-selected-unit-apostilamento">
                             <div id="receiving-units-container-apostilamento" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
                         <div class="mt-4">
@@ -510,7 +546,7 @@
                     <div id="aditivo-remanejamento-cotas-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Remanejamento de Cotas</h5>
                         <div>
-                            <label for="remanejamento-type-aditivo" class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
                             <select id="remanejamento-type-aditivo" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                                 <option value="">Selecione</option>
                                 <option value="Definitivo">Definitivo</option>
@@ -518,13 +554,13 @@
                             </select>
                         </div>
                         <div class="mb-4">
-                            <label for="ceding-unit-aditivo" class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
-                            <input type="text" id="ceding-unit-aditivo" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                            <label class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
+                            <input type="hidden" id="ceding-selected-unit-aditivo">
                             <div id="ceding-units-container-aditivo" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
                         <div class="mb-4">
-                            <label for="receiving-unit-aditivo" class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
-                            <input type="text" id="receiving-unit-aditivo" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                            <label class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
+                            <input type="hidden" id="receiving-selected-unit-aditivo">
                             <div id="receiving-units-container-aditivo" class="flex flex-wrap gap-2 mt-2"></div>
                         </div>
                         <div class="mt-4">
@@ -816,6 +852,8 @@
             const loginMessage = document.getElementById('login-message');
             const registerMessage = document.getElementById('register-message');
             const userIdDisplay = document.getElementById('user-id-display');
+            const offlineStatusMessage = document.getElementById('offline-status-message');
+
 
             // Elementos para o contador de contratos
             const activeContractsCountLink = document.getElementById('active-contracts-count-link'); // Changed to link
@@ -871,9 +909,10 @@
 
             const apostilamentoRemanejamentoCotasSection = document.getElementById('apostilamento-remanejamento-cotas-section');
             const remanejamentoTypeApostilamentoSelect = document.getElementById('remanejamento-type-apostilamento');
-            const cedingUnitApostilamentoInput = document.getElementById('ceding-unit-apostilamento');
+            // Removed text inputs for ceding/receiving units, now using hidden inputs and button containers
+            const cedingSelectedUnitApostilamento = document.getElementById('ceding-selected-unit-apostilamento');
             const cedingUnitsContainerApostilamento = document.getElementById('ceding-units-container-apostilamento');
-            const receivingUnitApostilamentoInput = document.getElementById('receiving-unit-apostilamento');
+            const receivingSelectedUnitApostilamento = document.getElementById('receiving-selected-unit-apostilamento');
             const receivingUnitsContainerApostilamento = document.getElementById('receiving-units-container-apostilamento');
             const remanejamentoTableBodyApostilamento = document.getElementById('remanejamento-table-body-apostilamento');
             const remanejamentoTotalApostilamento = document.getElementById('remanejamento-total-apostilamento');
@@ -893,9 +932,10 @@
             // Aditivo sub-option sections
             const aditivoRemanejamentoCotasSection = document.getElementById('aditivo-remanejamento-cotas-section');
             const remanejamentoTypeAditivoSelect = document.getElementById('remanejamento-type-aditivo');
-            const cedingUnitAditivoInput = document.getElementById('ceding-unit-aditivo');
+            // Removed text inputs for ceding/receiving units, now using hidden inputs and button containers
+            const cedingSelectedUnitAditivo = document.getElementById('ceding-selected-unit-aditivo');
             const cedingUnitsContainerAditivo = document.getElementById('ceding-units-container-aditivo');
-            const receivingUnitAditivoInput = document.getElementById('receiving-unit-aditivo');
+            const receivingSelectedUnitAditivo = document.getElementById('receiving-selected-unit-aditivo');
             const receivingUnitsContainerAditivo = document.getElementById('receiving-units-container-aditivo');
             const remanejamentoTableBodyAditivo = document.getElementById('remanejamento-table-body-aditivo');
             const remanejamentoTotalAditivo = document.getElementById('remanejamento-total-aditivo');
@@ -1109,7 +1149,8 @@
 
 
                 // Esconde/mostra botões de edição/exclusão/renovação nas cards
-                document.querySelectorAll('.edit-button, .delete-button, .addendum-button, .terminate-button, .delete-reminder-button').forEach(btn => {
+                // Updated: Now targets edit-contract-button and delete-contract-button directly
+                document.querySelectorAll('.edit-contract-button, .delete-contract-button, .addendum-button, .terminate-button, .delete-reminder-button').forEach(btn => {
                     if (btn) {
                         if (isAdmin) {
                             btn.classList.remove('hidden');
@@ -1119,8 +1160,8 @@
                     }
                 });
 
-                // Controla a visibilidade dos botões de edição no histórico
-                document.querySelectorAll('.edit-history-item-button').forEach(btn => {
+                // Controla a visibilidade dos botões de edição/exclusão no histórico
+                document.querySelectorAll('.edit-history-item-button, .delete-history-item-button').forEach(btn => {
                     if (btn) {
                         if (isAdmin) {
                             btn.classList.remove('hidden');
@@ -1129,6 +1170,17 @@
                         }
                     }
                 });
+            }
+
+            // Function to update the offline status message
+            function updateOfflineStatusDisplay(isOffline) {
+                if (offlineStatusMessage) {
+                    if (isOffline) {
+                        offlineStatusMessage.classList.remove('hidden');
+                    } else {
+                        offlineStatusMessage.classList.add('hidden');
+                    }
+                }
             }
 
             // --- Authentication ---
@@ -1148,9 +1200,14 @@
                         } else {
                             isAdmin = false;
                         }
+                        updateOfflineStatusDisplay(false); // If profile loaded, assume online
                     } catch (error) {
                         console.error("Erro ao carregar perfil do usuário:", error);
                         isAdmin = false; // Define como false se o perfil não puder ser lido ou não existir
+                        if (error.code === 'unavailable') {
+                            updateOfflineStatusDisplay(true);
+                            showMessageModal('Erro de Conexão', `Não foi possível carregar seu perfil. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                        }
                     }
 
                     showPage('main-page'); // Exibe a página principal
@@ -1179,6 +1236,7 @@
 
                     currentUserId = null;
                     isAdmin = false;
+                    updateOfflineStatusDisplay(false); // Hide on logout
                 }
             });
 
@@ -1202,6 +1260,7 @@
                 try {
                     await auth.signInWithEmailAndPassword(email, password);
                     if (loginMessage) loginMessage.textContent = '';
+                    updateOfflineStatusDisplay(false); // Successful login, assume online
                     // onAuthStateChanged irá lidar com a exibição da página
                 } catch (error) {
                     console.error("Erro de login:", error);
@@ -1210,6 +1269,9 @@
                         errorMessage = "Credenciais inválidas. Verifique seu e-mail e senha ou registre-se.";
                     } else if (error.code === 'auth/invalid-email') {
                         errorMessage = "E-mail inválido.";
+                    } else if (error.code === 'auth/network-request-failed' || error.code === 'unavailable') {
+                        errorMessage = "Erro de conexão. Verifique sua internet.";
+                        updateOfflineStatusDisplay(true);
                     }
                     if (loginMessage) loginMessage.textContent = errorMessage;
                 }
@@ -1251,6 +1313,7 @@
                     }
                     registerForm.reset();
                     setTimeout(() => showPage('login-page'), 2000); // Redireciona para o login após 2 segundos
+                    updateOfflineStatusDisplay(false); // Successful registration, assume online
                 } catch (error) {
                     console.error("Erro de registro:", error);
                     let errorMessage = "Erro ao registrar. Tente novamente.";
@@ -1258,6 +1321,9 @@
                         errorMessage = "Este e-mail já está em uso.";
                     } else if (error.code === 'auth/weak-password') {
                         errorMessage = "A senha deve ter pelo menos 6 caracteres.";
+                    } else if (error.code === 'auth/network-request-failed' || error.code === 'unavailable') {
+                        errorMessage = "Erro de conexão. Verifique sua internet.";
+                        updateOfflineStatusDisplay(true);
                     }
                     if (registerMessage) {
                         registerMessage.textContent = errorMessage;
@@ -1270,6 +1336,7 @@
             logoutButton.addEventListener('click', async () => {
                 try {
                     await auth.signOut();
+                    updateOfflineStatusDisplay(false); // Hide on logout
                 } catch (error) {
                     console.error("Erro ao fazer logout:", error);
                     showMessageModal('Erro', 'Não foi possível fazer logout. Tente novamente.');
@@ -1322,9 +1389,15 @@
                         const savedSeiOrder = await getSeiGroupOrder();
                         displayContracts(contractsToDisplay, savedSeiOrder);
                         checkEmptyState('contracts');
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
                     }, error => {
                         console.error("loadContracts: Erro ao carregar contratos em tempo real:", error);
-                        showMessageModal('Erro', `Erro ao carregar contratos: ${error.message}. Verifique as permissões do Firestore.`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível carregar os contratos. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao carregar contratos: ${error.message}. Verifique as permissões do Firestore.`);
+                        }
                     });
             }
 
@@ -1365,9 +1438,15 @@
                         });
                         displayTerminatedContracts(terminatedContracts);
                         checkEmptyState('terminated-contracts');
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
                     }, error => {
                         console.error("loadTerminatedContracts: Erro ao carregar contratos encerrados em tempo real:", error);
-                        showMessageModal('Erro', `Erro ao carregar contratos encerrados: ${error.message}. Verifique as permissões do Firestore.`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível carregar os contratos encerrados. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao carregar contratos encerrados: ${error.message}. Verifique as permissões do Firestore.`);
+                        }
                     });
             }
 
@@ -1566,11 +1645,12 @@
                                 <button class="addendum-button py-2 px-3 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
                                     <i class="fas fa-file-invoice mr-1"></i> Apost./Adit.
                                 </button>
-                                <button class="edit-button py-2 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
+                                <!-- Reverted to Edit and added Delete button -->
+                                <button class="edit-contract-button py-2 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
                                     <i class="fas fa-edit mr-1"></i> Editar
                                 </button>
-                                <button class="terminate-button py-2 px-3 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}">
-                                    <i class="fas fa-times-circle mr-1"></i> Encerrar
+                                <button class="delete-contract-button py-2 px-3 bg-red-700 text-white rounded-md text-sm hover:bg-red-800 transition duration-200 ${isAdmin ? '' : 'hidden'}" data-id="${contract.id}" data-collection="contracts">
+                                    <i class="fas fa-trash-alt mr-1"></i> Excluir
                                 </button>
                             </div>
                         `;
@@ -1580,8 +1660,11 @@
                 });
 
                 // Adiciona listeners para os botões de ação e estrelas
-                document.querySelectorAll('.edit-button').forEach(button => {
+                document.querySelectorAll('.edit-contract-button').forEach(button => {
                     button.addEventListener('click', (e) => editContract(e.currentTarget.dataset.id));
+                });
+                document.querySelectorAll('.delete-contract-button').forEach(button => {
+                    button.addEventListener('click', (e) => deleteContract(e.currentTarget.dataset.id, 'contracts'));
                 });
                 document.querySelectorAll('.addendum-button').forEach(button => {
                     button.addEventListener('click', (e) => openAddendumModal(e.currentTarget.dataset.id));
@@ -1599,6 +1682,7 @@
                         await toggleStar(contractId, !isCurrentlyStarred);
                     });
                 });
+
                 setAdminPermissions(isAdmin);
 
                 // Inicializa Sortable.js para os grupos SEI
@@ -1614,6 +1698,7 @@
                     });
                 }
             }
+
 
             // Função para atualizar o status de estrela (favorito) de um contrato
             async function toggleStar(contractId, newStarredStatus) {
@@ -1637,6 +1722,10 @@
                     await userPrefsRef.set({ order: newOrder }, { merge: true });
                 } catch (error) {
                     console.error("Erro ao salvar ordem dos grupos SEI:", error);
+                    if (error.code === 'unavailable') {
+                        updateOfflineStatusDisplay(true);
+                        showMessageModal('Erro de Conexão', `Não foi possível salvar a ordem dos grupos SEI. Verifique sua conexão com a internet.`, false);
+                    }
                 }
             }
 
@@ -1651,6 +1740,10 @@
                     return [];
                 } catch (error) {
                     console.error("Erro ao carregar ordem dos grupos SEI:", error);
+                    if (error.code === 'unavailable') {
+                        updateOfflineStatusDisplay(true);
+                        showMessageModal('Erro de Conexão', `Não foi possível carregar a ordem dos grupos SEI. Verifique sua conexão com a internet.`, false);
+                    }
                     return [];
                 }
             }
@@ -1809,9 +1902,15 @@
                         }
                         closeModal('contract-form-modal');
                         if (contractForm) contractForm.reset();
+                        updateOfflineStatusDisplay(false); // Successful operation, assume online
                     } catch (error) {
                         console.error("Erro ao salvar contrato:", error);
-                        showMessageModal('Erro', `Erro ao salvar contrato: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível salvar o contrato. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao salvar contrato: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -1866,12 +1965,18 @@
                         // Pass existing participatingUnits to populateUnitButtons
                         populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, contract.participatingUnits || []);
                         showModal(contractFormModal);
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
                     } else {
                         showMessageModal('Erro', 'Contrato não encontrado.');
                     }
                 } catch (error) {
                     console.error("Erro ao editar contrato:", error);
-                    showMessageModal('Erro', `Erro ao carregar dados do contrato para edição: ${error.message}`);
+                    if (error.code === 'unavailable') {
+                        showMessageModal('Erro de Conexão', `Não foi possível carregar os dados para edição. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                        updateOfflineStatusDisplay(true);
+                    } else {
+                        showMessageModal('Erro', `Erro ao carregar dados do contrato para edição: ${error.message}`);
+                    }
                 }
             }
 
@@ -1896,6 +2001,7 @@
 
                                 await contractRef.delete();
                                 showMessageModal('Sucesso', 'Contrato encerrado e movido para a lista de encerrados.');
+                                updateOfflineStatusDisplay(false); // Successful operation, assume online
                             }, true);
 
                         } else {
@@ -1903,7 +2009,12 @@
                         }
                     } catch (error) {
                         console.error("Erro ao encerrar contrato:", error);
-                        showMessageModal('Erro', `Erro ao encerrar contrato: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível encerrar o contrato. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao encerrar contrato: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -1913,10 +2024,16 @@
                     try {
                         await db.collection(`${PUBLIC_COLLECTION_PATH}/${collectionName}`).doc(id).delete();
                         showMessageModal('Sucesso', 'Contrato excluído permanentemente.');
+                        updateOfflineStatusDisplay(false); // Successful operation, assume online
                     }
                     catch (error) {
                         console.error(`Erro ao excluir contrato da coleção ${collectionName}:`, error);
-                        showMessageModal('Erro', `Erro ao excluir contrato: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível excluir o contrato. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao excluir contrato: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -1982,9 +2099,10 @@
                     } else if (selectedSubType === 'Remanejamento Cotas') {
                         if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
                         if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
-                        // Populate unit buttons for ceding/receiving units if needed (for display only, not selection)
-                        populateUnitButtons(cedingUnitsContainerApostilamento, cedingUnitApostilamentoInput, []); // No actual selection for these fields
-                        populateUnitButtons(receivingUnitsContainerApostilamento, receivingUnitApostilamentoInput, []);
+                        // Populate single unit buttons for ceding and receiving units
+                        populateSingleUnitButtons(cedingUnitsContainerApostilamento, cedingSelectedUnitApostilamento, '');
+                        populateSingleUnitButtons(receivingUnitsContainerApostilamento, receivingSelectedUnitApostilamento, '');
+                        if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = '';
                     }
                 });
             }
@@ -2002,8 +2120,10 @@
                     if (selectedSubType === 'Remanejamento Cotas') {
                         if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
                         if (remanejamentoTotalAditivo) remanejamentoTotalAditivo.textContent = formatCurrency(0);
-                        populateUnitButtons(cedingUnitsContainerAditivo, cedingUnitAditivoInput, []);
-                        populateUnitButtons(receivingUnitsContainerAditivo, receivingUnitAditivoInput, []);
+                        // Populate single unit buttons for ceding and receiving units
+                        populateSingleUnitButtons(cedingUnitsContainerAditivo, cedingSelectedUnitAditivo, '');
+                        populateSingleUnitButtons(receivingUnitsContainerAditivo, receivingSelectedUnitAditivo, '');
+                        if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = '';
                     } else if (selectedSubType === 'Acrescimo') {
                         if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
                         if (acrescimoTotal) acrescimoTotal.textContent = formatCurrency(0);
@@ -2046,8 +2166,8 @@
                         if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = '';
                         if (apostilamentoReajustePercentageInput) apostilamentoReajustePercentageInput.value = '';
                         if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = '';
-                        if (cedingUnitApostilamentoInput) cedingUnitApostilamentoInput.value = '';
-                        if (receivingUnitApostilamentoInput) receivingUnitApostilamentoInput.value = '';
+                        populateSingleUnitButtons(cedingUnitsContainerApostilamento, cedingSelectedUnitApostilamento, ''); // Clear selection
+                        populateSingleUnitButtons(receivingUnitsContainerApostilamento, receivingSelectedUnitApostilamento, ''); // Clear selection
                         if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = '';
                         if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = '';
                         if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
@@ -2064,8 +2184,8 @@
                         if (aditivoDateInput) aditivoDateInput.value = '';
                         if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = '';
                         if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = '';
-                        if (cedingUnitAditivoInput) cedingUnitAditivoInput.value = '';
-                        if (receivingUnitAditivoInput) receivingUnitAditivoInput.value = '';
+                        populateSingleUnitButtons(cedingUnitsContainerAditivo, cedingSelectedUnitAditivo, ''); // Clear selection
+                        populateSingleUnitButtons(receivingUnitsContainerAditivo, receivingSelectedUnitAditivo, ''); // Clear selection
                         if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = '';
                         if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = '';
                         if (aditivoTrocaMarcaDescriptionInput) aditivoTrocaMarcaDescriptionInput.value = '';
@@ -2087,12 +2207,18 @@
                         }
 
                         showModal(addendumModal);
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
                     } else {
                         showMessageModal('Erro', 'Contrato não encontrado para apostilamento/aditivo.');
                     }
                 } catch (error) {
                     console.error("Erro ao abrir modal de apostilamento/aditivo:", error);
-                    showMessageModal('Erro', `Erro ao carregar dados do contrato: ${error.message}`);
+                    if (error.code === 'unavailable') {
+                        showMessageModal('Erro de Conexão', `Não foi possível carregar os dados do contrato. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                        updateOfflineStatusDisplay(true);
+                    } else {
+                        showMessageModal('Erro', `Erro ao carregar dados do contrato: ${error.message}`);
+                    }
                 }
             }
 
@@ -2146,8 +2272,8 @@
                             historyEntry.details.designacaoUnits = designacaoUnits;
                         } else if (subType === 'Remanejamento Cotas') {
                             const remanejamentoType = remanejamentoTypeApostilamentoSelect.value;
-                            const cedingUnit = cedingUnitApostilamentoInput.value;
-                            const receivingUnit = receivingUnitApostilamentoInput.value;
+                            const cedingUnit = cedingSelectedUnitApostilamento.value; // Read from hidden input
+                            const receivingUnit = receivingSelectedUnitApostilamento.value; // Read from hidden input
                             const remanejamentoNotes = remanejamentoNotesApostilamentoInput.value;
                             const remanejamentoItems = Array.from(remanejamentoTableBodyApostilamento.rows).map(row => ({
                                 lote: row.querySelector('.remanejamento-lote')?.value,
@@ -2158,7 +2284,20 @@
                                 valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
                                 valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
                             }));
-                            historyEntry.notes = `Remanejamento de Cotas (${remanejamentoType}). Unidade Cedente: ${cedingUnit}, Unidade Cessionária: ${receivingUnit}. Observações: ${remanejamentoNotes}.`;
+
+                            // Construct the notes for display in the history
+                            let itemsSummary = '';
+                            if (remanejamentoItems && remanejamentoItems.length > 0) {
+                                itemsSummary = remanejamentoItems.map(item => {
+                                    const desc = item.descricao || item.codigo || item.item || 'Item';
+                                    const qty = item.quantidade || 0;
+                                    return `${desc} (Qtd: ${qty})`;
+                                }).join(', ');
+                                itemsSummary = `- ${itemsSummary}`; // Prepend with hyphen for clarity
+                            }
+
+                            const typePrefix = `${apostilamentoNumber}º Apostilamento`;
+                            historyEntry.notes = `${typePrefix}. Remanejamento ${remanejamentoType}. ${cedingUnit} &#8594; ${receivingUnit} ${itemsSummary}`;
                             historyEntry.details.remanejamento = { type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(remanejamentoTotalApostilamento.textContent) };
                         } else if (subType === 'Outros') {
                             const othersNotes = apostilamentoOthersNotesInput.value;
@@ -2183,8 +2322,8 @@
 
                         if (subType === 'Remanejamento Cotas') {
                             const remanejamentoType = remanejamentoTypeAditivoSelect.value;
-                            const cedingUnit = cedingUnitAditivoInput.value;
-                            const receivingUnit = receivingUnitAditivoInput.value;
+                            const cedingUnit = cedingSelectedUnitAditivo.value; // Read from hidden input
+                            const receivingUnit = receivingSelectedUnitAditivo.value; // Read from hidden input
                             const remanejamentoNotes = remanejamentoNotesAditivoInput.value;
                             const remanejamentoItems = Array.from(remanejamentoTableBodyAditivo.rows).map(row => ({
                                 lote: row.querySelector('.remanejamento-lote')?.value,
@@ -2195,11 +2334,24 @@
                                 valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
                                 valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
                             }));
-                            historyEntry.notes = `Remanejamento de Cotas (${remanejamentoType}). Unidade Cedente: ${cedingUnit}, Unidade Cessionária: ${receivingUnit}. Observações: ${remanejamentoNotes}.`;
+
+                            // Construct the notes for display in the history
+                            let itemsSummary = '';
+                            if (remanejamentoItems && remanejamentoItems.length > 0) {
+                                itemsSummary = remanejamentoItems.map(item => {
+                                    const desc = item.descricao || item.codigo || item.item || 'Item';
+                                    const qty = item.quantidade || 0;
+                                    return `${desc} (Qtd: ${qty})`;
+                                }).join(', ');
+                                itemsSummary = `- ${itemsSummary}`; // Prepend with hyphen for clarity
+                            }
+
+                            const typePrefix = `${aditivoNumber}º Aditivo`;
+                            historyEntry.notes = `${typePrefix}. Remanejamento ${remanejamentoType}. ${cedingUnit} &#8594; ${receivingUnit} ${itemsSummary}`;
                             historyEntry.details.remanejamento = { type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(remanejamentoTotalAditivo.textContent) };
                         } else if (subType === 'Reequilibrio') {
                             const reequilibrioPercentage = parseFloat(aditivoReequilibrioPercentageInput.value) || 0;
-                            historyEntry.notes = `Reequilíbrio de ${reequilibrioPercentage}%.`;
+                            historyEntry.notes = `Reequilíbrio de ${reequilibrionPercentage}%.`;
                             historyEntry.details.reequilibrionPercentage = reequilibrioPercentage;
                         } else if (subType === 'Troca Marca') {
                             const trocaMarcaDescription = aditivoTrocaMarcaDescriptionInput.value;
@@ -2217,7 +2369,17 @@
                                 valorTotal: parseCurrency(row.querySelector('.acrescimo-valor-total')?.textContent || '0,00'),
                                 porcentagem: parseFloat(row.querySelector('.acrescimo-porcentagem')?.value || 0)
                             }));
-                            historyEntry.notes = `Acréscimo de itens.`;
+                            let acrescimoSummary = '';
+                            if (acrescimoItems && acrescimoItems.length > 0) {
+                                acrescimoSummary = acrescimoItems.map(item => {
+                                    const desc = item.descritivo || item.codigo || 'Item';
+                                    const qty = item.quantidade || 0;
+                                    const val = formatCurrency(item.valorItem || 0);
+                                    return `${desc} (Qtd: ${qty}, Val: ${val})`;
+                                }).join(', ');
+                                acrescimoSummary = `- ${acrescimoSummary}`;
+                            }
+                            historyEntry.notes = `Acréscimo de itens. ${acrescimoSummary}`;
                             historyEntry.details.acrescimo = { items: acrescimoItems, total: parseCurrency(acrescimoTotal.textContent) };
                         } else if (subType === 'Supressao') {
                             const supressaoItems = Array.from(supressaoTableBody.rows).map(row => ({
@@ -2226,7 +2388,16 @@
                                 valor: parseCurrency(row.querySelector('.supressao-valor')?.value || '0,00'),
                                 porcentagem: parseFloat(row.querySelector('.supressao-porcentagem')?.value || 0)
                             }));
-                            historyEntry.notes = `Supressão de itens.`;
+                            let supressaoSummary = '';
+                            if (supressaoItems && supressaoItems.length > 0) {
+                                supressaoSummary = supressaoItems.map(item => {
+                                    const unit = (item.unidadeSuprimida || []).join(', ') || 'Unidade';
+                                    const val = formatCurrency(item.valor || 0);
+                                    return `${unit} (Val: ${val})`;
+                                }).join(', ');
+                                supressaoSummary = `- ${supressaoSummary}`;
+                            }
+                            historyEntry.notes = `Supressão de itens. ${supressaoSummary}`;
                             historyEntry.details.supressao = { items: supressaoItems, total: parseCurrency(supressaoTotal.textContent) };
                         } else if (subType === 'Renovacao') {
                             // This part is handled by finalizeRenewalButtonAditivo click listener
@@ -2264,9 +2435,15 @@
                             });
                             showMessageModal('Sucesso', `${addendumType} - ${subType} aplicado com sucesso!`);
                             closeModal('addendum-modal');
+                            updateOfflineStatusDisplay(false); // Successful operation, assume online
                         } catch (error) {
                             console.error(`Erro ao aplicar ${addendumType} - ${subType}:`, error);
-                            showMessageModal('Erro', `Erro ao aplicar ${addendumType} - ${subType}: ${error.message}`);
+                            if (error.code === 'unavailable') {
+                                showMessageModal('Erro de Conexão', `Não foi possível aplicar a alteração. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                                updateOfflineStatusDisplay(true);
+                            } else {
+                                showMessageModal('Erro', `Erro ao aplicar ${addendumType} - ${subType}: ${error.message}`);
+                            }
                         }
                     }
                 });
@@ -2280,32 +2457,108 @@
                         const contract = doc.data();
                         let historyHtml = '<ul class="list-disc pl-5 space-y-2">';
                         if (contract.contractHistory && contract.contractHistory.length > 0) {
-                            contract.contractHistory.forEach((entry, index) => {
-                                // Check if the entry is an Apostilamento or Aditivo
-                                const isEditable = entry.type && (entry.type.startsWith('Apostilamento') || entry.type.startsWith('Aditivo'));
-                                const editButtonHtml = isEditable && isAdmin ? `<button class="edit-history-item-button py-1 px-2 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 ml-2" data-contract-id="${id}" data-history-index="${index}"><i class="fas fa-edit"></i> Editar</button>` : '';
+                            // Filter to show only Apostilamento and Aditivo entries
+                            const filteredHistory = contract.contractHistory.filter(entry =>
+                                entry.type && (entry.type.startsWith('Apostilamento') || entry.type.startsWith('Aditivo'))
+                            );
 
-                                historyHtml += `
-                                    <li>
-                                        <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}${editButtonHtml}</p>
-                                        <p class="text-sm text-gray-700">${entry.notes}</p>
-                                        <p class="text-xs text-gray-500">Por: ${entry.changedBy || 'N/A'}</p>
-                                    </li>
-                                `;
-                            });
+                            if (filteredHistory.length > 0) {
+                                filteredHistory.forEach((entry, index) => {
+                                    const isEditable = entry.type && (entry.type.startsWith('Apostilamento') || entry.type.startsWith('Aditivo'));
+                                    const editButtonHtml = isEditable && isAdmin ? `<button class="edit-history-item-button py-1 px-2 bg-blue-500 text-white rounded-md text-xs hover:bg-blue-600 ml-2" data-contract-id="${id}" data-history-index="${index}"><i class="fas fa-edit"></i> Editar</button>` : '';
+                                    const deleteButtonHtml = isEditable && isAdmin ? `<button class="delete-history-item-button py-1 px-2 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 ml-2" data-contract-id="${id}" data-history-index="${index}"><i class="fas fa-trash-alt"></i> Excluir</button>` : '';
+
+
+                                    let displayNotes = entry.notes;
+                                    let tooltipText = ''; // This will be the detailed tooltip
+
+                                    if (isEditable) {
+                                        tooltipText = `Detalhes do ${entry.type}:\n`;
+                                        if (entry.details) {
+                                            for (const detailKey in entry.details) {
+                                                const detailValue = entry.details[detailKey];
+                                                if (typeof detailValue === 'object' && detailValue !== null) {
+                                                    if (detailKey === 'remanejamento') {
+                                                        tooltipText += `  Tipo: ${detailValue.type || 'N/A'}\n`;
+                                                        tooltipText += `  Cedente: ${detailValue.cedingUnit || 'N/A'}\n`;
+                                                        tooltipText += `  Cessionária: ${detailValue.receivingUnit || 'N/A'}\n`;
+                                                        if (detailValue.items && detailValue.items.length > 0) {
+                                                            tooltipText += `  Itens:\n`;
+                                                            detailValue.items.forEach(item => {
+                                                                tooltipText += `    - Lote: ${item.lote || 'N/A'}, Item: ${item.item || 'N/A'}, Código: ${item.codigo || 'N/A'}, Descrição: ${item.descricao || 'N/A'}\n`;
+                                                                tooltipText += `      Qtd: ${item.quantidade || 0}, Valor Unit: ${formatCurrency(item.valorUnitario || 0)}, Valor Total: ${formatCurrency(item.valorTotal || 0)}\n`;
+                                                            });
+                                                        }
+                                                        tooltipText += `  Total Remanejado: ${formatCurrency(detailValue.total || 0)}\n`;
+                                                        if (detailValue.notes) tooltipText += `  Obs: ${detailValue.notes}\n`;
+                                                    } else if (detailKey === 'acrescimo') {
+                                                        tooltipText += `  Itens de Acréscimo:\n`;
+                                                        if (detailValue.items && detailValue.items.length > 0) {
+                                                            detailValue.items.forEach(item => {
+                                                                tooltipText += `    - Lote: ${item.lote || 'N/A'}, Item: ${item.item || 'N/A'}, Código: ${item.codigo || 'N/A'}\n`;
+                                                                tooltipText += `      Unidades: ${(item.unidades || []).join(', ') || 'N/A'}\n`;
+                                                                tooltipText += `      Descritivo: ${item.descritivo || 'N/A'}\n`;
+                                                                tooltipText += `      Qtd: ${item.quantidade || 0}, Valor Item: ${formatCurrency(item.valorItem || 0)}, Valor Total: ${formatCurrency(item.valorTotal || 0)}, %: ${item.porcentagem || 0}\n`;
+                                                            });
+                                                        }
+                                                        tooltipText += `  Total Acréscimo: ${formatCurrency(detailValue.total || 0)}\n`;
+                                                    } else if (detailKey === 'supressao') {
+                                                        tooltipText += `  Itens de Supressão:\n`;
+                                                        if (detailValue.items && detailValue.items.length > 0) {
+                                                            detailValue.items.forEach(item => {
+                                                                tooltipText += `    - Unidade Suprimida: ${(item.unidadeSuprimida || []).join(', ') || 'N/A'}\n`;
+                                                                tooltipText += `      Lote: ${item.lote || 'N/A'}, Valor: ${formatCurrency(item.valor || 0)}, %: ${item.porcentagem || 0}\n`;
+                                                            });
+                                                        }
+                                                        tooltipText += `  Total Supressão: ${formatCurrency(detailValue.total || 0)}\n`;
+                                                    } else if (detailKey === 'reajustePercentage' || detailKey === 'reequilibrionPercentage') {
+                                                        tooltipText += `  Porcentagem: ${detailValue}%\n`;
+                                                    } else if (detailKey === 'trocaMarcaDescription' || detailKey === 'others') {
+                                                        tooltipText += `  Descrição: ${detailValue}\n`;
+                                                    } else if (detailKey === 'newDCOUnits' || detailKey === 'designacaoUnits') {
+                                                        tooltipText += `  Unidades: ${(detailValue || []).join(', ')}\n`;
+                                                    } else {
+                                                        tooltipText += `  ${detailKey}: ${JSON.stringify(detailValue)}\n`;
+                                                    }
+                                                } else {
+                                                    tooltipText += `  ${detailKey}: ${detailValue}\n`;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    historyHtml += `
+                                        <li title="${tooltipText.trim()}">
+                                            <p class="font-semibold">${entry.type} em ${createLocalDate(entry.date).toLocaleDateString('pt-BR')}${editButtonHtml}${deleteButtonHtml}</p>
+                                            <p class="text-sm text-gray-700">${displayNotes}</p>
+                                            <p class="text-xs text-gray-500">Por: ${entry.changedBy || 'N/A'}</p>
+                                        </li>
+                                    `;
+                                });
+                            } else {
+                                historyHtml += '<li>Nenhum apostilamento/aditivo encontrado para este contrato.</li>';
+                            }
                         } else {
                             historyHtml += '<li>Nenhum histórico de movimentação para este contrato.</li>';
                         }
                         historyHtml += '</ul>';
 
                         showMessageModal(`Histórico do Contrato: ${contract.seiNumber}`, historyHtml);
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
 
-                        // Add event listeners for the new edit buttons in the history modal
+                        // Add event listeners for the new edit and delete buttons in the history modal
                         document.querySelectorAll('.edit-history-item-button').forEach(button => {
                             button.addEventListener('click', (e) => {
                                 const contractId = e.currentTarget.dataset.contractId;
                                 const historyIndex = parseInt(e.currentTarget.dataset.historyIndex);
                                 editHistoryItem(contractId, historyIndex);
+                            });
+                        });
+                        document.querySelectorAll('.delete-history-item-button').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                const contractId = e.currentTarget.dataset.contractId;
+                                const historyIndex = parseInt(e.currentTarget.dataset.historyIndex);
+                                deleteHistoryItem(contractId, historyIndex);
                             });
                         });
                         setAdminPermissions(isAdmin); // Re-apply permissions for new buttons
@@ -2314,7 +2567,12 @@
                     }
                 } catch (error) {
                     console.error("Erro ao visualizar histórico:", error);
-                    showMessageModal('Erro', `Erro ao carregar histórico: ${error.message}`);
+                    if (error.code === 'unavailable') {
+                        showMessageModal('Erro de Conexão', `Não foi possível carregar o histórico. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                        updateOfflineStatusDisplay(true);
+                    } else {
+                        showMessageModal('Erro', `Erro ao carregar histórico: ${error.message}`);
+                    }
                 }
             }
 
@@ -2352,40 +2610,33 @@
                         if (apostilamentoNumberInput) apostilamentoNumberInput.value = historyEntry.type.match(/\(([^)]+)\)/)?.[1] || ''; // Extract number from title
                         if (apostilamentoDateInput) apostilamentoDateInput.value = historyEntry.date;
 
-                        const subType = Object.keys(historyEntry.details)[0]; // Get the subType key
-                        const formattedSubType = subType ? subType.replace(/([A-Z])/g, ' $1').trim() : ''; // Convert camelCase to "Space Case"
-                        if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = formattedSubType;
-                        showSubOptionSection(`apostilamento-${formattedSubType.replace(/\s/g, '-').toLowerCase()}-section`);
+                        // Extract subType from the historyEntry.type string
+                        const subTypeMatch = historyEntry.type.match(/-\s*([^)]+)$/);
+                        const subType = subTypeMatch ? subTypeMatch[1].trim() : '';
 
-                        // Populate sub-type specific fields
-                        if (formattedSubType === 'Nova DCO') {
+                        if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = subType;
+                        showSubOptionSection(`apostilamento-${subType.replace(/\s/g, '-').toLowerCase()}-section`);
+
+                        // Populate sub-type specific fields using details object
+                        if (subType === 'Nova DCO') {
                             populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, historyEntry.details.newDCOUnits || []);
-                        } else if (formattedSubType === 'Reajuste') {
+                        } else if (subType === 'Reajuste') {
                             if (apostilamentoReajustePercentageInput) apostilamentoReajustePercentageInput.value = historyEntry.details.reajustePercentage || '';
-                        } else if (formattedSubType === 'Designacao Gestores Fiscais') {
+                        } else if (subType === 'Designacao Gestores Fiscais') {
                             populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, historyEntry.details.designacaoUnits || []);
-                        } else if (formattedSubType === 'Remanejamento Cotas') {
+                        } else if (subType === 'Remanejamento Cotas') {
                             const remanejamento = historyEntry.details.remanejamento || {};
                             if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = remanejamento.type || '';
-                            if (cedingUnitApostilamentoInput) cedingUnitApostilamentoInput.value = remanejamento.cedingUnit || '';
-                            if (receivingUnitApostilamentoInput) receivingUnitApostilamentoInput.value = remanejamento.receivingUnit || '';
+                            populateSingleUnitButtons(cedingUnitsContainerApostilamento, cedingSelectedUnitApostilamento, remanejamento.cedingUnit || '');
+                            populateSingleUnitButtons(receivingUnitsContainerApostilamento, receivingSelectedUnitApostilamento, remanejamento.receivingUnit || '');
                             if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = remanejamento.notes || '';
                             // Populate remanejamento table
                             if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
                             (remanejamento.items || []).forEach(item => {
-                                addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
-                                const lastRow = remanejamentoTableBodyApostilamento.lastElementChild;
-                                if (lastRow) {
-                                    lastRow.querySelector('.remanejamento-lote').value = item.lote || '';
-                                    lastRow.querySelector('.remanejamento-item').value = item.item || '';
-                                    lastRow.querySelector('.remanejamento-codigo').value = item.codigo || '';
-                                    lastRow.querySelector('.remanejamento-descricao').value = item.descricao || '';
-                                    lastRow.querySelector('.remanejamento-quantidade').value = item.quantidade || '';
-                                    lastRow.querySelector('.remanejamento-valor-unitario').value = (item.valorUnitario || 0).toFixed(2).replace('.', ',');
-                                }
+                                addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento', item);
                             });
                             calculateRemanejamentoTotal('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
-                        } else if (formattedSubType === 'Outros') {
+                        } else if (subType === 'Outros') {
                             if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = historyEntry.details.others || '';
                         }
 
@@ -2394,83 +2645,102 @@
                         if (aditivoNumberInput) aditivoNumberInput.value = historyEntry.type.match(/\(([^)]+)\)/)?.[1] || ''; // Extract number from title
                         if (aditivoDateInput) aditivoDateInput.value = historyEntry.date;
 
-                        const subType = Object.keys(historyEntry.details)[0]; // Get the subType key
-                        const formattedSubType = subType ? subType.replace(/([A-Z])/g, ' $1').trim() : ''; // Convert camelCase to "Space Case"
-                        if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = formattedSubType;
-                        showSubOptionSection(`aditivo-${formattedSubType.replace(/\s/g, '-').toLowerCase()}-section`);
+                        // Extract subType from the historyEntry.type string
+                        const subTypeMatch = historyEntry.type.match(/-\s*([^)]+)$/);
+                        const subType = subTypeMatch ? subTypeMatch[1].trim() : '';
+
+                        if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = subType;
+                        showSubOptionSection(`aditivo-${subType.replace(/\s/g, '-').toLowerCase()}-section`);
 
                         // Populate sub-type specific fields
-                        if (formattedSubType === 'Remanejamento Cotas') {
+                        if (subType === 'Remanejamento Cotas') {
                             const remanejamento = historyEntry.details.remanejamento || {};
                             if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = remanejamento.type || '';
-                            if (cedingUnitAditivoInput) cedingUnitAditivoInput.value = remanejamento.cedingUnit || '';
-                            if (receivingUnitAditivoInput) receivingUnitAditivoInput.value = remanejamento.receivingUnit || '';
+                            populateSingleUnitButtons(cedingUnitsContainerAditivo, cedingSelectedUnitAditivo, remanejamento.cedingUnit || '');
+                            populateSingleUnitButtons(receivingUnitsContainerAditivo, receivingSelectedUnitAditivo, remanejamento.receivingUnit || '');
                             if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = remanejamento.notes || '';
                             // Populate remanejamento table
                             if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
                             (remanejamento.items || []).forEach(item => {
-                                addRemanejamentoItem('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo');
-                                const lastRow = remanejamentoTableBodyAditivo.lastElementChild;
-                                if (lastRow) {
-                                    lastRow.querySelector('.remanejamento-lote').value = item.lote || '';
-                                    lastRow.querySelector('.remanejamento-item').value = item.item || '';
-                                    lastRow.querySelector('.remanejamento-codigo').value = item.codigo || '';
-                                    lastRow.querySelector('.remanejamento-descricao').value = item.descricao || '';
-                                    lastRow.querySelector('.remanejamento-quantidade').value = item.quantidade || '';
-                                    lastRow.querySelector('.remanejamento-valor-unitario').value = (item.valorUnitario || 0).toFixed(2).replace('.', ',');
-                                }
+                                addRemanejamentoItem('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo', item);
                             });
                             calculateRemanejamentoTotal('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo');
-                        } else if (formattedSubType === 'Reequilibrio') {
+                        } else if (subType === 'Reequilibrio') {
                             if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = historyEntry.details.reequilibrionPercentage || '';
-                        } else if (formattedSubType === 'Troca Marca') {
+                        } else if (subType === 'Troca Marca') {
                             if (aditivoTrocaMarcaDescriptionInput) aditivoTrocaMarcaDescriptionInput.value = historyEntry.details.trocaMarcaDescription || '';
-                        } else if (formattedSubType === 'Acrescimo') {
+                        } else if (subType === 'Acrescimo') {
                             if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
                             (historyEntry.details.acrescimo?.items || []).forEach(item => {
-                                addAcrescimoItem();
-                                const lastRow = acrescimoTableBody.lastElementChild;
-                                if (lastRow) {
-                                    lastRow.querySelector('.acrescimo-lote').value = item.lote || '';
-                                    lastRow.querySelector('.acrescimo-item').value = item.item || '';
-                                    lastRow.querySelector('.acrescimo-codigo').value = item.codigo || '';
-                                    lastRow.querySelector('.acrescimo-descritivo').value = item.descritivo || '';
-                                    lastRow.querySelector('.acrescimo-quantidade').value = item.quantidade || '';
-                                    lastRow.querySelector('.acrescimo-valor-item').value = (item.valorItem || 0).toFixed(2).replace('.', ',');
-                                    lastRow.querySelector('.acrescimo-porcentagem').value = item.porcentagem || '';
-                                    // Populate units for acrescimo item
-                                    populateUnitButtons(lastRow.querySelector('.acrescimo-units-container'), lastRow.querySelector('.acrescimo-unidades-hidden'), item.unidades || []);
-                                }
+                                addAcrescimoItem(item);
                             });
                             calculateAcrescimoTotal();
-                        } else if (formattedSubType === 'Supressao') {
+                        } else if (subType === 'Supressao') {
                             if (supressaoTableBody) supressaoTableBody.innerHTML = '';
                             (historyEntry.details.supressao?.items || []).forEach(item => {
-                                addSupressaoItem();
-                                const lastRow = supressaoTableBody.lastElementChild;
-                                if (lastRow) {
-                                    lastRow.querySelector('.supressao-lote').value = item.lote || '';
-                                    lastRow.querySelector('.supressao-valor').value = (item.valor || 0).toFixed(2).replace('.', ',');
-                                    lastRow.querySelector('.supressao-porcentagem').value = item.porcentagem || '';
-                                    // Populate units for supressao item
-                                    populateUnitButtons(lastRow.querySelector('.supressao-units-container'), lastRow.querySelector('.supressao-unidade-hidden'), item.unidadeSuprimida || []);
-                                }
+                                addSupressaoItem(item);
                             });
                             calculateSupressaoTotal();
-                        } else if (formattedSubType === 'Renovacao') {
-                            // This part is handled by finalizeRenewalButtonAditivo click listener
-                            // We should prevent the main form submission if 'Renovacao' is selected
-                            // and the finalize button hasn't been clicked yet.
-                            showMessageModal('Atenção', 'Para finalizar a Renovação, use o botão "Efetivar Renovação" dentro da seção de Renovação.');
-                            return; // Prevent main form submission
+                        } else if (subType === 'Renovacao') {
+                            // Load existing renewal data if any
+                            const renewalChecklistData = contract.renewalChecklist || {};
+                            if (renewalDurationAditivoInput) renewalDurationAditivoInput.value = renewalChecklistData.renewalDuration || '';
+                            if (renewalUpdatedValueAditivoInput) renewalUpdatedValueAditivoInput.value = formatCurrency(renewalChecklistData.updatedValue || contract.contractValue).replace('R$', '').trim();
+
+                            renderChecklistItemsAditivo(contract.companyName, renewalChecklistData.items || {});
+                            renderUnitConcordanceAditivo(contract.participatingUnits || [], renewalChecklistData.unitConcordance || {});
+                            updateFinalRenewButtonStateAditivo();
                         }
                     }
                     closeModal('message-modal'); // Close the history modal
                     showModal(addendumModal); // Open the addendum modal
+                    updateOfflineStatusDisplay(false); // Data loaded, assume online
                 } catch (error) {
                     console.error("Erro ao editar item do histórico:", error);
-                    showMessageModal('Erro', `Erro ao carregar dados do histórico para edição: ${error.message}`);
+                    if (error.code === 'unavailable') {
+                        showMessageModal('Erro de Conexão', `Não foi possível carregar o item do histórico para edição. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                        updateOfflineStatusDisplay(true);
+                    } else {
+                        showMessageModal('Erro', `Erro ao carregar dados do histórico para edição: ${error.message}`);
+                    }
                 }
+            }
+
+            async function deleteHistoryItem(contractId, historyIndex) {
+                showMessageModal('Confirmar Exclusão', 'Tem certeza que deseja EXCLUIR este item do histórico? Esta ação é irreversível.', true, async () => {
+                    try {
+                        const contractRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId);
+                        const doc = await contractRef.get();
+                        if (doc.exists) {
+                            const contractData = doc.data();
+                            let contractHistory = contractData.contractHistory || [];
+
+                            if (historyIndex >= 0 && historyIndex < contractHistory.length) {
+                                const deletedEntry = contractHistory.splice(historyIndex, 1)[0]; // Remove the item
+                                await contractRef.update({
+                                    contractHistory: contractHistory, // Update the entire array
+                                    lastActivityDate: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                showMessageModal('Sucesso', `Item do histórico "${deletedEntry.type}" excluído com sucesso!`);
+                                // Re-open history to show updated list
+                                viewContractHistory(contractId);
+                                updateOfflineStatusDisplay(false); // Successful operation, assume online
+                            } else {
+                                showMessageModal('Erro', 'Índice do histórico inválido.');
+                            }
+                        } else {
+                            showMessageModal('Erro', 'Contrato não encontrado.');
+                        }
+                    } catch (error) {
+                        console.error("Erro ao excluir item do histórico:", error);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível excluir o item do histórico. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao excluir item do histórico: ${error.message}`);
+                        }
+                    }
+                });
             }
 
 
@@ -2495,9 +2765,15 @@
                         });
                         displayReminders(reminders);
                         checkEmptyState('reminders');
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
                     }, error => {
                         console.error("loadReminders: Erro ao carregar lembretes:", error);
-                        showMessageModal('Erro', `Erro ao carregar lembretes: ${error.message}. Verifique as permissões do Firestore.`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível carregar os lembretes. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao carregar lembretes: ${error.message}. Verifique as permissões do Firestore.`);
+                        }
                     });
             }
 
@@ -2615,9 +2891,15 @@
                         }
                         closeModal('reminder-form-modal');
                         if (reminderForm) reminderForm.reset();
+                        updateOfflineStatusDisplay(false); // Successful operation, assume online
                     } catch (error) {
                         console.error("Erro ao salvar lembrete no Firestore:", error);
-                        showMessageModal('Erro', `Erro ao salvar lembrete: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível salvar o lembrete. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao salvar lembrete: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -2634,12 +2916,18 @@
                         if (reminderDateInput) reminderDateInput.value = reminder.reminderDate;
                         if (reminderDescriptionInput) reminderDescriptionInput.value = reminder.description || '';
                         showModal(reminderFormModal);
+                        updateOfflineStatusDisplay(false); // Data loaded, assume online
                     } else {
                         showMessageModal('Erro', 'Lembrete não encontrado.');
                     }
                 } catch (error) {
                     console.error("Erro ao editar lembrete:", error);
-                    showMessageModal('Erro', `Erro ao carregar dados do lembrete para edição: ${error.message}`);
+                    if (error.code === 'unavailable') {
+                        showMessageModal('Erro de Conexão', `Não foi possível carregar os dados do lembrete para edição. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                        updateOfflineStatusDisplay(true);
+                    } else {
+                        showMessageModal('Erro', `Erro ao carregar dados do lembrete para edição: ${error.message}`);
+                    }
                 }
             }
 
@@ -2648,10 +2936,16 @@
                     try {
                         await db.collection(`${PUBLIC_COLLECTION_PATH}/reminders`).doc(id).delete();
                         showMessageModal('Sucesso', 'Lembrete excluído com sucesso!');
+                        updateOfflineStatusDisplay(false); // Successful operation, assume online
                     }
                     catch (error) {
                         console.error("Erro ao excluir lembrete:", error);
-                        showMessageModal('Erro', `Erro ao excluir lembrete: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível excluir o lembrete. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao excluir lembrete: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -2683,6 +2977,38 @@
                 // Ensure the hidden input always reflects the initial selected units
                 targetInput.value = JSON.stringify(selectedUnits);
                 console.log("[populateUnitButtons] Hidden input value set to:", targetInput.value); // Debugging line
+            }
+
+            /**
+             * Populates a container with unit buttons, allowing only a single selection.
+             * @param {HTMLElement} containerElement - The container to populate with buttons.
+             * @param {HTMLInputElement} targetInput - The hidden input to store the selected unit (string).
+             * @param {string} selectedUnit - The unit that should be pre-selected.
+             */
+            function populateSingleUnitButtons(containerElement, targetInput, selectedUnit = '') {
+                if (!containerElement || !targetInput) {
+                    console.warn("populateSingleUnitButtons: containerElement ou targetInput não encontrados.");
+                    return;
+                }
+                containerElement.innerHTML = '';
+                targetInput.value = selectedUnit; // Set initial value of hidden input
+
+                allUnits.forEach(unit => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.textContent = unit;
+                    button.className = `unit-button ${selectedUnit === unit ? 'selected' : ''}`;
+                    button.addEventListener('click', () => {
+                        // Deselect all other buttons in this container
+                        Array.from(containerElement.querySelectorAll('.unit-button')).forEach(btn => {
+                            btn.classList.remove('selected');
+                        });
+                        // Select the clicked button
+                        button.classList.add('selected');
+                        targetInput.value = unit; // Store the single selected unit
+                    });
+                    containerElement.appendChild(button);
+                });
             }
 
             // --- Dynamic Table Row Functions ---
@@ -3153,9 +3479,15 @@
                         });
                         showMessageModal('Sucesso', 'Progresso da Renovação salvo com sucesso!');
                         updateFinalRenewButtonStateAditivo(); // Re-evaluate button state after saving
+                        updateOfflineStatusDisplay(false); // Successful operation, assume online
                     } catch (error) {
                         console.error("Erro ao salvar progresso da renovação:", error);
-                        showMessageModal('Erro', `Erro ao salvar progresso da renovação: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível salvar o progresso da renovação. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao salvar progresso da renovação: ${error.message}`);
+                        }
                     }
                 });
             }
@@ -3202,12 +3534,18 @@
                             });
                             showMessageModal('Sucesso', 'Contrato renovado com sucesso!');
                             closeModal('addendum-modal');
+                            updateOfflineStatusDisplay(false); // Successful operation, assume online
                         } else {
                             showMessageModal('Erro', 'Contrato não encontrado para renovação.');
                         }
                     } catch (error) {
                         console.error("Erro ao renovar contrato:", error);
-                        showMessageModal('Erro', `Erro ao renovar contrato: ${error.message}`);
+                        if (error.code === 'unavailable') {
+                            showMessageModal('Erro de Conexão', `Não foi possível renovar o contrato. Verifique sua conexão com a internet. O aplicativo está em modo offline.`, false);
+                            updateOfflineStatusDisplay(true);
+                        } else {
+                            showMessageModal('Erro', `Erro ao renovar contrato: ${error.message}`);
+                        }
                     }
                 });
             }
