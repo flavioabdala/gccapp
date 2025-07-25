@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -458,55 +458,11 @@
 
                     <div id="apostilamento-remanejamento-cotas-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Remanejamento de Cotas</h5>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
-                            <select id="remanejamento-type-apostilamento" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <option value="Definitivo">Definitivo</option>
-                                <option value="Transitorio">Transitório</option>
-                            </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
-                            <input type="hidden" id="ceding-selected-unit-apostilamento">
-                            <div id="ceding-units-container-apostilamento" class="flex flex-wrap gap-2 mt-2"></div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
-                            <input type="hidden" id="receiving-selected-unit-apostilamento">
-                            <div id="receiving-units-container-apostilamento" class="flex flex-wrap gap-2 mt-2"></div>
-                        </div>
-                        <div class="mt-4">
-                            <h6 class="text-sm font-medium text-gray-700 mb-2">Itens de Remanejamento</h6>
-                            <table class="min-w-full bg-white border border-gray-200 rounded-md">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Lote</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Item</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Código</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Descrição</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Qtd.</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Valor Unit.</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Valor Total</th>
-                                        <th class="py-2 px-4 border-b"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="remanejamento-table-body-apostilamento">
-                                    <!-- Rows will be added here -->
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="6" class="py-2 px-4 text-right font-semibold text-gray-800">Total Remanejamento:</td>
-                                        <td class="py-2 px-4 font-semibold text-gray-800" id="remanejamento-total-apostilamento">R$ 0,00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" id="add-remanejamento-item-apostilamento" class="mt-2 py-1 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">Adicionar Item</button>
-                        </div>
-                        <div>
-                            <label for="remanejamento-notes-apostilamento" class="block text-sm font-medium text-gray-700">Observações do Remanejamento</label>
-                            <textarea id="remanejamento-notes-apostilamento" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        <button type="button" id="add-apostilamento-remanejamento-block" class="py-2 px-4 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 mb-4">
+                            <i class="fas fa-plus mr-1"></i> Adicionar Novo Remanejamento
+                        </button>
+                        <div id="apostilamento-remanejamento-blocks-container">
+                            <!-- Remanejamento blocks will be dynamically added here -->
                         </div>
                     </div>
 
@@ -545,55 +501,11 @@
                     <!-- Sub-option sections for Aditivo -->
                     <div id="aditivo-remanejamento-cotas-section" class="sub-option-section space-y-4">
                         <h5 class="text-md font-semibold text-gray-800 mb-2">Remanejamento de Cotas</h5>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
-                            <select id="remanejamento-type-aditivo" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <option value="Definitivo">Definitivo</option>
-                                <option value="Transitorio">Transitório</option>
-                            </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
-                            <input type="hidden" id="ceding-selected-unit-aditivo">
-                            <div id="ceding-units-container-aditivo" class="flex flex-wrap gap-2 mt-2"></div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
-                            <input type="hidden" id="receiving-selected-unit-aditivo">
-                            <div id="receiving-units-container-aditivo" class="flex flex-wrap gap-2 mt-2"></div>
-                        </div>
-                        <div class="mt-4">
-                            <h6 class="text-sm font-medium text-gray-700 mb-2">Itens de Remanejamento</h6>
-                            <table class="min-w-full bg-white border border-gray-200 rounded-md">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Lote</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Item</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Código</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Descrição</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Qtd.</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Valor Unit.</th>
-                                        <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Valor Total</th>
-                                        <th class="py-2 px-4 border-b"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="remanejamento-table-body-aditivo">
-                                    <!-- Rows will be added here -->
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="6" class="py-2 px-4 text-right font-semibold text-gray-800">Total Remanejamento:</td>
-                                        <td class="py-2 px-4 font-semibold text-gray-800" id="remanejamento-total-aditivo">R$ 0,00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" id="add-remanejamento-item-aditivo" class="mt-2 py-1 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">Adicionar Item</button>
-                        </div>
-                        <div>
-                            <label for="remanejamento-notes-aditivo" class="block text-sm font-medium text-gray-700">Observações do Remanejamento</label>
-                            <textarea id="remanejamento-notes-aditivo" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        <button type="button" id="add-aditivo-remanejamento-block" class="py-2 px-4 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 mb-4">
+                            <i class="fas fa-plus mr-1"></i> Adicionar Novo Remanejamento
+                        </button>
+                        <div id="aditivo-remanejamento-blocks-container">
+                            <!-- Remanejamento blocks will be dynamically added here -->
                         </div>
                     </div>
 
@@ -908,16 +820,8 @@
             const apostilamentoDesignacaoSelectedUnitsInput = document.getElementById('apostilamento-designacao-selected-units'); // Permanent hidden input
 
             const apostilamentoRemanejamentoCotasSection = document.getElementById('apostilamento-remanejamento-cotas-section');
-            const remanejamentoTypeApostilamentoSelect = document.getElementById('remanejamento-type-apostilamento');
-            // Removed text inputs for ceding/receiving units, now using hidden inputs and button containers
-            const cedingSelectedUnitApostilamento = document.getElementById('ceding-selected-unit-apostilamento');
-            const cedingUnitsContainerApostilamento = document.getElementById('ceding-units-container-apostilamento');
-            const receivingSelectedUnitApostilamento = document.getElementById('receiving-selected-unit-apostilamento');
-            const receivingUnitsContainerApostilamento = document.getElementById('receiving-units-container-apostilamento');
-            const remanejamentoTableBodyApostilamento = document.getElementById('remanejamento-table-body-apostilamento');
-            const remanejamentoTotalApostilamento = document.getElementById('remanejamento-total-apostilamento');
-            const addRemanejamentoItemApostilamentoButton = document.getElementById('add-remanejamento-item-apostilamento');
-            const remanejamentoNotesApostilamentoInput = document.getElementById('remanejamento-notes-apostilamento');
+            const addApostilamentoRemanejamentoBlockButton = document.getElementById('add-apostilamento-remanejamento-block');
+            const apostilamentoRemanejamentoBlocksContainer = document.getElementById('apostilamento-remanejamento-blocks-container');
 
             const apostilamentoOutrosSection = document.getElementById('apostilamento-outros-section');
             const apostilamentoOthersNotesInput = document.getElementById('apostilamento-others-notes');
@@ -931,16 +835,8 @@
 
             // Aditivo sub-option sections
             const aditivoRemanejamentoCotasSection = document.getElementById('aditivo-remanejamento-cotas-section');
-            const remanejamentoTypeAditivoSelect = document.getElementById('remanejamento-type-aditivo');
-            // Removed text inputs for ceding/receiving units, now using hidden inputs and button containers
-            const cedingSelectedUnitAditivo = document.getElementById('ceding-selected-unit-aditivo');
-            const cedingUnitsContainerAditivo = document.getElementById('ceding-units-container-aditivo');
-            const receivingSelectedUnitAditivo = document.getElementById('receiving-selected-unit-aditivo');
-            const receivingUnitsContainerAditivo = document.getElementById('receiving-units-container-aditivo');
-            const remanejamentoTableBodyAditivo = document.getElementById('remanejamento-table-body-aditivo');
-            const remanejamentoTotalAditivo = document.getElementById('remanejamento-total-aditivo');
-            const addRemanejamentoItemAditivoButton = document.getElementById('add-remanejamento-item-aditivo');
-            const remanejamentoNotesAditivoInput = document.getElementById('remanejamento-notes-aditivo');
+            const addAditivoRemanejamentoBlockButton = document.getElementById('add-aditivo-remanejamento-block');
+            const aditivoRemanejamentoBlocksContainer = document.getElementById('aditivo-remanejamento-blocks-container');
 
             const aditivoReequilibrioSection = document.getElementById('aditivo-reequilibrio-section');
             const aditivoReequilibrioPercentageInput = document.getElementById('aditivo-reequilibrio-percentage');
@@ -2097,12 +1993,9 @@
                         if (apostilamentoDesignacaoSelectedUnitsInput) apostilamentoDesignacaoSelectedUnitsInput.value = '[]'; // Clear previous selection
                         populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, currentContractUnits);
                     } else if (selectedSubType === 'Remanejamento Cotas') {
-                        if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
-                        if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
-                        // Populate single unit buttons for ceding and receiving units
-                        populateSingleUnitButtons(cedingUnitsContainerApostilamento, cedingSelectedUnitApostilamento, '');
-                        populateSingleUnitButtons(receivingUnitsContainerApostilamento, receivingSelectedUnitApostilamento, '');
-                        if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = '';
+                        // Clear existing blocks and add one empty one if none exist
+                        if (apostilamentoRemanejamentoBlocksContainer) apostilamentoRemanejamentoBlocksContainer.innerHTML = '';
+                        addRemanejamentoBlock('apostilamento'); // Add an empty block by default
                     }
                 });
             }
@@ -2118,12 +2011,9 @@
                     const currentContractUnits = contractDoc.exists ? (contractDoc.data().participatingUnits || []) : [];
 
                     if (selectedSubType === 'Remanejamento Cotas') {
-                        if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
-                        if (remanejamentoTotalAditivo) remanejamentoTotalAditivo.textContent = formatCurrency(0);
-                        // Populate single unit buttons for ceding and receiving units
-                        populateSingleUnitButtons(cedingUnitsContainerAditivo, cedingSelectedUnitAditivo, '');
-                        populateSingleUnitButtons(receivingUnitsContainerAditivo, receivingSelectedUnitAditivo, '');
-                        if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = '';
+                        // Clear existing blocks and add one empty one if none exist
+                        if (aditivoRemanejamentoBlocksContainer) aditivoRemanejamentoBlocksContainer.innerHTML = '';
+                        addRemanejamentoBlock('aditivo'); // Add an empty block by default
                     } else if (selectedSubType === 'Acrescimo') {
                         if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
                         if (acrescimoTotal) acrescimoTotal.textContent = formatCurrency(0);
@@ -2165,36 +2055,29 @@
                         if (apostilamentoDateInput) apostilamentoDateInput.value = '';
                         if (apostilamentoSubTypeSelect) apostilamentoSubTypeSelect.value = '';
                         if (apostilamentoReajustePercentageInput) apostilamentoReajustePercentageInput.value = '';
-                        if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = '';
-                        populateSingleUnitButtons(cedingUnitsContainerApostilamento, cedingSelectedUnitApostilamento, ''); // Clear selection
-                        populateSingleUnitButtons(receivingUnitsContainerApostilamento, receivingSelectedUnitApostilamento, ''); // Clear selection
-                        if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = '';
                         if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = '';
-                        if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
-                        if (remanejamentoTotalApostilamento) remanejamentoTotalApostilamento.textContent = formatCurrency(0);
                         // Clear unit button selections for apostilamento
                         if (apostilamentoSelectedUnitsInput) apostilamentoSelectedUnitsInput.value = '[]';
                         if (apostilamentoDesignacaoSelectedUnitsInput) apostilamentoDesignacaoSelectedUnitsInput.value = '[]';
                         populateUnitButtons(apostilamentoUnitsContainer, apostilamentoSelectedUnitsInput, []);
                         populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, []);
+                        // Clear remanejamento blocks
+                        if (apostilamentoRemanejamentoBlocksContainer) apostilamentoRemanejamentoBlocksContainer.innerHTML = '';
 
 
                         // Clear all specific fields for Aditivo
                         if (aditivoNumberInput) aditivoNumberInput.value = '';
                         if (aditivoDateInput) aditivoDateInput.value = '';
                         if (aditivoSubTypeSelect) aditivoSubTypeSelect.value = '';
-                        if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = '';
-                        populateSingleUnitButtons(cedingUnitsContainerAditivo, cedingSelectedUnitAditivo, ''); // Clear selection
-                        populateSingleUnitButtons(receivingUnitsContainerAditivo, receivingSelectedUnitAditivo, ''); // Clear selection
-                        if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = '';
                         if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = '';
                         if (aditivoTrocaMarcaDescriptionInput) aditivoTrocaMarcaDescriptionInput.value = '';
                         if (acrescimoTableBody) acrescimoTableBody.innerHTML = '';
                         if (acrescimoTotal) acrescimoTotal.textContent = formatCurrency(0);
                         if (supressaoTableBody) supressaoTableBody.innerHTML = '';
                         if (supressaoTotal) supressaoTotal.textContent = formatCurrency(0);
-                        if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
-                        if (remanejamentoTotalAditivo) remanejamentoTotalAditivo.textContent = formatCurrency(0);
+                        // Clear remanejamento blocks
+                        if (aditivoRemanejamentoBlocksContainer) aditivoRemanejamentoBlocksContainer.innerHTML = '';
+
 
                         // Clear renewal specific fields
                         if (renewalDurationAditivoInput) renewalDurationAditivoInput.value = '';
@@ -2271,34 +2154,25 @@
                             historyEntry.notes = `Designação de Gestores e Fiscais para unidades: ${designacaoUnits.join(', ')}.`;
                             historyEntry.details.designacaoUnits = designacaoUnits;
                         } else if (subType === 'Remanejamento Cotas') {
-                            const remanejamentoType = remanejamentoTypeApostilamentoSelect.value;
-                            const cedingUnit = cedingSelectedUnitApostilamento.value; // Read from hidden input
-                            const receivingUnit = receivingSelectedUnitApostilamento.value; // Read from hidden input
-                            const remanejamentoNotes = remanejamentoNotesApostilamentoInput.value;
-                            const remanejamentoItems = Array.from(remanejamentoTableBodyApostilamento.rows).map(row => ({
-                                lote: row.querySelector('.remanejamento-lote')?.value,
-                                item: row.querySelector('.remanejamento-item')?.value,
-                                codigo: row.querySelector('.remanejamento-codigo')?.value,
-                                descricao: row.querySelector('.remanejamento-descricao')?.value,
-                                quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
-                                valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
-                                valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
-                            }));
-
-                            // Construct the notes for display in the history
-                            let itemsSummary = '';
-                            if (remanejamentoItems && remanejamentoItems.length > 0) {
-                                itemsSummary = remanejamentoItems.map(item => {
-                                    const desc = item.descricao || item.codigo || item.item || 'Item';
-                                    const qty = item.quantidade || 0;
-                                    return `${desc} (Qtd: ${qty})`;
-                                }).join(', ');
-                                itemsSummary = `- ${itemsSummary}`; // Prepend with hyphen for clarity
-                            }
-
-                            const typePrefix = `${apostilamentoNumber}º Apostilamento`;
-                            historyEntry.notes = `${typePrefix}. Remanejamento ${remanejamentoType}. ${cedingUnit} &#8594; ${receivingUnit} ${itemsSummary}`;
-                            historyEntry.details.remanejamento = { type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(remanejamentoTotalApostilamento.textContent) };
+                            const remanejamentosData = [];
+                            document.querySelectorAll('#apostilamento-remanejamento-blocks-container .remanejamento-block').forEach(block => {
+                                const remanejamentoType = block.querySelector('.remanejamento-type-select')?.value;
+                                const cedingUnit = block.querySelector('.ceding-selected-unit-hidden')?.value;
+                                const receivingUnit = block.querySelector('.receiving-selected-unit-hidden')?.value;
+                                const remanejamentoNotes = block.querySelector('.remanejamento-notes')?.value;
+                                const remanejamentoItems = Array.from(block.querySelectorAll('.remanejamento-table-body tr')).map(row => ({
+                                    lote: row.querySelector('.remanejamento-lote')?.value,
+                                    item: row.querySelector('.remanejamento-item')?.value,
+                                    codigo: row.querySelector('.remanejamento-codigo')?.value,
+                                    descricao: row.querySelector('.remanejamento-descricao')?.value,
+                                    quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
+                                    valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
+                                    valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
+                                }));
+                                remanejamentosData.push({ type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(block.querySelector('.remanejamento-total')?.textContent) });
+                            });
+                            historyEntry.details.remanejamentos = remanejamentosData;
+                            historyEntry.notes = `Remanejamento de Cotas (${remanejamentosData.length} blocos).`; // Simplified note
                         } else if (subType === 'Outros') {
                             const othersNotes = apostilamentoOthersNotesInput.value;
                             historyEntry.notes = `Outros: ${othersNotes}.`;
@@ -2321,34 +2195,25 @@
                         };
 
                         if (subType === 'Remanejamento Cotas') {
-                            const remanejamentoType = remanejamentoTypeAditivoSelect.value;
-                            const cedingUnit = cedingSelectedUnitAditivo.value; // Read from hidden input
-                            const receivingUnit = receivingSelectedUnitAditivo.value; // Read from hidden input
-                            const remanejamentoNotes = remanejamentoNotesAditivoInput.value;
-                            const remanejamentoItems = Array.from(remanejamentoTableBodyAditivo.rows).map(row => ({
-                                lote: row.querySelector('.remanejamento-lote')?.value,
-                                item: row.querySelector('.remanejamento-item')?.value,
-                                codigo: row.querySelector('.remanejamento-codigo')?.value,
-                                descricao: row.querySelector('.remanejamento-descricao')?.value,
-                                quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
-                                valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
-                                valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
-                            }));
-
-                            // Construct the notes for display in the history
-                            let itemsSummary = '';
-                            if (remanejamentoItems && remanejamentoItems.length > 0) {
-                                itemsSummary = remanejamentoItems.map(item => {
-                                    const desc = item.descricao || item.codigo || item.item || 'Item';
-                                    const qty = item.quantidade || 0;
-                                    return `${desc} (Qtd: ${qty})`;
-                                }).join(', ');
-                                itemsSummary = `- ${itemsSummary}`; // Prepend with hyphen for clarity
-                            }
-
-                            const typePrefix = `${aditivoNumber}º Aditivo`;
-                            historyEntry.notes = `${typePrefix}. Remanejamento ${remanejamentoType}. ${cedingUnit} &#8594; ${receivingUnit} ${itemsSummary}`;
-                            historyEntry.details.remanejamento = { type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(remanejamentoTotalAditivo.textContent) };
+                            const remanejamentosData = [];
+                            document.querySelectorAll('#aditivo-remanejamento-blocks-container .remanejamento-block').forEach(block => {
+                                const remanejamentoType = block.querySelector('.remanejamento-type-select')?.value;
+                                const cedingUnit = block.querySelector('.ceding-selected-unit-hidden')?.value;
+                                const receivingUnit = block.querySelector('.receiving-selected-unit-hidden')?.value;
+                                const remanejamentoNotes = block.querySelector('.remanejamento-notes')?.value;
+                                const remanejamentoItems = Array.from(block.querySelectorAll('.remanejamento-table-body tr')).map(row => ({
+                                    lote: row.querySelector('.remanejamento-lote')?.value,
+                                    item: row.querySelector('.remanejamento-item')?.value,
+                                    codigo: row.querySelector('.remanejamento-codigo')?.value,
+                                    descricao: row.querySelector('.remanejamento-descricao')?.value,
+                                    quantidade: parseFloat(row.querySelector('.remanejamento-quantidade')?.value || 0),
+                                    valorUnitario: parseCurrency(row.querySelector('.remanejamento-valor-unitario')?.value || '0,00'),
+                                    valorTotal: parseCurrency(row.querySelector('.remanejamento-valor-total')?.textContent || '0,00')
+                                }));
+                                remanejamentosData.push({ type: remanejamentoType, cedingUnit, receivingUnit, notes: remanejamentoNotes, items: remanejamentoItems, total: parseCurrency(block.querySelector('.remanejamento-total')?.textContent) });
+                            });
+                            historyEntry.details.remanejamentos = remanejamentosData;
+                            historyEntry.notes = `Remanejamento de Cotas (${remanejamentosData.length} blocos).`; // Simplified note
                         } else if (subType === 'Reequilibrio') {
                             const reequilibrioPercentage = parseFloat(aditivoReequilibrioPercentageInput.value) || 0;
                             historyEntry.notes = `Reequilíbrio de ${reequilibrionPercentage}%.`;
@@ -2458,9 +2323,17 @@
                         let historyHtml = '<ul class="list-disc pl-5 space-y-2">';
                         if (contract.contractHistory && contract.contractHistory.length > 0) {
                             // Filter to show only Apostilamento and Aditivo entries
-                            const filteredHistory = contract.contractHistory.filter(entry =>
+                            let filteredHistory = contract.contractHistory.filter(entry =>
                                 entry.type && (entry.type.startsWith('Apostilamento') || entry.type.startsWith('Aditivo'))
                             );
+
+                            // Sort the history in reverse chronological order (most recent first)
+                            filteredHistory.sort((a, b) => {
+                                const dateA = new Date(a.date);
+                                const dateB = new Date(b.date);
+                                return dateB.getTime() - dateA.getTime();
+                            });
+
 
                             if (filteredHistory.length > 0) {
                                 filteredHistory.forEach((entry, index) => {
@@ -2478,10 +2351,8 @@
 
                                         displayNotes = `${mainType} (${docNumber})`;
 
-                                        if (entry.details && entry.details.remanejamento) {
-                                            const remanejamento = entry.details.remanejamento;
-                                            // Include remanejamento type in display notes
-                                            displayNotes += ` - Remanejamento ${remanejamento.type ? remanejamento.type.toLowerCase() : ''} de ${remanejamento.cedingUnit || 'N/A'} para ${remanejamento.receivingUnit || 'N/A'}`;
+                                        if (entry.details && entry.details.remanejamentos && Array.isArray(entry.details.remanejamentos)) {
+                                            displayNotes += ` - Remanejamento de Cotas (${entry.details.remanejamentos.length} blocos)`;
                                         } else {
                                             // For other types, just append the sub-type if available
                                             const subTypeMatch = entry.type.match(/-\s*([^)]+)$/);
@@ -2496,21 +2367,24 @@
                                         if (entry.details) {
                                             for (const detailKey in entry.details) {
                                                 const detailValue = entry.details[detailKey];
-                                                if (typeof detailValue === 'object' && detailValue !== null) {
-                                                    if (detailKey === 'remanejamento') {
-                                                        tooltipText += `  Tipo: ${detailValue.type || 'N/A'}\n`;
-                                                        tooltipText += `  Cedente: ${detailValue.cedingUnit || 'N/A'}\n`;
-                                                        tooltipText += `  Cessionária: ${detailValue.receivingUnit || 'N/A'}\n`;
-                                                        if (detailValue.items && detailValue.items.length > 0) {
+                                                if (detailKey === 'remanejamentos' && Array.isArray(detailValue)) {
+                                                    detailValue.forEach((remanejamento, idx) => {
+                                                        tooltipText += `  --- Remanejamento ${idx + 1} ---\n`;
+                                                        tooltipText += `  Tipo: ${remanejamento.type || 'N/A'}\n`;
+                                                        tooltipText += `  Cedente: ${remanejamento.cedingUnit || 'N/A'}\n`;
+                                                        tooltipText += `  Cessionária: ${remanejamento.receivingUnit || 'N/A'}\n`;
+                                                        if (remanejamento.items && remanejamento.items.length > 0) {
                                                             tooltipText += `  Itens:\n`;
-                                                            detailValue.items.forEach(item => {
+                                                            remanejamento.items.forEach(item => {
                                                                 tooltipText += `    - Lote: ${item.lote || 'N/A'}, Item: ${item.item || 'N/A'}, Código: ${item.codigo || 'N/A'}, Descrição: ${item.descricao || 'N/A'}\n`;
                                                                 tooltipText += `      Qtd: ${item.quantidade || 0}, Valor Unit: ${formatCurrency(item.valorUnitario || 0)}, Valor Total: ${formatCurrency(item.valorTotal || 0)}\n`;
                                                             });
                                                         }
-                                                        tooltipText += `  Total Remanejado: ${formatCurrency(detailValue.total || 0)}\n`;
-                                                        if (detailValue.notes) tooltipText += `  Obs: ${detailValue.notes}\n`;
-                                                    } else if (detailKey === 'acrescimo') {
+                                                        tooltipText += `  Total Remanejado: ${formatCurrency(remanejamento.total || 0)}\n`;
+                                                        if (remanejamento.notes) tooltipText += `  Obs: ${remanejamento.notes}\n`;
+                                                    });
+                                                } else if (typeof detailValue === 'object' && detailValue !== null) {
+                                                    if (detailKey === 'acrescimo') {
                                                         tooltipText += `  Itens de Acréscimo:\n`;
                                                         if (detailValue.items && detailValue.items.length > 0) {
                                                             detailValue.items.forEach(item => {
@@ -2643,17 +2517,10 @@
                         } else if (subType === 'Designacao Gestores Fiscais') {
                             populateUnitButtons(apostilamentoDesignacaoUnitsContainer, apostilamentoDesignacaoSelectedUnitsInput, historyEntry.details.designacaoUnits || []);
                         } else if (subType === 'Remanejamento Cotas') {
-                            const remanejamento = historyEntry.details.remanejamento || {};
-                            if (remanejamentoTypeApostilamentoSelect) remanejamentoTypeApostilamentoSelect.value = remanejamento.type || '';
-                            populateSingleUnitButtons(cedingUnitsContainerApostilamento, cedingSelectedUnitApostilamento, remanejamento.cedingUnit || '');
-                            populateSingleUnitButtons(receivingUnitsContainerApostilamento, receivingSelectedUnitApostilamento, remanejamento.receivingUnit || '');
-                            if (remanejamentoNotesApostilamentoInput) remanejamentoNotesApostilamentoInput.value = remanejamento.notes || '';
-                            // Populate remanejamento table
-                            if (remanejamentoTableBodyApostilamento) remanejamentoTableBodyApostilamento.innerHTML = '';
-                            (remanejamento.items || []).forEach(item => {
-                                addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento', item);
+                            if (apostilamentoRemanejamentoBlocksContainer) apostilamentoRemanejamentoBlocksContainer.innerHTML = ''; // Clear existing
+                            (historyEntry.details.remanejamentos || []).forEach(remanejamentoData => {
+                                addRemanejamentoBlock('apostilamento', remanejamentoData);
                             });
-                            calculateRemanejamentoTotal('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
                         } else if (subType === 'Outros') {
                             if (apostilamentoOthersNotesInput) apostilamentoOthersNotesInput.value = historyEntry.details.others || '';
                         }
@@ -2672,17 +2539,10 @@
 
                         // Populate sub-type specific fields
                         if (subType === 'Remanejamento Cotas') {
-                            const remanejamento = historyEntry.details.remanejamento || {};
-                            if (remanejamentoTypeAditivoSelect) remanejamentoTypeAditivoSelect.value = remanejamento.type || '';
-                            populateSingleUnitButtons(cedingUnitsContainerAditivo, cedingSelectedUnitAditivo, remanejamento.cedingUnit || '');
-                            populateSingleUnitButtons(receivingUnitsContainerAditivo, receivingSelectedUnitAditivo, remanejamento.receivingUnit || '');
-                            if (remanejamentoNotesAditivoInput) remanejamentoNotesAditivoInput.value = remanejamento.notes || '';
-                            // Populate remanejamento table
-                            if (remanejamentoTableBodyAditivo) remanejamentoTableBodyAditivo.innerHTML = '';
-                            (remanejamento.items || []).forEach(item => {
-                                addRemanejamentoItem('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo', item);
+                            if (aditivoRemanejamentoBlocksContainer) aditivoRemanejamentoBlocksContainer.innerHTML = ''; // Clear existing
+                            (historyEntry.details.remanejamentos || []).forEach(remanejamentoData => {
+                                addRemanejamentoBlock('aditivo', remanejamentoData);
                             });
-                            calculateRemanejamentoTotal('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo');
                         } else if (subType === 'Reequilibrio') {
                             if (aditivoReequilibrioPercentageInput) aditivoReequilibrioPercentageInput.value = historyEntry.details.reequilibrionPercentage || '';
                         } else if (subType === 'Troca Marca') {
@@ -2909,6 +2769,7 @@
                         }
                         closeModal('reminder-form-modal');
                         if (reminderForm) reminderForm.reset();
+                        loadReminders(); // Call loadReminders to update the list immediately
                         updateOfflineStatusDisplay(false); // Successful operation, assume online
                     } catch (error) {
                         console.error("Erro ao salvar lembrete no Firestore:", error);
@@ -3030,16 +2891,14 @@
             }
 
             // --- Dynamic Table Row Functions ---
-            function addRemanejamentoItem(tableBodyId, totalDisplayId, itemData = {}) {
-                console.log(`addRemanejamentoItem called for tableBodyId: ${tableBodyId}`); // Debug log
-                const tableBody = document.getElementById(tableBodyId);
-                if (!tableBody) {
-                    console.error(`Table body with ID ${tableBodyId} not found.`); // Debug log
-                    return;
-                }
-
+            /**
+             * Adds a new remanejamento item row to a specified table body.
+             * @param {HTMLElement} tableBody - The tbody element to add the row to.
+             * @param {HTMLElement} totalDisplay - The element displaying the total for this table.
+             * @param {object} [itemData={}] - Optional initial data for the item.
+             */
+            function addRemanejamentoItem(tableBody, totalDisplay, itemData = {}) {
                 const newRow = tableBody.insertRow();
-                // Changed classes for input fields to make them visible and editable
                 newRow.innerHTML = `
                     <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-lote" value="${itemData.lote || ''}"></td>
                     <td class="py-2 px-4 border-b"><input type="text" class="w-full border border-gray-300 rounded-md text-xs remanejamento-item" value="${itemData.item || ''}"></td>
@@ -3057,7 +2916,7 @@
 
                 [quantityInput, unitValueInput].forEach(input => {
                     if (input) {
-                        input.addEventListener('input', () => calculateRemanejamentoTotal(tableBodyId, totalDisplayId));
+                        input.addEventListener('input', () => calculateRemanejamentoTotal(tableBody, totalDisplay));
                         if (input.classList.contains('remanejamento-valor-unitario')) {
                             input.addEventListener('blur', (e) => { // Format on blur
                                 let value = parseCurrency(e.target.value);
@@ -3070,15 +2929,18 @@
                 if (removeButton) {
                     removeButton.addEventListener('click', () => {
                         newRow.remove();
-                        calculateRemanejamentoTotal(tableBodyId, totalDisplayId);
+                        calculateRemanejamentoTotal(tableBody, totalDisplay);
                     });
                 }
-                calculateRemanejamentoTotal(tableBodyId, totalDisplayId); // Calculate initially for pre-filled data
+                calculateRemanejamentoTotal(tableBody, totalDisplay); // Calculate initially for pre-filled data
             }
 
-            function calculateRemanejamentoTotal(tableBodyId, totalDisplayId) {
-                const tableBody = document.getElementById(tableBodyId);
-                const totalDisplay = document.getElementById(totalDisplayId);
+            /**
+             * Calculates the total for a remanejamento table.
+             * @param {HTMLElement} tableBody - The tbody element of the table.
+             * @param {HTMLElement} totalDisplay - The element displaying the total for this table.
+             */
+            function calculateRemanejamentoTotal(tableBody, totalDisplay) {
                 if (!tableBody || !totalDisplay) return;
 
                 let total = 0;
@@ -3091,6 +2953,113 @@
                 });
                 totalDisplay.textContent = formatCurrency(total);
             }
+
+            /**
+             * Adds a new dynamic remanejamento block to the specified container.
+             * @param {string} type - 'apostilamento' or 'aditivo' to determine the container.
+             * @param {object} [blockData={}] - Optional initial data for the block.
+             */
+            function addRemanejamentoBlock(type, blockData = {}) {
+                const container = type === 'apostilamento' ? apostilamentoRemanejamentoBlocksContainer : aditivoRemanejamentoBlocksContainer;
+                if (!container) return;
+
+                const blockId = `remanejamento-block-${Date.now()}-${Math.floor(Math.random() * 1000)}`; // Unique ID
+
+                const newBlock = document.createElement('div');
+                newBlock.className = `remanejamento-block border p-4 rounded-md mb-4 bg-gray-50`;
+                newBlock.setAttribute('data-block-id', blockId);
+                newBlock.innerHTML = `
+                    <div class="flex justify-end mb-2">
+                        <button type="button" class="remove-remanejamento-block-button text-red-500 hover:text-red-700 text-sm"><i class="fas fa-times-circle"></i> Remover Remanejamento</button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo de Remanejamento</label>
+                        <select class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md remanejamento-type-select">
+                            <option value="">Selecione</option>
+                            <option value="Definitivo">Definitivo</option>
+                            <option value="Transitorio">Transitório</option>
+                        </select>
+                    </div>
+                    <div class="mb-4 mt-2">
+                        <label class="block text-sm font-medium text-gray-700">Unidade Cedente</label>
+                        <input type="hidden" class="ceding-selected-unit-hidden">
+                        <div class="ceding-units-container flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Unidade Cessionária</label>
+                        <input type="hidden" class="receiving-selected-unit-hidden">
+                        <div class="receiving-units-container flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+                    <div class="mt-4">
+                        <h6 class="text-sm font-medium text-gray-700 mb-2">Itens de Remanejamento</h6>
+                        <table class="min-w-full bg-white border border-gray-200 rounded-md">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Lote</th>
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Item</th>
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Código</th>
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Descrição</th>
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Qtd.</th>
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Valor Unit.</th>
+                                    <th class="py-2 px-4 border-b text-left text-xs font-semibold text-gray-600">Valor Total</th>
+                                    <th class="py-2 px-4 border-b"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="remanejamento-table-body">
+                                <!-- Rows will be added here -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="py-2 px-4 text-right font-semibold text-gray-800">Total Remanejamento:</td>
+                                    <td class="py-2 px-4 font-semibold text-gray-800 remanejamento-total">R$ 0,00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <button type="button" class="add-remanejamento-item-button mt-2 py-1 px-3 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">Adicionar Item</button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Observações do Remanejamento</label>
+                        <textarea rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md remanejamento-notes"></textarea>
+                    </div>
+                `;
+                container.appendChild(newBlock);
+
+                // Populate with data if provided
+                if (blockData) {
+                    newBlock.querySelector('.remanejamento-type-select').value = blockData.type || '';
+                    newBlock.querySelector('.remanejamento-notes').value = blockData.notes || '';
+                    populateSingleUnitButtons(newBlock.querySelector('.ceding-units-container'), newBlock.querySelector('.ceding-selected-unit-hidden'), blockData.cedingUnit || '');
+                    populateSingleUnitButtons(newBlock.querySelector('.receiving-units-container'), newBlock.querySelector('.receiving-selected-unit-hidden'), blockData.receivingUnit || '');
+
+                    const tableBody = newBlock.querySelector('.remanejamento-table-body');
+                    const totalDisplay = newBlock.querySelector('.remanejamento-total');
+                    if (tableBody) tableBody.innerHTML = ''; // Clear existing rows
+                    (blockData.items || []).forEach(item => {
+                        addRemanejamentoItem(tableBody, totalDisplay, item);
+                    });
+                    calculateRemanejamentoTotal(tableBody, totalDisplay);
+                }
+
+                // Attach event listeners for the new block
+                newBlock.querySelector('.remove-remanejamento-block-button').addEventListener('click', () => {
+                    newBlock.remove();
+                });
+                newBlock.querySelector('.add-remanejamento-item-button').addEventListener('click', () => {
+                    const tableBody = newBlock.querySelector('.remanejamento-table-body');
+                    const totalDisplay = newBlock.querySelector('.remanejamento-total');
+                    addRemanejamentoItem(tableBody, totalDisplay);
+                });
+            }
+
+            // Event listeners for "Add New Remanejamento" buttons
+            if (addApostilamentoRemanejamentoBlockButton) {
+                addApostilamentoRemanejamentoBlockButton.addEventListener('click', () => addRemanejamentoBlock('apostilamento'));
+            }
+            if (addAditivoRemanejamentoBlockButton) {
+                addAditivoRemanejamentoBlockButton.addEventListener('click', () => addRemanejamentoBlock('aditivo'));
+            }
+
 
             function addAcrescimoItem(itemData = {}) {
                 const tableBody = document.getElementById('acrescimo-table-body');
@@ -3316,20 +3285,6 @@
                 });
             });
 
-
-            if (addRemanejamentoItemApostilamentoButton) {
-                console.log("addRemanejamentoItemApostilamentoButton found."); // Debug log
-                addRemanejamentoItemApostilamentoButton.addEventListener('click', () => {
-                    console.log("addRemanejamentoItemApostilamentoButton clicked!"); // Debug log
-                    addRemanejamentoItem('remanejamento-table-body-apostilamento', 'remanejamento-total-apostilamento');
-                });
-            } else {
-                console.error("addRemanejamentoItemApostilamentoButton NOT found."); // Debug log
-            }
-
-            if (addRemanejamentoItemAditivoButton) {
-                addRemanejamentoItemAditivoButton.addEventListener('click', () => addRemanejamentoItem('remanejamento-table-body-aditivo', 'remanejamento-total-aditivo'));
-            }
 
             if (addAcrescimoItemButton) {
                 addAcrescimoItemButton.addEventListener('click', addAcrescimoItem);
