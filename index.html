@@ -3,456 +3,1076 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Contratos Pro</title>
+    <title>Gestão de Contratos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Bibliotecas para Excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .login-background { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal.active { display: flex; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .status-badge { padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-        .status-renewal { background-color: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        #app.login-background {
+            background-color: #8B5CF6;
+        }
+        .flashing {
+            animation: flash 1s infinite alternate;
+        }
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .unit-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background-color: white;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 0.25rem;
+        }
+        .unit-button.selected {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .tab-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="text-gray-800">
 
-    <div id="app" class="flex-grow flex items-center justify-center p-4 login-background">
-        <!-- Tela de Login -->
-        <div id="login-section" class="w-full max-w-md bg-white rounded-xl shadow-2xl p-8">
-            <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Contratos Admin</h1>
-            <div id="auth-ui" class="space-y-4">
-                <button id="btn-login-anon" class="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">Acessar Sistema</button>
-                <p class="text-xs text-center text-gray-500">Autenticação segura via Firebase</p>
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <div id="login-page" class="hidden w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Gestão de Contratos</h1>
+                <p class="text-gray-500">Faça login para acessar o sistema</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+            <div class="mt-4 text-center">
+                <a href="#" id="show-register-link" class="text-sm text-blue-600 hover:text-blue-500">Não tem uma conta? Registre-se</a>
             </div>
         </div>
 
-        <!-- Dashboard Principal (Oculto inicialmente) -->
-        <div id="main-dashboard" class="hidden w-full max-w-7xl h-[90vh] bg-gray-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-indigo-800 text-white p-6 flex justify-between items-center">
+        <div id="register-page" class="hidden w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Criar Conta</h1>
+            </div>
+            <form id="register-form" class="space-y-6">
                 <div>
-                    <h2 class="text-2xl font-bold">Painel de Gestão</h2>
-                    <p class="text-indigo-200 text-sm" id="user-info">Carregando...</p>
+                    <label for="reg-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="reg-email" name="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                 </div>
-                <div class="flex gap-3">
-                    <button id="btn-export-excel" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                        <i class="fas fa-file-excel"></i> Exportar XLSX
+                <div>
+                    <label for="reg-password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="reg-password" name="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Registrar
                     </button>
-                    <button id="btn-logout" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold">Sair</button>
+                </div>
+            </form>
+            <div class="mt-4 text-center">
+                <a href="#" id="show-login-link" class="text-sm text-blue-600 hover:text-blue-500">Já tem uma conta? Faça login</a>
+            </div>
+        </div>
+
+        <div id="main-page" class="hidden flex-1 flex flex-col w-full">
+            <header class="bg-white shadow-sm z-10">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-file-contract text-blue-600 text-3xl mr-3"></i>
+                        <h1 class="text-2xl font-bold text-gray-900">Gestão de Contratos</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="user-id-display" class="text-sm text-gray-500 hidden md:inline"></span>
+                        <div id="offline-indicator" class="hidden bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-red-400">
+                            Offline
+                        </div>
+                        <button id="logout-button" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-sign-out-alt text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button class="tab-button active-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="contracts">
+                            Contratos Ativos
+                        </button>
+                        <button class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="terminated">
+                            Encerrados
+                        </button>
+                        <button class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="reminders">
+                            Lembretes
+                        </button>
+                    </nav>
                 </div>
             </header>
 
-            <!-- Menu de Tabs -->
-            <nav class="bg-white border-b flex px-6 space-x-6">
-                <button class="tab-trigger py-4 border-b-2 border-indigo-600 text-indigo-600 font-bold" data-target="tab-ativos">Ativos</button>
-                <button class="tab-trigger py-4 border-b-2 border-transparent text-gray-500 hover:text-indigo-600" data-target="tab-vencendo">Vencendo (180 dias)</button>
-                <button class="tab-trigger py-4 border-b-2 border-transparent text-gray-500 hover:text-indigo-600" data-target="tab-encerrados">Encerrados</button>
-            </nav>
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-8">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <div id="contracts-tab" class="tab-content">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500 cursor-pointer" id="filter-active-contracts">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-green-100 text-green-500 mr-4">
+                                        <i class="fas fa-check-circle text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Ativos</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="active-contracts-count-value">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500 cursor-pointer" id="filter-expiring-contracts">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-500 mr-4">
+                                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">A Vencer (180 dias)</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="expiring-contracts-count-value">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-full bg-red-100 text-red-500 mr-4">
+                                        <i class="fas fa-times-circle text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Vencidos</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="overdue-contracts-count">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            <!-- Conteúdo das Tabs -->
-            <main class="flex-grow overflow-y-auto p-6">
-                <div id="tab-ativos" class="tab-content active">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-700">Contratos Vigentes</h3>
-                        <button id="btn-new-contract" class="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-indigo-700">+ Novo Contrato</button>
+                        <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 gap-2">
+                            <div class="flex gap-2">
+                                <button id="add-contract-button" title="Adicionar Novo Contrato" class="py-2 px-4 bg-blue-600 text-white rounded-md text-lg hover:bg-blue-700 transition duration-200 w-12 h-12 flex items-center justify-center">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button id="export-excel-button" title="Baixar Planilha Excel Completa" class="py-2 px-4 bg-green-600 text-white rounded-md text-lg hover:bg-green-700 transition duration-200 w-12 h-12 flex items-center justify-center">
+                                    <i class="fas fa-file-excel"></i>
+                                </button>
+                            </div>
+                            <div class="relative w-full md:w-1/3"> 
+                                <input type="text" id="search-input" placeholder="Buscar contratos (Empresa, SEI, Nº)..."
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <div id="contracts-list" class="space-y-6">
+                            </div>
+                         <div id="no-contracts-message" class="hidden text-center py-12 text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-3 block"></i>
+                            Nenhum contrato encontrado.
+                        </div>
                     </div>
-                    <div id="list-ativos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                </div>
 
-                <div id="tab-vencendo" class="tab-content">
-                    <h3 class="text-xl font-bold text-gray-700 mb-6">Alerta de Renovação</h3>
-                    <div id="list-vencendo" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                </div>
+                    <div id="terminated-tab" class="tab-content hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Contratos Encerrados</h2>
+                         <div id="terminated-list" class="space-y-4">
+                            </div>
+                    </div>
 
-                <div id="tab-encerrados" class="tab-content">
-                    <h3 class="text-xl font-bold text-gray-700 mb-6">Histórico de Encerrados</h3>
-                    <div id="list-encerrados" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <div id="reminders-tab" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800">Lembretes</h2>
+                            <button id="add-reminder-button" class="py-2 px-4 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-plus mr-2"></i> Novo Lembrete
+                            </button>
+                        </div>
+                        <div id="reminders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            </div>
+                    </div>
+
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Modal Form Contrato -->
-    <div id="modal-contract" class="modal">
-        <div class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-2xl relative overflow-y-auto max-h-[90vh]">
-            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onclick="closeModal('modal-contract')"><i class="fas fa-times fa-lg"></i></button>
-            <h2 class="text-2xl font-bold mb-6" id="modal-title">Cadastrar Contrato</h2>
-            
-            <form id="form-contract" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="hidden" id="field-id">
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Número SEI</label>
-                    <input type="text" id="field-sei" required class="w-full p-2 border rounded mt-1">
-                </div>
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Nº Contrato</label>
-                    <input type="text" id="field-numero" required class="w-full p-2 border rounded mt-1">
-                </div>
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Valor Atual (R$)</label>
-                    <input type="text" id="field-valor" placeholder="0,00" required class="w-full p-2 border rounded mt-1">
-                </div>
-                <div class="md:col-span-3">
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Empresa / Contratada</label>
-                    <input type="text" id="field-empresa" required class="w-full p-2 border rounded mt-1">
-                </div>
-                <div class="md:col-span-3">
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Objeto</label>
-                    <textarea id="field-objeto" rows="2" required class="w-full p-2 border rounded mt-1"></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Vigência Inicial</label>
-                    <input type="date" id="field-data-inicio" required class="w-full p-2 border rounded mt-1">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Vigência Atual</label>
-                    <input type="date" id="field-data-fim" required class="w-full p-2 border rounded mt-1">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Lei Aplicada</label>
-                    <select id="field-lei" class="w-full p-2 border rounded mt-1">
-                        <option value="8666">Lei 8.666/93</option>
-                        <option value="14133">Lei 14.133/21</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-3 border-t pt-4">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Unidades Participantes (Separadas por vírgula)</label>
-                    <input type="text" id="field-unidades" placeholder="Ex: Financeiro, TI, RH" class="w-full p-2 border rounded">
-                </div>
-
-                <div class="md:col-span-3 flex items-center gap-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                    <input type="checkbox" id="field-renovacao-iniciada" class="w-5 h-5">
-                    <label for="field-renovacao-iniciada" class="text-sm font-bold text-yellow-800">Processo de Renovação já foi iniciado?</label>
+    <div id="contract-form-modal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6 m-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="contract-form-title" class="text-2xl font-bold text-gray-900">Adicionar Novo Contrato</h2>
+                <button onclick="closeModal('contract-form-modal')" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="contract-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nº Processo SEI</label>
+                        <input type="text" id="sei-number" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Nº Contrato</label>
+                        <input type="text" id="contract-number" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Nome da Empresa</label>
+                        <input type="text" id="company-name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Objeto do Contrato</label>
+                        <textarea id="contract-object" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Início do Processo</label>
+                        <input type="date" id="initial-process-date" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo de Lei</label>
+                        <select id="law-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                            <option value="8666">Lei 8.666/93</option>
+                            <option value="14133">Lei 14.133/21</option>
+                        </select>
+                    </div>
+                    <div>
+                         <label class="block text-sm font-medium text-gray-700">Vigência Atual (Término)</label>
+                        <input type="date" id="current-validity-date" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
+                    <div>
+                         <label class="block text-sm font-medium text-gray-700">Renovação Atual (Nº)</label>
+                        <input type="number" id="renewal-number" min="0" value="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                        <input type="text" id="contract-value" placeholder="0,00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                    </div>
                 </div>
 
-                <div class="md:col-span-3 flex justify-end gap-3 pt-6">
-                    <button type="button" onclick="closeModal('modal-contract')" class="px-6 py-2 bg-gray-200 rounded-lg font-bold">Cancelar</button>
-                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold">Salvar Contrato</button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unidades Participantes</label>
+                    <div id="units-checkbox-container" class="flex flex-wrap bg-gray-50 p-3 rounded-md border border-gray-200">
+                        </div>
+                    <input type="hidden" id="contract-selected-units" value="[]">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea id="contract-observations" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"></textarea>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeModal('contract-form-modal')" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-3">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Salvar Contrato
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Aditivos / Apostilamentos -->
-    <div id="modal-event" class="modal">
-        <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl relative">
-            <h2 class="text-xl font-bold mb-4">Adicionar Evento ao Histórico</h2>
-            <form id="form-event" class="space-y-4">
-                <input type="hidden" id="event-contract-id">
+    <div id="addendum-modal" class="modal">
+         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Aditivo / Apostilamento / Renovação</h2>
+                <button onclick="closeModal('addendum-modal')" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="addendum-form" class="space-y-6">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Tipo</label>
-                    <select id="event-type" class="w-full p-2 border rounded">
-                        <option value="Aditivo">Termo Aditivo</option>
-                        <option value="Apostilamento">Apostilamento</option>
-                        <option value="Reajuste">Reajuste de Valor</option>
-                    </select>
+                     <label class="block text-sm font-medium text-gray-700">Tipo de Alteração</label>
+                     <select id="addendum-type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2" onchange="toggleAddendumFields()">
+                         <option value="Renovação de Prazo">Renovação de Prazo</option>
+                         <option value="Aditivo de Valor">Aditivo de Valor</option>
+                         <option value="Apostilamento">Apostilamento (Reajuste)</option>
+                         <option value="Outro">Outro</option>
+                     </select>
                 </div>
+                
+                <div id="new-validity-group">
+                     <label class="block text-sm font-medium text-gray-700">Nova Data de Vigência</label>
+                     <input type="date" id="addendum-new-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                </div>
+
+                <div id="new-value-group" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Novo Valor / Valor Adicionado (R$)</label>
+                    <input type="text" id="addendum-value" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2">
+                </div>
+
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Descrição/Resumo</label>
-                    <input type="text" id="event-desc" required placeholder="Ex: Prorrogação por 12 meses" class="w-full p-2 border rounded">
+                    <label class="block text-sm font-medium text-gray-700">Descrição / Notas</label>
+                    <textarea id="addendum-notes" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"></textarea>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase">Data do Evento</label>
-                    <input type="date" id="event-date" required class="w-full p-2 border rounded">
-                </div>
-                <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeModal('modal-event')" class="px-4 py-2 bg-gray-200 rounded">Voltar</button>
-                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded">Registrar</button>
+
+                <div class="flex justify-end pt-4">
+                     <button type="button" onclick="closeModal('addendum-modal')" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 mr-3">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        Salvar Alteração
+                    </button>
                 </div>
             </form>
+         </div>
+    </div>
+
+    <div id="history-modal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6 m-4 max-h-[90vh] overflow-y-auto">
+             <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Histórico do Contrato</h2>
+                <button onclick="closeModal('history-modal')" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="history-content" class="space-y-4">
+                </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, query, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <div id="message-modal" class="modal" style="z-index: 60;">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 m-4">
+            <h3 id="message-modal-title" class="text-lg font-bold text-gray-900 mb-2"></h3>
+            <div id="message-modal-body" class="text-gray-600 mb-6"></div>
+            <div class="flex justify-end">
+                </div>
+        </div>
+    </div>
 
-        // Configuração segura do ambiente
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'contratos-default';
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-        let currentUser = null;
-        let allContracts = [];
-
-        // --- AUTH ---
-        document.getElementById('btn-login-anon').onclick = async () => {
-            try {
-                await signInAnonymously(auth);
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao conectar ao banco de dados.");
-            }
-        };
-
-        document.getElementById('btn-logout').onclick = () => signOut(auth);
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('main-dashboard').classList.remove('hidden');
-                document.getElementById('user-info').innerText = `Logado como: ${user.uid}`;
-                initDataListener();
-            } else {
-                currentUser = null;
-                document.getElementById('login-section').classList.remove('hidden');
-                document.getElementById('main-dashboard').classList.add('hidden');
-            }
-        });
-
-        // --- DATA LISTENER ---
-        function initDataListener() {
-            // Regra 1 e 2: Path restrito conforme instruções
-            const colPath = collection(db, 'artifacts', appId, 'public', 'data', 'contracts');
-            
-            onSnapshot(colPath, (snapshot) => {
-                allContracts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderAll();
-            }, (error) => console.error("Erro no Firestore:", error));
+    <script>
+        // --- FUNÇÕES UTILITÁRIAS ---
+        function showModal(modalElement) {
+            modalElement.style.display = 'flex';
         }
 
-        // --- RENDERING ---
-        function renderAll() {
-            const today = new Date();
-            const threshold = new Date();
-            threshold.setDate(today.getDate() + 180);
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
 
-            const ativos = [];
-            const vencendo = [];
-            const encerrados = [];
+        function showMessageModal(title, body, isConfirmation = false, callback = null, isPrompt = false) {
+            const messageModalTitle = document.getElementById('message-modal-title');
+            const messageModalBody = document.getElementById('message-modal-body');
+            const messageModal = document.getElementById('message-modal');
 
-            allContracts.forEach(c => {
-                const dateFim = new Date(c.dataFim);
-                
-                // Regra 5: Migração imediata para encerrados se vencido
-                if (dateFim < today) {
-                    encerrados.push(c);
-                } else if (dateFim <= threshold) {
-                    vencendo.push(c);
-                    ativos.push(c); // Aparece em ambos para visibilidade
+            if (!messageModalTitle || !messageModalBody || !messageModal) return;
+
+            messageModalTitle.textContent = title;
+            if (isPrompt) {
+                messageModalBody.innerHTML = `<p class="mb-4">${body}</p><input type="text" id="modal-prompt-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">`;
+            } else {
+                messageModalBody.innerHTML = `<p class="mb-4">${body}</p>`;
+            }
+
+            const modalFooter = messageModal.querySelector('.flex.justify-end');
+            if (modalFooter) modalFooter.innerHTML = '';
+
+            if (isConfirmation || isPrompt) {
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancelar';
+                cancelButton.className = 'py-2 px-4 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 mr-3';
+                cancelButton.onclick = () => closeModal('message-modal');
+                if (modalFooter) modalFooter.appendChild(cancelButton);
+
+                const confirmButton = document.createElement('button');
+                confirmButton.textContent = isPrompt ? 'Confirmar' : 'OK';
+                confirmButton.className = 'py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700';
+                confirmButton.onclick = () => {
+                    closeModal('message-modal');
+                    if (callback) {
+                        if (isPrompt) {
+                            const inputValue = document.getElementById('modal-prompt-input')?.value || '';
+                            callback(inputValue);
+                        } else {
+                            callback();
+                        }
+                    }
+                };
+                if (modalFooter) modalFooter.appendChild(confirmButton);
+            } else {
+                const okButton = document.createElement('button');
+                okButton.textContent = 'OK';
+                okButton.className = 'py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700';
+                okButton.onclick = () => closeModal('message-modal');
+                if (modalFooter) modalFooter.appendChild(okButton);
+            }
+            showModal(messageModal);
+        }
+
+        // Correção de Data Local
+        function createLocalDate(dateString) {
+            if (!dateString) return new Date();
+            const parts = dateString.split('-');
+            const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
+
+        // CORREÇÃO 1: Parsing de Moeda Robusto
+        function parseCurrency(value) {
+            if (!value) return 0;
+            // Remove tudo que não for número ou sinal de menos, troca vírgula por ponto
+            let cleaned = value.toString().replace(/[^\d,]/g, '').replace(',', '.');
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function formatCurrency(value) {
+            if (value === null || value === undefined || isNaN(value)) return 'R$ 0,00';
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(value));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configuração do Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw",
+                authDomain: "gcc-contratos.firebaseapp.com",
+                projectId: "gcc-contratos",
+                storageBucket: "gcc-contratos.firebasestorage.app",
+                messagingSenderId: "405415511927",
+                appId: "1:405415511927:web:4612190119302726820372",
+                measurementId: "G-T1T4N9WD5T"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            const APP_ID = firebaseConfig.projectId;
+            const PUBLIC_COLLECTION_PATH = `artifacts/${APP_ID}/public/data`;
+            const USERS_COLLECTION_PATH = `artifacts/${APP_ID}/users`;
+
+            // Elementos UI
+            const loginPage = document.getElementById('login-page');
+            const registerPage = document.getElementById('register-page');
+            const mainPage = document.getElementById('main-page');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const logoutButton = document.getElementById('logout-button');
+            const exportExcelButton = document.getElementById('export-excel-button'); // Botão Excel
+            
+            // Formulários
+            const contractFormModal = document.getElementById('contract-form-modal');
+            const contractForm = document.getElementById('contract-form');
+            const contractSelectedUnitsInput = document.getElementById('contract-selected-units');
+            const unitsCheckboxContainer = document.getElementById('units-checkbox-container');
+            const addendumModal = document.getElementById('addendum-modal');
+            const addendumForm = document.getElementById('addendum-form');
+            
+            // Variáveis de Estado
+            let currentUserId = null;
+            let isAdmin = false;
+            let allContractsData = [];
+            let unsubscribeContracts = null;
+            
+            const allUnits = ['CHB', 'CHPB', 'CSPD', 'CSSFA', 'CSSFE', 'CSSI', 'HAC', 'HCM', 'HEM', 'HIJPII', 'HJXXIII', 'HMAL', 'HRAD', 'HRBJA', 'HRJP', 'IRS', 'MOV', 'HJK'].sort();
+            const SEI_COLOR_PALETTE = ['#FFDDC1', '#B0E0E6', '#DDA0DD', '#ADD8E6', '#F0E68C', '#98FB98', '#FFB6C1', '#C0C0C0', '#FFC0CB', '#BDB76B', '#87CEEB', '#E6E6FA', '#F5DEB3', '#A9A9A9', '#FFE4B5', '#D8BFD8'];
+            let seiColorMap = {};
+            let nextColorIndex = 0;
+
+            // Helper de Cor
+            function getSeiColor(seiNumber) {
+                if (!seiColorMap[seiNumber]) {
+                    seiColorMap[seiNumber] = SEI_COLOR_PALETTE[nextColorIndex % SEI_COLOR_PALETTE.length];
+                    nextColorIndex++;
+                }
+                return seiColorMap[seiNumber];
+            }
+
+            // Autenticação
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    document.getElementById('user-id-display').textContent = `UID: ${currentUserId}`;
+                    
+                    try {
+                        const doc = await db.collection(USERS_COLLECTION_PATH).doc(currentUserId).collection('profile').doc('data').get();
+                        isAdmin = (doc.exists && doc.data().isAdmin === true);
+                    } catch (e) { isAdmin = false; }
+
+                    showPage('main-page');
+                    setActiveTab('contracts');
+                    loadContracts(); 
+                    loadReminders();
+                    loadTerminatedContracts();
+                    setAdminPermissions(isAdmin);
                 } else {
-                    ativos.push(c);
+                    showPage('login-page');
+                    currentUserId = null;
+                    isAdmin = false;
                 }
             });
 
-            renderList(document.getElementById('list-ativos'), ativos);
-            renderList(document.getElementById('list-vencendo'), vencendo);
-            renderList(document.getElementById('list-encerrados'), encerrados, true);
-        }
-
-        function renderList(container, list, isHistory = false) {
-            container.innerHTML = '';
-            if (list.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400">Nenhum contrato nesta categoria.</div>`;
-                return;
-            }
-
-            list.forEach(c => {
-                const card = document.createElement('div');
-                card.className = `bg-white p-5 rounded-xl shadow border-l-4 ${isHistory ? 'border-gray-400 opacity-75' : 'border-indigo-500'} relative`;
-                
-                // Regra 3: Badge de renovação iniciada
-                const renewalBadge = c.renovacaoIniciada 
-                    ? `<span class="status-badge status-renewal absolute top-4 right-4"><i class="fas fa-sync fa-spin mr-1"></i> RENOVAÇÃO INICIADA</span>`
-                    : '';
-
-                card.innerHTML = `
-                    ${renewalBadge}
-                    <div class="mb-3">
-                        <h4 class="font-bold text-lg text-gray-800">${c.empresa}</h4>
-                        <p class="text-xs text-gray-500">Contrato: ${c.numero} | SEI: ${c.sei}</p>
-                    </div>
-                    <div class="text-sm text-gray-600 mb-4 line-clamp-2">
-                        <strong>Objeto:</strong> ${c.objeto}
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs mb-4">
-                        <div class="bg-gray-50 p-2 rounded">
-                            <p class="text-gray-400 uppercase font-bold">Vencimento</p>
-                            <p class="text-gray-800 font-bold">${formatDate(c.dataFim)}</p>
-                        </div>
-                        <div class="bg-gray-50 p-2 rounded">
-                            <p class="text-gray-400 uppercase font-bold">Valor Atual</p>
-                            <p class="text-indigo-600 font-bold">R$ ${c.valor || '0,00'}</p>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-[10px] text-gray-400 uppercase font-bold">Unidades</p>
-                        <div class="flex flex-wrap gap-1 mt-1">
-                            ${(c.unidades || '').split(',').map(u => u.trim()).filter(u => u).map(u => `<span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px]">${u}</span>`).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="border-t pt-3 flex justify-between">
-                         <div class="flex gap-2">
-                            <button onclick="editContract('${c.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold uppercase">Editar</button>
-                            <button onclick="openEventModal('${c.id}')" class="text-purple-600 hover:text-purple-800 text-xs font-bold uppercase">Eventos</button>
-                         </div>
-                         <button onclick="viewHistory('${c.id}')" class="text-gray-500 hover:text-gray-700 text-xs"><i class="fas fa-history"></i></button>
-                    </div>
-                `;
-                container.appendChild(card);
+            // Login / Registro / Logout
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } catch (error) { showMessageModal('Erro', error.message); }
             });
-        }
 
-        // --- FORM HANDLERS ---
-        document.getElementById('btn-new-contract').onclick = () => {
-            document.getElementById('form-contract').reset();
-            document.getElementById('field-id').value = '';
-            document.getElementById('modal-title').innerText = 'Novo Contrato';
-            openModal('modal-contract');
-        };
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('reg-email').value;
+                const password = document.getElementById('reg-password').value;
+                try {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    showMessageModal('Sucesso', 'Conta criada!');
+                } catch (error) { showMessageModal('Erro', error.message); }
+            });
 
-        document.getElementById('form-contract').onsubmit = async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
+            logoutButton.addEventListener('click', () => auth.signOut());
+            document.getElementById('show-register-link').onclick = () => showPage('register-page');
+            document.getElementById('show-login-link').onclick = () => showPage('login-page');
 
-            const id = document.getElementById('field-id').value || crypto.randomUUID();
-            
-            // Regra 1 e 2: Garantindo captura correta de valor e unidades
-            const contractData = {
-                sei: document.getElementById('field-sei').value,
-                numero: document.getElementById('field-numero').value,
-                valor: document.getElementById('field-valor').value,
-                empresa: document.getElementById('field-empresa').value,
-                objeto: document.getElementById('field-objeto').value,
-                dataInicio: document.getElementById('field-data-inicio').value,
-                dataFim: document.getElementById('field-data-fim').value,
-                lei: document.getElementById('field-lei').value,
-                unidades: document.getElementById('field-unidades').value,
-                renovacaoIniciada: document.getElementById('field-renovacao-iniciada').checked,
-                updatedAt: new Date().toISOString()
-            };
+            function showPage(pageId) {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('register-page').classList.add('hidden');
+                document.getElementById('main-page').classList.add('hidden');
+                document.getElementById('app').classList.remove('login-background', 'flex-col', 'items-center', 'justify-center');
 
-            // Se for novo, inicializa histórico
-            if (!document.getElementById('field-id').value) {
-                contractData.historico = [{
-                    tipo: 'Criação',
-                    desc: 'Contrato cadastrado no sistema',
-                    data: new Date().toISOString().split('T')[0]
-                }];
+                if (pageId === 'login-page' || pageId === 'register-page') {
+                    document.getElementById('app').classList.add('login-background', 'flex-col', 'items-center', 'justify-center');
+                }
+                document.getElementById(pageId).classList.remove('hidden');
             }
 
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'contracts', id);
-                await setDoc(docRef, contractData, { merge: true });
-                closeModal('modal-contract');
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao salvar dados.");
+            // Tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+            });
+
+            function setActiveTab(tabName) {
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active-tab', 'border-blue-500', 'text-blue-600');
+                    if(btn.dataset.tab === tabName) btn.classList.add('active-tab', 'border-blue-500', 'text-blue-600');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+                setAdminPermissions(isAdmin);
             }
-        };
 
-        // Regra 4: Inclusão de aditivos reflete no histórico
-        document.getElementById('form-event').onsubmit = async (e) => {
-            e.preventDefault();
-            const cid = document.getElementById('event-contract-id').value;
-            const contract = allContracts.find(c => c.id === cid);
-            if (!contract) return;
-
-            const newEvent = {
-                tipo: document.getElementById('event-type').value,
-                desc: document.getElementById('event-desc').value,
-                data: document.getElementById('event-date').value
-            };
-
-            const updatedHistory = [...(contract.historico || []), newEvent];
-
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'contracts', cid);
-                await updateDoc(docRef, { historico: updatedHistory });
-                closeModal('modal-event');
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        // --- EXCEL EXPORT (Regra 6) ---
-        document.getElementById('btn-export-excel').onclick = () => {
-            if (allContracts.length === 0) return alert("Não há dados para exportar.");
-
-            const dataToExport = allContracts.map(c => ({
-                'Processo SEI': c.sei,
-                'Nº Contrato': c.numero,
-                'Empresa': c.empresa,
-                'Valor Atual': c.valor,
-                'Vigência Inicial': c.dataInicio,
-                'Vigência Final': c.dataFim,
-                'Objeto': c.objeto,
-                'Unidades': c.unidades,
-                'Renovação Iniciada': c.renovacaoIniciada ? 'Sim' : 'Não',
-                'Lei': c.lei
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Contratos");
-            XLSX.writeFile(workbook, `Relatorio_Contratos_${new Date().toISOString().split('T')[0]}.xlsx`);
-        };
-
-        // --- HELPERS ---
-        window.editContract = (id) => {
-            const c = allContracts.find(item => item.id === id);
-            if (!c) return;
-            document.getElementById('field-id').value = c.id;
-            document.getElementById('field-sei').value = c.sei;
-            document.getElementById('field-numero').value = c.numero;
-            document.getElementById('field-valor').value = c.valor || '';
-            document.getElementById('field-empresa').value = c.empresa;
-            document.getElementById('field-objeto').value = c.objeto;
-            document.getElementById('field-data-inicio').value = c.dataInicio;
-            document.getElementById('field-data-fim').value = c.dataFim;
-            document.getElementById('field-lei').value = c.lei;
-            document.getElementById('field-unidades').value = c.unidades || '';
-            document.getElementById('field-renovacao-iniciada').checked = !!c.renovacaoIniciada;
-            
-            document.getElementById('modal-title').innerText = 'Editar Contrato';
-            openModal('modal-contract');
-        };
-
-        window.openEventModal = (id) => {
-            document.getElementById('event-contract-id').value = id;
-            document.getElementById('form-event').reset();
-            openModal('modal-event');
-        };
-
-        window.viewHistory = (id) => {
-            const c = allContracts.find(item => item.id === id);
-            if (!c || !c.historico) return;
-            const historyText = c.historico.map(h => `[${formatDate(h.data)}] ${h.tipo}: ${h.desc}`).join('\n');
-            alert(`Histórico do Contrato ${c.numero}:\n\n${historyText}`);
-        };
-
-        window.openModal = (id) => document.getElementById(id).classList.add('active');
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
-
-        function formatDate(d) {
-            if (!d) return '-';
-            const parts = d.split('-');
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        // Tab system
-        document.querySelectorAll('.tab-trigger').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.tab-trigger').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            function setAdminPermissions(userIsAdmin) {
+                isAdmin = userIsAdmin;
+                const display = isAdmin ? 'block' : 'none';
+                ['add-contract-button', 'add-reminder-button'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.style.display = display;
+                });
                 
-                btn.classList.add('border-indigo-600', 'text-indigo-600');
-                document.getElementById(btn.dataset.target).classList.add('active');
-            };
-        });
+                document.querySelectorAll('.edit-contract-button, .delete-contract-button, .addendum-button, .terminate-button, .delete-reminder-button').forEach(btn => {
+                    if(isAdmin) btn.classList.remove('hidden');
+                    else btn.classList.add('hidden');
+                });
+            }
 
+            // --- Lógica Principal de Contratos ---
+
+            async function loadContracts(filterExpiring = false, filterActive = false) {
+                if (!currentUserId) return;
+                if (unsubscribeContracts) unsubscribeContracts();
+
+                unsubscribeContracts = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`)
+                    .onSnapshot(async snapshot => {
+                        allContractsData = [];
+                        snapshot.forEach(doc => {
+                            allContractsData.push({ id: doc.id, ...doc.data() });
+                        });
+
+                        // 5. Verificação Automática de Vencidos
+                        await checkAndArchiveExpiredContracts(allContractsData);
+
+                        let displayData = allContractsData;
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+
+                        if (filterExpiring) {
+                            displayData = allContractsData.filter(c => {
+                                const vDate = createLocalDate(c.currentValidityDate);
+                                const diffDays = Math.ceil((vDate - today) / (1000 * 60 * 60 * 24));
+                                return diffDays <= 180 && diffDays >= 0;
+                            });
+                        } else if (filterActive) {
+                            displayData = allContractsData.filter(c => {
+                                const vDate = createLocalDate(c.currentValidityDate);
+                                return vDate >= today;
+                            });
+                        }
+
+                        // Order by SEI (logic simplified here, assuming existing sort function logic or simple sort)
+                        displayContracts(displayData);
+                    });
+            }
+
+            // CORREÇÃO 5: Função de Arquivamento Automático
+            async function checkAndArchiveExpiredContracts(contracts) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const expired = contracts.filter(c => {
+                    const vDate = createLocalDate(c.currentValidityDate);
+                    // Tolerância de 1 dia para evitar problemas de fuso
+                    const diffDays = Math.ceil((vDate - today) / (1000 * 60 * 60 * 24));
+                    return diffDays < -1; 
+                });
+
+                if (expired.length > 0) {
+                    const batch = db.batch();
+                    const terminatedRef = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`);
+                    const contractsRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`);
+
+                    expired.forEach(contract => {
+                        const newDocRef = terminatedRef.doc(); 
+                        const oldDocRef = contractsRef.doc(contract.id);
+
+                        const terminatedData = {
+                            ...contract,
+                            terminationDate: new Date().toISOString().split('T')[0],
+                            terminationNotes: 'Arquivamento Automático por Vencimento.',
+                            terminatedBy: 'Sistema',
+                            archivedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        delete terminatedData.id;
+
+                        batch.set(newDocRef, terminatedData);
+                        batch.delete(oldDocRef);
+                    });
+
+                    try {
+                        await batch.commit();
+                        console.log(`${expired.length} contratos arquivados automaticamente.`);
+                    } catch (error) {
+                        console.error("Erro no arquivamento automático:", error);
+                    }
+                }
+            }
+
+            function displayContracts(contracts) {
+                const list = document.getElementById('contracts-list');
+                list.innerHTML = '';
+                
+                let active = 0, expiring = 0, overdue = 0;
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                allContractsData.forEach(c => {
+                    const d = createLocalDate(c.currentValidityDate);
+                    const diff = Math.ceil((d - today) / (1000*60*60*24));
+                    if (diff >= 0) {
+                        active++;
+                        if (diff <= 180) expiring++;
+                    } else {
+                        overdue++;
+                    }
+                });
+
+                document.getElementById('active-contracts-count-value').textContent = active;
+                document.getElementById('expiring-contracts-count-value').textContent = expiring;
+                document.getElementById('overdue-contracts-count').textContent = overdue;
+
+                if(contracts.length === 0) {
+                    document.getElementById('no-contracts-message').classList.remove('hidden');
+                    return;
+                }
+                document.getElementById('no-contracts-message').classList.add('hidden');
+
+                // Agrupamento por SEI
+                const grouped = contracts.reduce((acc, c) => {
+                    const root = c.seiNumber ? c.seiNumber.split('-')[0] : 'Sem SEI';
+                    if(!acc[root]) acc[root] = [];
+                    acc[root].push(c);
+                    return acc;
+                }, {});
+
+                Object.keys(grouped).forEach(root => {
+                    const groupContainer = document.createElement('div');
+                    groupContainer.className = `border-l-8 rounded-lg shadow-md p-4 bg-white mb-6`;
+                    groupContainer.style.borderColor = getSeiColor(root);
+                    
+                    groupContainer.innerHTML = `<h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Processo SEI: ${root}</h3>`;
+
+                    grouped[root].forEach(c => {
+                        const vDate = createLocalDate(c.currentValidityDate);
+                        const diff = Math.ceil((vDate - today) / (1000*60*60*24));
+                        
+                        let statusClass = diff < 0 ? 'bg-gray-400' : (diff <= 180 ? 'bg-red-500 flashing' : 'bg-green-500');
+                        let statusText = diff < 0 ? 'Vencido' : (diff <= 180 ? `Vence em ${diff} dias` : 'Ativo');
+
+                        // CORREÇÃO 3: Indicador de Renovação
+                        let renewalBadge = '';
+                        if (c.renewalChecklist && Object.keys(c.renewalChecklist).length > 0) {
+                            renewalBadge = `<div class="mt-2 inline-block px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold border border-orange-300"><i class="fas fa-sync-alt mr-1"></i> Renovação Iniciada</div>`;
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = "bg-white rounded-lg shadow-sm p-6 mb-4 relative border border-gray-200";
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800 truncate pr-8">${c.companyName}</h3>
+                                <span class="text-xs font-bold px-2 py-1 rounded text-white ${statusClass}">${statusText}</span>
+                            </div>
+                            ${renewalBadge}
+                            <div class="mt-3 text-sm text-gray-600 space-y-1">
+                                <p><strong>Contrato:</strong> ${c.contractNumber}</p>
+                                <p><strong>Objeto:</strong> ${c.contractObject}</p>
+                                <p><strong>Vigência:</strong> ${vDate.toLocaleDateString('pt-BR')}</p>
+                                <p><strong>Valor:</strong> ${formatCurrency(c.contractValue)}</p>
+                                <p><strong>Unidades:</strong> ${(c.participatingUnits || []).join(', ')}</p>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-2 justify-end">
+                                <button class="py-1 px-3 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-sm" onclick="viewContractHistory('${c.id}')"><i class="fas fa-history"></i></button>
+                                <button class="py-1 px-3 bg-green-600 text-white rounded hover:bg-green-700 text-sm addendum-button ${isAdmin?'':'hidden'}" data-id="${c.id}"><i class="fas fa-file-invoice"></i></button>
+                                <button class="py-1 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm edit-contract-button ${isAdmin?'':'hidden'}" data-id="${c.id}"><i class="fas fa-edit"></i></button>
+                                <button class="py-1 px-3 bg-red-700 text-white rounded hover:bg-red-800 text-sm delete-contract-button ${isAdmin?'':'hidden'}" data-id="${c.id}"><i class="fas fa-trash"></i></button>
+                            </div>
+                        `;
+                        groupContainer.appendChild(card);
+                    });
+                    list.appendChild(groupContainer);
+                });
+                
+                // Re-bind buttons
+                document.querySelectorAll('.edit-contract-button').forEach(b => b.onclick = (e) => editContract(e.currentTarget.dataset.id));
+                document.querySelectorAll('.addendum-button').forEach(b => b.onclick = (e) => openAddendumModal(e.currentTarget.dataset.id));
+                document.querySelectorAll('.delete-contract-button').forEach(b => b.onclick = (e) => deleteContract(e.currentTarget.dataset.id, 'contracts'));
+            }
+
+            // --- Formulário de Contrato ---
+
+            if(document.getElementById('add-contract-button')) {
+                document.getElementById('add-contract-button').addEventListener('click', () => {
+                    contractForm.reset();
+                    contractForm.dataset.id = '';
+                    document.getElementById('contract-form-title').textContent = 'Adicionar Novo Contrato';
+                    document.getElementById('contract-selected-units').value = '[]';
+                    populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, []);
+                    showModal(contractFormModal);
+                });
+            }
+
+            contractForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = contractForm.dataset.id;
+                
+                // CORREÇÃO 1: Parsing do valor
+                const valRaw = document.getElementById('contract-value').value;
+                const valParsed = parseCurrency(valRaw);
+
+                // CORREÇÃO 2: Parsing das unidades
+                const unitsRaw = document.getElementById('contract-selected-units').value;
+                let unitsParsed = [];
+                try { unitsParsed = JSON.parse(unitsRaw); } catch(err) { unitsParsed = []; }
+
+                const data = {
+                    seiNumber: document.getElementById('sei-number').value,
+                    contractNumber: document.getElementById('contract-number').value,
+                    companyName: document.getElementById('company-name').value,
+                    contractObject: document.getElementById('contract-object').value,
+                    initialProcessDate: document.getElementById('initial-process-date').value,
+                    lawType: document.getElementById('law-type').value,
+                    currentValidityDate: document.getElementById('current-validity-date').value,
+                    renewalNumber: parseInt(document.getElementById('renewal-number').value) || 0,
+                    contractValue: valParsed,
+                    participatingUnits: unitsParsed, 
+                    observations: document.getElementById('contract-observations').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    if (id) {
+                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).update(data);
+                        showMessageModal('Sucesso', 'Contrato atualizado.');
+                    } else {
+                        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                        data.contractHistory = [{
+                            type: 'Criação',
+                            date: new Date().toISOString().split('T')[0],
+                            notes: 'Contrato criado.',
+                            changedBy: currentUserId
+                        }];
+                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).add(data);
+                        showMessageModal('Sucesso', 'Contrato criado.');
+                    }
+                    closeModal('contract-form-modal');
+                } catch (error) {
+                    console.error(error);
+                    showMessageModal('Erro', 'Falha ao salvar contrato.');
+                }
+            });
+
+            // CORREÇÃO 2: Unidades UI Lógica
+            function populateUnitButtons(container, inputHidden, selected = []) {
+                container.innerHTML = '';
+                inputHidden.value = JSON.stringify(selected);
+
+                allUnits.forEach(unit => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = unit;
+                    btn.className = `unit-button ${selected.includes(unit) ? 'selected' : ''}`;
+                    
+                    btn.addEventListener('click', () => {
+                        btn.classList.toggle('selected');
+                        const currentSelected = Array.from(container.querySelectorAll('.unit-button.selected')).map(b => b.textContent);
+                        inputHidden.value = JSON.stringify(currentSelected); // Salva imediatamente no hidden
+                    });
+                    container.appendChild(btn);
+                });
+            }
+
+            async function editContract(id) {
+                const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).get();
+                if(!doc.exists) return;
+                const c = doc.data();
+                
+                contractForm.dataset.id = id;
+                document.getElementById('sei-number').value = c.seiNumber;
+                document.getElementById('contract-number').value = c.contractNumber;
+                document.getElementById('company-name').value = c.companyName;
+                document.getElementById('contract-object').value = c.contractObject;
+                document.getElementById('initial-process-date').value = c.initialProcessDate;
+                document.getElementById('law-type').value = c.lawType;
+                document.getElementById('current-validity-date').value = c.currentValidityDate;
+                document.getElementById('renewal-number').value = c.renewalNumber;
+                document.getElementById('contract-value').value = formatCurrency(c.contractValue).replace('R$', '').trim();
+                document.getElementById('contract-observations').value = c.observations || '';
+                
+                populateUnitButtons(unitsCheckboxContainer, contractSelectedUnitsInput, c.participatingUnits || []);
+                showModal(contractFormModal);
+            }
+
+            async function deleteContract(id, col) {
+                showMessageModal('Confirmar', 'Deseja excluir permanentemente?', true, async () => {
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/${col}`).doc(id).delete();
+                });
+            }
+
+            // --- Aditivos e Apostilamentos ---
+
+            window.openAddendumModal = function(contractId) {
+                addendumForm.reset();
+                addendumForm.dataset.contractId = contractId;
+                document.getElementById('addendum-type').dispatchEvent(new Event('change'));
+                showModal(addendumModal);
+            };
+
+            window.toggleAddendumFields = function() {
+                const type = document.getElementById('addendum-type').value;
+                const dateGroup = document.getElementById('new-validity-group');
+                const valueGroup = document.getElementById('new-value-group');
+                
+                if (type === 'Renovação de Prazo') {
+                    dateGroup.classList.remove('hidden');
+                    valueGroup.classList.add('hidden');
+                } else if (type === 'Aditivo de Valor' || type === 'Apostilamento') {
+                    dateGroup.classList.add('hidden');
+                    valueGroup.classList.remove('hidden');
+                } else {
+                    dateGroup.classList.remove('hidden');
+                    valueGroup.classList.remove('hidden');
+                }
+            };
+
+            addendumForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const contractId = addendumForm.dataset.contractId;
+                const type = document.getElementById('addendum-type').value;
+                const newDate = document.getElementById('addendum-new-date').value;
+                const valRaw = document.getElementById('addendum-value').value;
+                const notes = document.getElementById('addendum-notes').value;
+
+                const historyEntry = {
+                    type: type,
+                    date: new Date().toISOString().split('T')[0],
+                    notes: notes,
+                    changedBy: currentUserId,
+                    timestamp: Date.now() // Força ordenação
+                };
+
+                const updateData = {
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    contractHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry)
+                };
+
+                // CORREÇÃO 4: Histórico Imediato e Atualização de Dados
+                if (type === 'Renovação de Prazo' && newDate) {
+                    updateData.currentValidityDate = newDate;
+                    updateData.renewalNumber = firebase.firestore.FieldValue.increment(1);
+                    // Remove checklist se existir
+                    updateData.renewalChecklist = firebase.firestore.FieldValue.delete();
+                }
+
+                if ((type === 'Aditivo de Valor' || type === 'Apostilamento') && valRaw) {
+                    const parsedVal = parseCurrency(valRaw);
+                    // Aqui a lógica depende se você quer SOMAR ou SUBSTITUIR. 
+                    // Assumindo SUBSTITUIR o valor total atualizado:
+                    updateData.contractValue = parsedVal; 
+                }
+
+                try {
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update(updateData);
+                    showMessageModal('Sucesso', 'Alteração salva!');
+                    closeModal('addendum-modal');
+                } catch (error) {
+                    console.error(error);
+                    showMessageModal('Erro', 'Erro ao salvar alteração.');
+                }
+            });
+
+            // --- Histórico ---
+            window.viewContractHistory = async function(id) {
+                const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).get();
+                if (!doc.exists) return;
+                
+                const history = doc.data().contractHistory || [];
+                // Sort by date/timestamp desc
+                history.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0) || new Date(b.date) - new Date(a.date));
+
+                const content = document.getElementById('history-content');
+                content.innerHTML = '';
+
+                if (history.length === 0) content.innerHTML = '<p class="text-gray-500">Sem histórico.</p>';
+
+                history.forEach(h => {
+                    const item = document.createElement('div');
+                    item.className = 'border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded';
+                    item.innerHTML = `
+                        <p class="font-bold text-gray-800">${h.type} <span class="text-xs font-normal text-gray-500 float-right">${h.date.split('-').reverse().join('/')}</span></p>
+                        <p class="text-sm text-gray-600 mt-1">${h.notes}</p>
+                    `;
+                    content.appendChild(item);
+                });
+                showModal(document.getElementById('history-modal'));
+            };
+
+            // --- Contratos Encerrados ---
+            function loadTerminatedContracts() {
+                db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`)
+                    .onSnapshot(snapshot => {
+                        const list = document.getElementById('terminated-list');
+                        list.innerHTML = '';
+                        if (snapshot.empty) {
+                            list.innerHTML = '<p class="text-gray-500">Nenhum contrato encerrado.</p>';
+                            return;
+                        }
+                        snapshot.forEach(doc => {
+                            const c = doc.data();
+                            const item = document.createElement('div');
+                            item.className = 'bg-gray-100 p-4 rounded-lg shadow-sm border border-gray-300 opacity-75';
+                            item.innerHTML = `
+                                <div class="flex justify-between">
+                                    <h3 class="font-bold text-gray-700">${c.companyName} (Encerrado)</h3>
+                                    <span class="text-xs bg-gray-500 text-white px-2 py-1 rounded">Vigência Final: ${c.currentValidityDate.split('-').reverse().join('/')}</span>
+                                </div>
+                                <p class="text-sm mt-2">Motivo: ${c.terminationNotes || 'Não informado'}</p>
+                            `;
+                            list.appendChild(item);
+                        });
+                    });
+            }
+
+            // --- Lembretes ---
+            function loadReminders() {
+                // Implementação básica de lembretes (mantida simples)
+                const list = document.getElementById('reminders-list');
+                // Se precisar de lógica real de lembretes, adicionar collection no Firestore.
+                // Por hora, apenas placeholder UI.
+            }
+
+            // --- CORREÇÃO 6: Exportação Excel ---
+            if (exportExcelButton) {
+                exportExcelButton.addEventListener('click', exportToExcel);
+            }
+
+            function exportToExcel() {
+                if (!allContractsData || allContractsData.length === 0) {
+                    showMessageModal('Aviso', 'Não há dados para exportar.');
+                    return;
+                }
+
+                const dataToExport = allContractsData.map(c => ({
+                    'Processo SEI': c.seiNumber,
+                    'Nº Contrato': c.contractNumber,
+                    'Empresa': c.companyName,
+                    'Objeto': c.contractObject,
+                    'Valor (R$)': parseFloat(c.contractValue || 0), // Garante número para o Excel somar
+                    'Vigência': c.currentValidityDate ? c.currentValidityDate.split('-').reverse().join('/') : '',
+                    'Renovação Nº': c.renewalNumber,
+                    'Unidades': (c.participatingUnits || []).join(', '),
+                    'Observações': c.observations || '',
+                    'Lei': c.lawType === '8666' ? 'Lei 8.666/93' : 'Lei 14.133/21',
+                    'Status Renovação': (c.renewalChecklist && Object.keys(c.renewalChecklist).length > 0) ? 'Iniciada' : 'Não Iniciada'
+                }));
+
+                // SheetJS
+                const ws = XLSX.utils.json_to_sheet(dataToExport);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Contratos Ativos");
+
+                XLSX.writeFile(wb, `Relatorio_Contratos_${new Date().toISOString().slice(0,10)}.xlsx`);
+            }
+
+            // Filtros Dashboard
+            document.getElementById('filter-active-contracts').onclick = () => loadContracts(false, true);
+            document.getElementById('filter-expiring-contracts').onclick = () => loadContracts(true, false);
+            
+            // Busca
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                if(!term) {
+                    loadContracts(); // Reload all
+                    return;
+                }
+                const filtered = allContractsData.filter(c => 
+                    (c.companyName && c.companyName.toLowerCase().includes(term)) ||
+                    (c.contractNumber && c.contractNumber.includes(term)) ||
+                    (c.seiNumber && c.seiNumber.toLowerCase().includes(term))
+                );
+                displayContracts(filtered);
+            });
+
+        });
     </script>
 </body>
 </html>
