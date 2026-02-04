@@ -1,309 +1,378 @@
-// main.js
+// main.js - Código Completo e Otimizado
 
-// Certifique-se de que 'auth' e 'db' foram inicializados em firebase-config.js
-// e que ADMIN_UIDS também está definido lá.
+// Configuração de campos (Altere aqui se os nomes no seu Firestore forem diferentes)
+const FIELDS = {
+    processo: 'processoSei',     // Campo do número SEI
+    objeto: 'objeto',            // Campo do objeto do contrato
+    empresa: 'nomeEmpresa',      // Campo do nome da empresa
+    vigencia: 'vigenciaAtual',   // Campo da data de vencimento (Formato YYYY-MM-DD)
+    renovacaoCount: 'numeroRenovacao'
+};
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // --- Referências DOM Comuns ---
-    const btnLogout = document.getElementById('btnLogout');
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-    const adminOnlyElements = document.querySelectorAll('.admin-only'); // Elementos visíveis apenas para admin
+const renovacaoItems = [
+    "Ofício", 
+    "Memorando-circular", 
+    "Resposta da Empresa", 
+    "Resposta das Unidades", 
+    "Memória de Cálculo", 
+    "Pesquisa de Preço", 
+    "Ausência de ETP", 
+    "Check List", 
+    "Justificativa"
+];
 
-    // --- Elementos do Modal de Contrato ---
-    const contractModal = document.getElementById('contractModal');
-    const contractForm = document.getElementById('contractForm');
-    const closeButtons = document.querySelectorAll('.close-button'); // Botões de fechar de todos os modais
-    const btnAddContract = document.getElementById('btnAddContract');
-    const contractsList = document.getElementById('contractsList');
+// --- Inicialização ---
+function initApp() {
+    loadContracts();
+    setupEventListeners();
+}
 
-    const processoSeiInput = document.getElementById('processoSei');
-    const numeroContratoInput = document.getElementById('numeroContrato');
-    const nomeEmpresaInput = document.getElementById('nomeEmpresa');
-    const objetoInput = document.getElementById('objeto');
-    const dataInicialProcessoInput = document.getElementById('dataInicialProcesso');
-    const tipoLeiSelect = document.getElementById('tipoLei');
-    const prazoMaximoDisplay = document.getElementById('prazoMaximoDisplay');
-    const vigenciaAtualInput = document.getElementById('vigenciaAtual');
-    const numeroRenovacaoInput = document.getElementById('numeroRenovacao');
-    const valorAtualizadoInput = document.getElementById('valorAtualizado');
-    const unidadesParticipantesDiv = document.getElementById('unidadesParticipantes');
-    let editingContractId = null; // Para saber se estamos adicionando ou editando
+function setupEventListeners() {
+    // Busca em tempo real (Debounce para performance)
+    const searchInput = document.getElementById('contractSearchInput');
+    let timeout = null;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => loadContracts(e.target.value), 300);
+    });
 
-    // --- Elementos do Modal de Seleção de Movimentação ---
-    const movimentacaoSelectionModal = document.getElementById('movimentacaoSelectionModal');
-    const btnSelectAditivo = document.getElementById('btnSelectAditivo');
-    const btnSelectApostilamento = document.getElementById('btnSelectApostilamento');
-    let currentContractForMovimentacao = null; // O contrato que está sendo movimentado
+    document.getElementById('btnLogout').addEventListener('click', () => auth.signOut());
+}
 
-    // --- Elementos do Modal de Aditivo ---
-    const aditivoModal = document.getElementById('aditivoModal');
-    const aditivoForm = document.getElementById('aditivoForm');
-    const aditivoTipoSelect = document.getElementById('aditivoTipo');
-    const aditivoNumeroInput = document.getElementById('aditivoNumero');
-    const aditivoObjetoInput = document.getElementById('aditivoObjeto');
-    const renovacaoFields = document.getElementById('renovacaoFields');
-    const renovacaoVigenciaMesesInput = document.getElementById('renovacaoVigenciaMeses');
-    const proximoVencimentoDisplay = document.getElementById('proximoVencimentoDisplay');
-    const renovacaoValorInput = document.getElementById('renovacaoValor');
-    const unidadesRenovacaoDiv = document.getElementById('unidadesRenovacao');
-    const supressaoFields = document.getElementById('supressaoFields');
-    const supressaoValorInput = document.getElementById('supressaoValor');
-    const unidadesSupressaoDiv = document.getElementById('unidadesSupressao');
-    const acrescimoFields = document.getElementById('acrescimoFields');
-    const acrescimoValorInput = document.getElementById('acrescimoValor');
-    const outrosAditivoFields = document.getElementById('outrosAditivoFields');
-    const aditivoOutrosDescTextarea = document.getElementById('aditivoOutrosDesc');
-
-    // --- Elementos do Modal de Apostilamento ---
-    const apostilamentoModal = document.getElementById('apostilamentoModal');
-    const apostilamentoForm = document.getElementById('apostilamentoForm');
-    const apostilamentoTipoSelect = document.getElementById('apostilamentoTipo');
-    const apostilamentoNumeroInput = document.getElementById('apostilamentoNumero');
-    const apostilamentoObjetoInput = document.getElementById('apostilamentoObjeto');
-    const outrosApostilamentoFields = document.getElementById('outrosApostilamentoFields');
-    const apostilamentoOutrosDescTextarea = document.getElementById('apostilamentoOutrosDesc');
-
-    // --- Elementos do Modal de Encerramento ---
-    const deleteReasonModal = document.getElementById('deleteReasonModal');
-    const deleteReasonForm = document.getElementById('deleteReasonForm');
-    const deleteReasonTextarea = document.getElementById('deleteReasonText');
-    let contractToDeleteId = null;
-
-    // --- Elementos do Lembrete ---
-    const remindersList = document.getElementById('remindersList');
-    const btnAddReminder = document.getElementById('btnAddReminder');
-    const reminderModal = document.getElementById('reminderModal');
-    const reminderForm = document.getElementById('reminderForm');
-    const reminderTitleInput = document.getElementById('reminderTitle');
-    const reminderDescriptionTextarea = document.getElementById('reminderDescription');
-    const reminderDateInput = document.getElementById('reminderDate');
-    const reminderUrgencySelect = document.getElementById('reminderUrgency');
-    let editingReminderId = null;
-
-    // --- Elementos da Busca ---
-    const contractSearchInput = document.getElementById('contractSearchInput');
-
-    // --- Variáveis Globais de Estado ---
-    let currentUserIsAdmin = false;
-    const UNIDADES = [
-        'Unidade A', 'Unidade B', 'Unidade C', 'Unidade D',
-        'Unidade E', 'Unidade F', 'Unidade G', 'Unidade H',
-        'Unidade I', 'Unidade J'
-    ]; // Exemplo de unidades
-
-
-    // --- Funções Auxiliares ---
-
-    // Formata data para dd/mm/aaaa
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
-        if (isNaN(date.getTime())) return dateString; // Retorna original se inválido
-
-        return date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
+// --- Renderização dos Contratos ---
+async function loadContracts(searchTerm = '') {
+    const listContainer = document.getElementById('contractsList');
+    
+    try {
+        let query = db.collection('contracts');
+        // Nota: Filtros complexos no client-side para simplicidade sem índices compostos
+        const snapshot = await query.get();
+        
+        const contracts = [];
+        snapshot.forEach(doc => {
+            contracts.push({ id: doc.id, ...doc.data() });
         });
-    };
 
-    // Calcula prazo máximo baseado na lei
-    const calcularPrazoMaximo = (dataInicial, tipoLei) => {
-        if (!dataInicial) return '';
-        const data = new Date(dataInicial + 'T00:00:00');
-        if (isNaN(data.getTime())) return '';
-
-        let mesesMaximo = 0;
-        if (tipoLei === '8666') {
-            mesesMaximo = 60; // 5 anos
-        } else if (tipoLei === 'nova') {
-            mesesMaximo = 120; // 10 anos
-        }
-
-        if (mesesMaximo > 0) {
-            data.setMonth(data.getMonth() + mesesMaximo);
-            return formatDate(data.toISOString().split('T')[0]);
-        }
-        return '';
-    };
-
-    // Calcula o próximo vencimento para renovação
-    const calcularProximoVencimento = (vigenciaAtual, mesesRenovacao) => {
-        if (!vigenciaAtual || !mesesRenovacao) return '';
-        const data = new Date(vigenciaAtual + 'T00:00:00');
-        if (isNaN(data.getTime())) return '';
-
-        data.setMonth(data.getMonth() + parseInt(mesesRenovacao, 10));
-        return formatDate(data.toISOString().split('T')[0]);
-    };
-
-    // Preenche checkboxes de unidades
-    const populateUnidadesCheckboxes = (containerDiv, selectedUnidades = []) => {
-        containerDiv.innerHTML = '';
-        UNIDADES.forEach(unidade => {
-            const checkboxId = `${containerDiv.id}-${unidade.replace(/\s/g, '-')}`;
-            const isChecked = selectedUnidades.includes(unidade);
-            containerDiv.innerHTML += `
-                <label for="${checkboxId}">
-                    <input type="checkbox" id="${checkboxId}" value="${unidade}" ${isChecked ? 'checked' : ''}>
-                    ${unidade}
-                </label>
-            `;
+        // Filtragem Client-Side (Case insensitive)
+        const filtered = contracts.filter(c => {
+            if (!searchTerm) return true;
+            const term = searchTerm.toLowerCase();
+            return (c[FIELDS.processo] || '').toLowerCase().includes(term) ||
+                   (c[FIELDS.objeto] || '').toLowerCase().includes(term) ||
+                   (c[FIELDS.empresa] || '').toLowerCase().includes(term);
         });
-    };
 
-    // Fecha todos os modais
-    const closeAllModals = () => {
-        contractModal.style.display = 'none';
-        movimentacaoSelectionModal.style.display = 'none';
-        aditivoModal.style.display = 'none';
-        apostilamentoModal.style.display = 'none';
-        deleteReasonModal.style.display = 'none';
-        reminderModal.style.display = 'none';
-    };
-
-    // Abre um modal específico
-    const openModal = (modal) => {
-        modal.style.display = 'flex'; // Usar flex para centralizar
-    };
-
-    // Define visibilidade de elementos para admin
-    const setAdminVisibility = () => {
-        adminOnlyElements.forEach(el => {
-            if (currentUserIsAdmin) {
-                el.style.display = 'block'; // Mostra se admin
-            } else {
-                el.style.display = 'none'; // Esconde se não admin
-            }
-        });
-    };
-
-    // --- Listener de Autenticação (para gerenciar proteção do dashboard) ---
-    auth.onAuthStateChanged(async (user) => {
-        if (!user) {
-            // Se não houver usuário logado, redireciona para a página de login
-            window.location.href = 'index.html';
+        listContainer.innerHTML = '';
+        
+        if (filtered.length === 0) {
+            listContainer.innerHTML = '<div class="text-center text-gray-500 mt-10">Nenhum contrato encontrado.</div>';
             return;
         }
 
-        // Verifica se o usuário é administrador
-        // A coleção 'users' deve ter sido criada ao cadastrar usuários
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-            currentUserIsAdmin = userDoc.data().isAdmin || ADMIN_UIDS.includes(user.uid);
-            // Se for admin, mas o campo isAdmin no Firestore for false,
-            // ou se for um UID admin da lista, mas não tiver o campo isAdmin no Firestore,
-            // pode-se atualizar o campo isAdmin no Firestore para manter consistência.
-            if (ADMIN_UIDS.includes(user.uid) && !userDoc.data().isAdmin) {
-                await db.collection('users').doc(user.uid).update({ isAdmin: true });
-                currentUserIsAdmin = true; // Garante que a flag esteja atualizada
+        filtered.forEach(data => {
+            const card = createContractCard(data);
+            listContainer.innerHTML += card;
+        });
+
+    } catch (error) {
+        console.error("Erro ao carregar:", error);
+        listContainer.innerHTML = '<div class="text-red-500 text-center">Erro ao carregar dados.</div>';
+    }
+}
+
+// Cria o HTML do Card (Sem a palavra SEI, layout ajustado)
+function createContractCard(data) {
+    const statusBadges = getStatusBadges(data[FIELDS.vigencia]);
+    const objetoTexto = data[FIELDS.objeto] ? `- ${data[FIELDS.objeto]}` : '';
+
+    return `
+    <div class="contract-card">
+        <div class="card-header">
+            <div class="card-title-group">
+                <span class="processo-numero">${data[FIELDS.processo]}</span>
+                <span class="contrato-objeto">${objetoTexto}</span>
+            </div>
+            <div class="status-container">
+                ${statusBadges}
+            </div>
+        </div>
+        
+        <div class="card-footer">
+            <span class="font-medium text-gray-700">
+                <i class="fas fa-building mr-1"></i> ${data[FIELDS.empresa]}
+            </span>
+            <div class="action-buttons">
+                <button onclick="openHistory('${data.id}')" class="btn-history">
+                    <i class="fas fa-history"></i> Histórico
+                </button>
+                <button onclick="startRenovacao('${data.id}', '${data[FIELDS.processo]}')" class="btn-renew">
+                    <i class="fas fa-sync-alt"></i> Renovação
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+// Lógica de Status (Retorna múltiplos badges se necessário)
+function getStatusBadges(dateString) {
+    if (!dateString) return '<span class="badge bg-gray-400">Sem Data</span>';
+
+    const hoje = new Date();
+    // Zerar horas para comparação justa de dias
+    hoje.setHours(0,0,0,0);
+    
+    const vencimento = new Date(dateString + "T00:00:00");
+    const diffTime = vencimento - hoje;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let badgesHtml = '';
+
+    // 1. Status Vencido (Prioridade Máxima)
+    if (diffDays < 0) {
+        return '<span class="badge bg-expired">Vencido</span>';
+    }
+
+    // 2. Status Vigente (Base)
+    // Se não está vencido, está vigente.
+    badgesHtml += '<span class="badge bg-active">Vigente</span>';
+
+    // 3. Status de Alerta (Crítico ou A Vencer) - Adiciona AO LADO do Vigente
+    if (diffDays <= 30) {
+        badgesHtml += '<span class="badge bg-critical">Crítico</span>';
+    } else if (diffDays <= 90) {
+        badgesHtml += '<span class="badge bg-warning">A Vencer</span>';
+    }
+
+    return badgesHtml;
+}
+
+// --- Lógica de Renovação ---
+
+async function startRenovacao(contractId, processoNumero) {
+    const modal = document.getElementById('renovacaoModal');
+    document.getElementById('renovacao-contract-id').value = contractId;
+    document.getElementById('renovacao-subtitle').innerText = `Processo: ${processoNumero}`;
+    document.getElementById('renovacao-numero-aditivo').value = '';
+    document.getElementById('renovacao-meses').value = '';
+    
+    const checklistContainer = document.getElementById('renovacao-checklist-container');
+    checklistContainer.innerHTML = '<div class="col-span-2 text-center text-gray-400">Carregando progresso...</div>';
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex'); // Para centralizar com flexbox
+
+    // Carregar progresso salvo
+    try {
+        const doc = await db.collection('contracts').doc(contractId).collection('renovacao_temp').doc('progresso').get();
+        const savedProgress = doc.exists ? doc.data() : {};
+
+        renderChecklist(contractId, savedProgress);
+        checkRenovacaoStatus(savedProgress);
+    } catch (e) {
+        console.error("Erro ao carregar checklist", e);
+        renderChecklist(contractId, {});
+    }
+}
+
+function renderChecklist(contractId, savedData) {
+    const container = document.getElementById('renovacao-checklist-container');
+    container.innerHTML = '';
+
+    renovacaoItems.forEach(item => {
+        const key = item.toLowerCase().replace(/\s+/g, "_");
+        const isChecked = savedData[key] === true;
+
+        const div = document.createElement('div');
+        div.className = `checklist-item ${isChecked ? 'bg-blue-50 border-blue-200' : ''}`;
+        div.onclick = (e) => {
+            // Previne clique duplo se clicar direto no input
+            if (e.target.type !== 'checkbox') {
+                const checkbox = div.querySelector('input');
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
             }
-        } else {
-            // Se o documento do usuário não existir (usuário logou mas não foi cadastrado no Firestore),
-            // Isso pode acontecer se usuários foram criados diretamente no console ou por outro método.
-            // Para garantir consistência, crie o documento aqui.
-            await db.collection('users').doc(user.uid).set({
-                email: user.email,
-                isAdmin: ADMIN_UIDS.includes(user.uid), // Define admin com base na lista global
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            currentUserIsAdmin = ADMIN_UIDS.includes(user.uid);
+        };
+
+        div.innerHTML = `
+            <input type="checkbox" id="chk_${key}" ${isChecked ? 'checked' : ''}>
+            <label class="checklist-label" for="chk_${key}">${item}</label>
+        `;
+
+        // Evento de Salvar
+        const checkbox = div.querySelector('input');
+        checkbox.addEventListener('change', async (e) => {
+            const checked = e.target.checked;
+            // Efeito visual imediato
+            if(checked) div.classList.add('bg-blue-50', 'border-blue-200');
+            else div.classList.remove('bg-blue-50', 'border-blue-200');
+
+            await saveProgress(contractId, key, checked);
+        });
+
+        container.appendChild(div);
+    });
+}
+
+async function saveProgress(contractId, key, isChecked) {
+    try {
+        await db.collection('contracts').doc(contractId).collection('renovacao_temp').doc('progresso').set({
+            [key]: isChecked
+        }, { merge: true });
+        
+        // Atualiza UI de status "Renovação Iniciada"
+        document.getElementById('renovacao-status-box').classList.remove('hidden');
+        
+    } catch (e) {
+        console.error("Erro ao salvar progresso:", e);
+    }
+}
+
+function checkRenovacaoStatus(data) {
+    const hasAny = Object.values(data).some(v => v === true);
+    if (hasAny) {
+        document.getElementById('renovacao-status-box').classList.remove('hidden');
+    } else {
+        document.getElementById('renovacao-status-box').classList.add('hidden');
+    }
+}
+
+async function efetivarRenovacao() {
+    const contractId = document.getElementById('renovacao-contract-id').value;
+    const numeroAditivo = document.getElementById('renovacao-numero-aditivo').value;
+    const meses = document.getElementById('renovacao-meses').value;
+
+    if (!numeroAditivo) return alert("Por favor, informe o número do processo/aditivo.");
+    if (!meses || isNaN(meses) || parseInt(meses) <= 0) return alert("Informe uma quantidade de meses válida.");
+
+    // Validação Final do Checklist no Banco (Segurança)
+    const docSnap = await db.collection('contracts').doc(contractId).collection('renovacao_temp').doc('progresso').get();
+    const data = docSnap.exists ? docSnap.data() : {};
+    
+    // Verifica se TODOS os itens da lista oficial estão true no banco
+    const pendentes = renovacaoItems.filter(item => {
+        const key = item.toLowerCase().replace(/\s+/g, "_");
+        return data[key] !== true;
+    });
+
+    if (pendentes.length > 0) {
+        alert(`Não é possível renovar.\n\nItens pendentes:\n- ${pendentes.join('\n- ')}`);
+        return;
+    }
+
+    // Processar Renovação
+    try {
+        const contractRef = db.collection('contracts').doc(contractId);
+        const contractDoc = await contractRef.get();
+        const currentData = contractDoc.data();
+
+        // Calcular nova data
+        const currentVigencia = new Date(currentData[FIELDS.vigencia] + "T00:00:00");
+        currentVigencia.setMonth(currentVigencia.getMonth() + parseInt(meses));
+        const newVigenciaStr = currentVigencia.toISOString().split('T')[0];
+
+        const batch = db.batch();
+
+        // 1. Atualizar contrato
+        batch.update(contractRef, {
+            [FIELDS.vigencia]: newVigenciaStr,
+            [FIELDS.renovacaoCount]: (currentData[FIELDS.renovacaoCount] || 0) + 1,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Adicionar ao Histórico (Caminho corrigido)
+        const historyRef = contractRef.collection('history').doc();
+        batch.set(historyRef, {
+            type: 'Renovação',
+            description: `Renovação de ${meses} meses. Novo vencimento: ${newVigenciaStr}. Processo: ${numeroAditivo}`,
+            date: new Date().toISOString().split('T')[0],
+            user: auth.currentUser.email,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp() // Para ordenação
+        });
+
+        // 3. Limpar progresso temporário
+        const progressoRef = contractRef.collection('renovacao_temp').doc('progresso');
+        batch.delete(progressoRef);
+
+        await batch.commit();
+
+        alert("Renovação realizada com sucesso!");
+        closeModal('renovacaoModal');
+        loadContracts(); // Recarrega lista
+
+    } catch (e) {
+        console.error("Erro fatal na renovação:", e);
+        alert("Erro ao processar renovação. Verifique o console.");
+    }
+}
+
+// --- Histórico ---
+
+async function openHistory(contractId) {
+    const modal = document.getElementById('historyModal');
+    const content = document.getElementById('historyContent');
+    content.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    try {
+        // Ordena por timestamp descrescente (mais recente primeiro)
+        const snapshot = await db.collection('contracts').doc(contractId).collection('history')
+                                 .orderBy('timestamp', 'desc') 
+                                 .get();
+
+        if (snapshot.empty) {
+            content.innerHTML = '<div class="text-gray-500 text-center">Nenhum histórico registrado.</div>';
+            return;
         }
 
-        setAdminVisibility(); // Ajusta a visibilidade dos elementos de admin
-        fetchContracts(); // Carrega os contratos após a autenticação
-        fetchReminders(); // Carrega os lembretes
-    });
-
-    // --- Logout ---
-    if (btnLogout) {
-        btnLogout.addEventListener('click', async () => {
-            try {
-                await auth.signOut();
-                alert('Você foi desconectado.');
-                window.location.href = 'index.html'; // Redireciona para a página de login
-            } catch (error) {
-                console.error("Erro ao fazer logout:", error);
-                alert("Erro ao fazer logout: " + error.message);
+        let html = '<ul class="space-y-4">';
+        snapshot.forEach(doc => {
+            const h = doc.data();
+            // Formatar data se for timestamp ou string
+            let dateDisplay = h.date;
+            if(h.timestamp && h.timestamp.toDate) {
+                dateDisplay = h.timestamp.toDate().toLocaleDateString('pt-BR') + ' ' + h.timestamp.toDate().toLocaleTimeString('pt-BR');
             }
+
+            html += `
+                <li class="border-l-4 border-blue-500 bg-gray-50 p-3 rounded">
+                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>${dateDisplay || 'Data desc.'}</span>
+                        <span class="font-semibold">${h.user || 'Sistema'}</span>
+                    </div>
+                    <div class="font-bold text-gray-800">${h.type || 'Ação'}</div>
+                    <div class="text-sm text-gray-600">${h.description}</div>
+                </li>
+            `;
         });
+        html += '</ul>';
+        content.innerHTML = html;
+
+    } catch (e) {
+        console.error("Erro histórico:", e);
+        // Fallback: tentar sem ordenação caso o índice não exista ainda
+        try {
+            const snapshotBackup = await db.collection('contracts').doc(contractId).collection('history').get();
+            // Renderizar backup... (simplificado aqui)
+            content.innerHTML = '<div class="text-yellow-600">Erro de índice. Histórico pode estar desordenado.</div>';
+        } catch(e2) {
+            content.innerHTML = '<div class="text-red-500">Não foi possível carregar o histórico.</div>';
+        }
     }
+}
 
-    // --- Navegação entre Abas ---
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tab = button.dataset.tab;
+// --- Utilitários ---
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
 
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-
-            button.classList.add('active');
-            document.getElementById(tab).classList.add('active');
-
-            // Recarregar dados se a aba for de contratos encerrados ou lembretes
-            if (tab === 'processos-encerrados') {
-                fetchEndedContracts();
-            } else if (tab === 'lembretes') {
-                fetchReminders();
-            } else if (tab === 'contratos') {
-                fetchContracts();
-            }
-        });
-    });
-
-    // --- Contratos (CRUD) ---
-
-    // Abrir Modal de Adicionar Contrato
-    if (btnAddContract) {
-        btnAddContract.addEventListener('click', () => {
-            editingContractId = null;
-            contractForm.reset();
-            prazoMaximoDisplay.textContent = '';
-            valorAtualizadoInput.value = ''; // Garante que o valor esteja vazio
-            populateUnidadesCheckboxes(unidadesParticipantesDiv);
-            openModal(contractModal);
-        });
+// Fechar modal ao clicar fora
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.classList.add('hidden');
+        event.target.classList.remove('flex');
     }
-
-    // Calcular Prazo Máximo ao mudar data inicial ou tipo de lei
-    tipoLeiSelect.addEventListener('change', () => {
-        prazoMaximoDisplay.textContent = calcularPrazoMaximo(dataInicialProcessoInput.value, tipoLeiSelect.value);
-    });
-    dataInicialProcessoInput.addEventListener('change', () => {
-        prazoMaximoDisplay.textContent = calcularPrazoMaximo(dataInicialProcessoInput.value, tipoLeiSelect.value);
-    });
-
-    // Submissão do Formulário de Contrato
-    if (contractForm) {
-        contractForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const selectedUnidades = Array.from(unidadesParticipantesDiv.querySelectorAll('input[type="checkbox"]:checked'))
-                .map(checkbox => checkbox.value);
-
-            const contractData = {
-                processoSei: processoSeiInput.value,
-                numeroContrato: numeroContratoInput.value,
-                nomeEmpresa: nomeEmpresaInput.value,
-                objeto: objetoInput.value,
-                dataInicialProcesso: dataInicialProcessoInput.value,
-                tipoLei: tipoLeiSelect.value,
-                vigenciaAtual: vigenciaAtualInput.value,
-                numeroRenovacao: parseInt(numeroRenovacaoInput.value, 10),
-                valorAtualizado: parseFloat(valorAtualizadoInput.value),
-                unidadesParticipantes: selectedUnidades,
-                status: 'Ativo',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            try {
-                if (editingContractId) {
-                    await db.collection('contracts').doc(editingContractId).update(contractData);
-                    alert('Contrato atualizado com sucesso!');
-                } else {
-                    await db.collection('contracts').add(contractData);
-                    alert('Contrato adicionado com sucesso!');
-                }
-                closeAllMod
+}
