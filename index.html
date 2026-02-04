@@ -4,240 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Contratos</title>
-    <script src="https://cdn.tailwindcss.com">
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js">
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js">
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
     
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
+
+        /* Login Styles */
         #app.login-background {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background-color: #8B5CF6;
         }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
             z-index: 50;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+            left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto;
             background-color: rgba(0,0,0,0.5);
             align-items: center;
             justify-content: center;
         }
+
+        /* Unit Buttons */
         .unit-button {
             padding: 0.5rem 0.75rem;
             border: 1px solid #d1d5db;
@@ -254,6 +59,8 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
             color: white;
             border-color: #2563eb;
         }
+
+        /* Tabs */
         .tab-button.active-tab {
             border-bottom-color: #3b82f6;
             color: #2563eb;
@@ -266,20 +73,33 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
             color: #374151;
             border-bottom-color: #d1d5db;
         }
-        /* Estilos para o Accordion */
-        .sei-group-header {
-            transition: background-color 0.2s;
+
+        /* Accordion Header */
+        .sei-group-header { transition: background-color 0.2s; }
+        .sei-group-header:hover { background-color: #f9fafb; }
+
+        /* Checklist Styles */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            background-color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .sei-group-header:hover {
-            background-color: #f9fafb;
+        .checklist-item:hover { background-color: #f1f5f9; }
+        .checklist-item.checked {
+            background-color: #eff6ff;
+            border-color: #93c5fd;
         }
-        .sub-option-section {
-            display: none;
-            border: 1px solid #e5e7eb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            background-color: #f9fafb;
+        .checklist-item input {
+            width: 16px; height: 16px;
+            margin-right: 10px;
+            accent-color: #2563eb;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -466,11 +286,11 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                         <option value="Reajuste">Reajuste</option>
                         <option value="Outros">Outros</option>
                     </select>
-                    <div id="apostilamento-reajuste-section" class="sub-option-section">
+                    <div id="apostilamento-reajuste-section" class="hidden border border-gray-200 p-3 rounded bg-gray-50 mt-2">
                         <input type="number" id="apostilamento-reajuste-percentage" placeholder="% Reajuste" class="w-full border p-2 rounded">
                         <input type="text" id="apostilamento-novo-valor" placeholder="Novo Valor Global (R$)" class="w-full border p-2 rounded mt-2">
                     </div>
-                    <div id="apostilamento-outros-section" class="sub-option-section">
+                    <div id="apostilamento-outros-section" class="hidden border border-gray-200 p-3 rounded bg-gray-50 mt-2">
                         <textarea id="apostilamento-others-notes" placeholder="Descrição" class="w-full border p-2 rounded"></textarea>
                     </div>
                 </div>
@@ -488,36 +308,41 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                         <option value="Supressao">Supressão</option>
                     </select>
                     
-                    <div id="aditivo-renovacao-section" class="sub-option-section">
+                    <div id="aditivo-renovacao-section" class="hidden border border-gray-200 p-3 rounded bg-gray-50 mt-2">
                         <div class="grid grid-cols-2 gap-2">
                             <input type="number" id="renewal-duration-aditivo" placeholder="Meses (+)" class="border p-2 rounded">
                             <input type="date" id="renewal-new-date-aditivo" placeholder="Nova Data Fim" class="border p-2 rounded">
                         </div>
                          <input type="text" id="renewal-updated-value-aditivo" placeholder="Novo Valor (R$)" class="border p-2 rounded mt-2">
                     </div>
-                    <div id="aditivo-acrescimo-section" class="sub-option-section">
+                    <div id="aditivo-acrescimo-section" class="hidden border border-gray-200 p-3 rounded bg-gray-50 mt-2">
                          <input type="text" id="acrescimo-valor-total" placeholder="Valor Acrescido (R$)" class="w-full border p-2 rounded">
                          <textarea id="acrescimo-detalhes" placeholder="Detalhes" class="w-full border p-2 rounded mt-2"></textarea>
                     </div>
-    <div id="aditivo-renovacao-full" class="sub-option-section border border-purple-300 bg-purple-50 p-4 rounded mt-2">
-        <h4 class="font-bold text-purple-800 mb-2">Renovação (Com Checklist)</h4>
-        <label class="block text-xs font-bold mb-1">Número do Aditivo</label>
-        <input type="text" id="renovacao-numero" placeholder="Ex: 03/2025" class="border p-2 rounded w-full mb-3">
-        <div id="renovacao-status-box" class="bg-blue-100 text-blue-800 px-3 py-2 rounded text-sm font-semibold mb-3 hidden">
-            Renovação Iniciada
-        </div>
-        <h5 class="font-semibold mb-1">Checklist</h5>
-        <div id="renovacao-checklist" class="space-y-1"></div>
-        <button id="renovacao-efetivar" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">
-            Efetivar Renovação
-        </button>
-    </div>
-    
+
+                    <div id="aditivo-renovacao-full" class="hidden border border-blue-300 bg-blue-50 p-4 rounded mt-2">
+                        <h4 class="font-bold text-blue-800 mb-2">Renovação de Contrato</h4>
+                        
+                        <div id="renovacao-status-box" class="bg-green-100 text-green-800 px-3 py-2 rounded text-sm font-bold mb-3 hidden border border-green-300 text-center">
+                            RENOVAÇÃO INICIADA
+                        </div>
+
+                        <label class="block text-xs font-bold mb-1 uppercase text-gray-600">Número do Processo/Aditivo</label>
+                        <input type="text" id="renovacao-numero" placeholder="Ex: Aditivo 03/2026" class="border p-2 rounded w-full mb-3 focus:ring-2 focus:ring-blue-500">
+                        
+                        <h5 class="font-semibold mb-2 text-sm text-gray-700">Checklist de Requisitos (Obrigatório)</h5>
+                        <div id="renovacao-checklist" class="space-y-1 mb-4">
+                            </div>
+                        
+                        <button id="renovacao-efetivar" type="button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow transition transform hover:scale-[1.01]">
+                            <i class="fas fa-check-circle mr-2"></i> Efetivar Renovação
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex justify-end pt-4 gap-3">
-                    <button type="button" onclick="closeModal('addendum-modal')" class="px-4 py-2 border rounded">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Salvar e Registrar</button>
+                    <button type="button" onclick="closeModal('addendum-modal')" class="px-4 py-2 border rounded hover:bg-gray-100">Cancelar</button>
+                    <button id="btn-save-generic" type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar Outros</button>
                 </div>
             </form>
         </div>
@@ -547,216 +372,8 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js">
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
-
     <script>
-        // CONFIGURAÇÃO
+        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDTxRQdMy4QugmySVeSErf5Kqihn_4OhWw",
             authDomain: "gcc-contratos.firebaseapp.com",
@@ -765,6 +382,7 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
             messagingSenderId: "405415511927",
             appId: "1:405415511927:web:4612190119302726820372"
         };
+        
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -774,10 +392,14 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
         let allContractsData = [];
         let currentUserId = null;
         let currentUserName = "Usuário";
-        let isAdmin = false;
         let currentFilter = 'all';
         let searchTerm = '';
         const allUnits = ['CHB', 'CHPB', 'CSPD', 'CSSFA', 'CSSFE', 'CSSI', 'HAC', 'HCM', 'HEM', 'HIJPII', 'HJXXIII', 'HMAL', 'HRAD', 'HRBJA', 'HRJP', 'IRS', 'MOV', 'HJK'].sort();
+        
+        const renovacaoItems = [
+            "Ofício", "Memorando-circular", "Resposta da Empresa", "Resposta das Unidades", 
+            "Memória de Cálculo", "Pesquisa de Preço", "Ausência de ETP", "Check List", "Justificativa"
+        ];
 
         // UTILITÁRIOS
         function createLocalDate(dateString) {
@@ -812,14 +434,12 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUserId = user.uid;
-                    // BUSCAR NOME DO USUÁRIO
                     try {
                         const userDoc = await db.collection(USERS_COLLECTION_PATH).doc(user.uid).collection('profile').doc('data').get();
                         currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : user.email;
                     } catch(e) { currentUserName = user.email; }
                     
                     document.getElementById('user-id-display').textContent = currentUserName;
-
                     document.getElementById('main-page').classList.remove('hidden');
                     document.getElementById('login-page').classList.add('hidden');
                     document.getElementById('app').classList.remove('login-background');
@@ -842,16 +462,13 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
             document.getElementById('show-register-link').onclick = () => { document.getElementById('login-page').classList.add('hidden'); document.getElementById('register-page').classList.remove('hidden'); };
             document.getElementById('show-login-link').onclick = () => { document.getElementById('register-page').classList.add('hidden'); document.getElementById('login-page').classList.remove('hidden'); };
 
-            // TABS CSS FIX
+            // TABS
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-button').forEach(b => {
-                        b.classList.remove('active-tab'); 
-                        b.classList.add('inactive-tab');
+                        b.classList.remove('active-tab'); b.classList.add('inactive-tab');
                     });
-                    btn.classList.add('active-tab');
-                    btn.classList.remove('inactive-tab');
-                    
+                    btn.classList.add('active-tab'); btn.classList.remove('inactive-tab');
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
                     document.getElementById(btn.dataset.tab + '-tab').classList.remove('hidden');
                 }
@@ -909,15 +526,16 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 renderContractsList(res);
             }
 
-            // RENDER ATIVOS (Com botão Encerrar)
+            // --- RENDERIZAÇÃO DOS CARDS (VISUAL NOVO) ---
             function renderContractsList(contracts) {
                 const list = document.getElementById('contracts-list');
                 list.innerHTML = '';
                 if(!contracts.length) { document.getElementById('no-contracts-message').classList.remove('hidden'); return; }
                 document.getElementById('no-contracts-message').classList.add('hidden');
 
+                // Agrupar por Processo
                 const grouped = contracts.reduce((acc, c) => {
-                    const s = c.seiNumber || 'Sem SEI';
+                    const s = c.seiNumber || 'Sem Processo';
                     if(!acc[s]) acc[s] = []; acc[s].push(c); return acc;
                 }, {});
 
@@ -925,46 +543,75 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                     const group = grouped[sei];
                     const div = document.createElement('div');
                     div.className = "border rounded-lg bg-white mb-3 shadow-sm overflow-hidden";
+                    
+                    // Cabeçalho Accordion
                     div.innerHTML = `
-                        <div class="sei-group-header flex justify-between items-center p-3 cursor-pointer bg-white border-b" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <div class="sei-group-header flex justify-between items-center p-3 cursor-pointer bg-white border-b hover:bg-gray-50 transition" onclick="this.nextElementSibling.classList.toggle('hidden')">
                             <div class="flex items-center gap-3">
-                                <div class="bg-blue-100 p-2 rounded text-blue-600 font-bold text-xs">SEI</div>
-                                <div><span class="font-bold text-gray-800">${sei}</span><span class="ml-2 text-xs bg-gray-200 px-2 rounded-full">${group.length}</span></div>
+                                <i class="fas fa-folder text-blue-500 text-lg"></i>
+                                <div>
+                                    <span class="font-bold text-gray-800 text-lg">${sei}</span>
+                                    <span class="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">${group.length}</span>
+                                </div>
                             </div>
                             <i class="fas fa-chevron-down text-gray-400"></i>
                         </div>
                         <div class="hidden bg-gray-50 p-3 space-y-3"></div>
                     `;
                     const container = div.querySelector('.space-y-3');
+                    
                     group.forEach(d => {
                         const today = new Date(); today.setHours(0,0,0,0);
                         const days = Math.ceil((createLocalDate(d.currentValidityDate) - today)/86400000);
-                        let cl = "bg-green-100 text-green-800", txt = "Vigente";
-                        if(days < 0) { cl = "bg-red-100 text-red-800"; txt = "Vencido"; }
-                        else if(days <= 180) { cl = "bg-yellow-100 text-yellow-800"; txt = "A Vencer"; }
+                        
+                        // Lógica de Múltiplos Status
+                        let badgesHtml = '';
+                        if(days < 0) {
+                            badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-red-600 text-white font-bold uppercase ml-1">Vencido</span>';
+                        } else {
+                            badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-green-600 text-white font-bold uppercase ml-1">Vigente</span>';
+                        }
+                        // Alertas adicionais
+                        if(days >= 0 && days <= 30) {
+                            badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-bold border border-red-200 uppercase ml-1">Crítico</span>';
+                        } else if (days > 30 && days <= 90) {
+                            badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800 font-bold border border-yellow-200 uppercase ml-1">A Vencer</span>';
+                        }
 
                         const card = document.createElement('div');
-                        card.className = "bg-white p-4 rounded border border-gray-200 shadow-sm relative";
+                        card.className = "bg-white p-4 rounded border-l-4 border-blue-500 shadow-sm relative hover:shadow-md transition";
+                        
+                        // Layout do Card
                         card.innerHTML = `
-                            <div class="flex justify-between mb-2">
-                                <h4 class="font-bold text-blue-900">${d.companyName}</h4>
-                                <span class="text-xs px-2 py-1 rounded ${cl} font-bold">${txt}</span>
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex flex-col md:flex-row md:items-baseline gap-2 w-full">
+                                    <span class="text-lg font-bold text-blue-800">${d.contractNumber || 'S/N'}</span>
+                                    <span class="text-sm text-gray-500 italic hidden md:inline">- ${d.contractObject || 'Sem objeto'}</span>
+                                </div>
+                                <div class="flex justify-end min-w-max">
+                                    ${badgesHtml}
+                                </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
-                                <div><strong>Contrato:</strong> ${d.contractNumber}</div>
-                                <div><strong>Vigência:</strong> ${d.currentValidityDate ? d.currentValidityDate.split('-').reverse().join('/') : '-'} (${days} dias)</div>
+                            
+                            <div class="md:hidden text-sm text-gray-500 italic mb-2">${d.contractObject || ''}</div>
+                            
+                            <div class="font-bold text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-building text-gray-400 mr-2"></i> ${d.companyName}
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                                <div><strong>Vigência:</strong> ${d.currentValidityDate ? d.currentValidityDate.split('-').reverse().join('/') : '-'} <span class="${days < 0 ? 'text-red-600' : 'text-green-600'} font-bold">(${days} dias)</span></div>
                                 <div><strong>Valor:</strong> ${formatCurrency(d.contractValue)}</div>
                             </div>
-                            <div class="mt-2 text-xs bg-gray-50 p-2 rounded border border-gray-100">
-                                <strong>Unidades:</strong> ${(d.participatingUnits||[]).join(', ') || 'Nenhuma'}
-                            </div>
+                            
+                            <div class="mt-2 text-xs text-gray-400">Unidades: ${(d.participatingUnits||[]).join(', ') || '-'}</div>
                             ${d.observations ? `<div class="mt-1 text-xs text-gray-500 italic border-l-2 border-yellow-400 pl-2">"${d.observations}"</div>` : ''}
                             
                             <div class="mt-3 flex gap-2 pt-2 border-t justify-end">
-                                <button onclick="openHistoryModal('${d.id}', 'active')" class="px-2 py-1 text-xs border rounded hover:bg-gray-50" title="Histórico"><i class="fas fa-history text-gray-500"></i></button>
-                                <button onclick="openAddendumModal('${d.id}')" class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 font-bold"><i class="fas fa-file-signature"></i> Aditivo</button>
-                                <button onclick="openEditModal('${d.id}', 'active')" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-bold"><i class="fas fa-edit"></i> Editar</button>
-                                <button onclick="openTerminateModal('${d.id}')" class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 font-bold" title="Encerrar Contrato"><i class="fas fa-archive"></i></button>
+                                <button onclick="openHistoryModal('${d.id}', 'active')" class="text-blue-600 text-xs font-bold hover:underline mr-auto"><i class="fas fa-history"></i> Histórico</button>
+                                <button onclick="openAddendumModal('${d.id}')" class="px-3 py-1 text-xs bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 font-bold transition"><i class="fas fa-sync-alt"></i> Renovação/Aditivo</button>
+                                <button onclick="openEditModal('${d.id}', 'active')" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 font-bold transition"><i class="fas fa-edit"></i> Editar</button>
+                                <button onclick="openTerminateModal('${d.id}')" class="px-3 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 font-bold transition" title="Encerrar"><i class="fas fa-times"></i></button>
                             </div>
                         `;
                         container.appendChild(card);
@@ -973,14 +620,12 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 });
             }
 
-            // CARREGAR ENCERRADOS (Com Status Alinhado e Botões)
             function loadTerminated() {
                 db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).onSnapshot(snap => {
                     const list = document.getElementById('terminated-list');
                     list.innerHTML = '';
                     if(snap.empty) { document.getElementById('no-terminated-message').classList.remove('hidden'); return; }
                     document.getElementById('no-terminated-message').classList.add('hidden');
-
                     const contracts = [];
                     snap.forEach(d => contracts.push({id:d.id, ...d.data()}));
                     
@@ -1002,30 +647,16 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                         `;
                         const container = div.querySelector('.hidden');
                         group.forEach(d => {
-                            // CÁLCULO DO STATUS PARA ABA ENCERRADOS
-                            const today = new Date(); today.setHours(0,0,0,0);
-                            const days = Math.ceil((createLocalDate(d.currentValidityDate) - today)/86400000);
-                            let cl = "bg-green-100 text-green-800", txt = "Vigente";
-                            if(days < 0) { cl = "bg-red-100 text-red-800"; txt = "Vencido"; }
-                            else if(days <= 180) { cl = "bg-yellow-100 text-yellow-800"; txt = "A Vencer"; }
-
                             const card = document.createElement('div');
                             card.className = "border p-3 rounded bg-gray-50 relative";
                             card.innerHTML = `
                                 <div class="flex justify-between items-start mb-1">
-                                    <div>
-                                        <h4 class="font-bold text-gray-800">${d.companyName}</h4>
-                                        <p class="text-xs text-gray-500">Encerrado: ${d.terminationDate || '-'}</p>
-                                    </div>
-                                    <span class="text-xs px-2 py-1 rounded ${cl} font-bold ml-2">${txt}</span>
+                                    <div><h4 class="font-bold text-gray-800">${d.companyName}</h4><p class="text-xs text-gray-500">Encerrado: ${d.terminationDate || '-'}</p></div>
+                                    <span class="text-xs px-2 py-1 rounded bg-gray-200 text-gray-700 font-bold ml-2">Encerrado</span>
                                 </div>
-                                <div class="text-sm text-gray-600 mb-2">
-                                    <p>${d.contractObject || ''}</p>
-                                    <p class="text-xs italic mt-1 bg-red-50 p-1 border-l-2 border-red-300">Obs: ${d.terminationNotes || 'Sem nota'}</p>
-                                </div>
+                                <div class="text-sm text-gray-600 mb-2"><p class="text-xs italic mt-1 bg-red-50 p-1 border-l-2 border-red-300">Obs: ${d.terminationNotes || 'Sem nota'}</p></div>
                                 <div class="flex justify-end gap-2 border-t pt-2 mt-2">
                                      <button onclick="openHistoryModal('${d.id}', 'terminated')" class="text-xs text-gray-500 hover:text-blue-600 underline">Histórico</button>
-                                     <button onclick="openEditModal('${d.id}', 'terminated')" class="text-xs text-blue-600 hover:text-blue-800 font-bold border px-2 rounded">Editar</button>
                                      <button onclick="reactivateContract('${d.id}')" class="text-xs text-green-600 hover:text-green-800 font-bold border px-2 rounded">Reativar</button>
                                 </div>
                             `;
@@ -1036,78 +667,58 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 });
             }
 
-            // ENCERRAR / REATIVAR
-            window.openTerminateModal = (id) => {
-                document.getElementById('terminate-contract-id').value = id;
-                document.getElementById('termination-date').value = new Date().toISOString().split('T')[0];
-                showModal('terminate-modal');
-            };
-
-            window.confirmTermination = async () => {
-                const id = document.getElementById('terminate-contract-id').value;
-                const date = document.getElementById('termination-date').value;
-                const notes = document.getElementById('termination-notes').value;
+            // --- LÓGICA DE RENOVAÇÃO & CHECKLIST ---
+            async function loadChecklist(contractId) {
+                const container = document.getElementById("renovacao-checklist");
+                container.innerHTML = '<div class="text-gray-400 text-sm">Carregando checklist...</div>';
                 
                 try {
-                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).get();
-                    const data = doc.data();
+                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get();
+                    const saved = doc.exists ? doc.data() : {};
                     
-                    // Copiar Histórico Manualmente (Firestore não move subcoleções)
-                    const historySnap = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).get();
-                    
-                    await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).set({
-                        ...data, terminationDate: date, terminationNotes: notes, status: 'terminated'
+                    container.innerHTML = "";
+                    renovacaoItems.forEach(item => {
+                        const id = item.toLowerCase().replace(/\s+/g, "_");
+                        const checked = saved[id] === true;
+                        
+                        const div = document.createElement('div');
+                        div.className = `checklist-item ${checked ? 'checked' : ''}`;
+                        div.innerHTML = `<input type="checkbox" data-item="${id}" ${checked ? "checked" : ""}> <span class="text-sm select-none">${item}</span>`;
+                        
+                        div.onclick = (e) => {
+                            if(e.target.type !== 'checkbox') {
+                                const cb = div.querySelector('input');
+                                cb.checked = !cb.checked;
+                                saveChecklistItem(contractId, id, cb.checked, div);
+                            }
+                        };
+                        div.querySelector('input').onclick = (e) => {
+                            e.stopPropagation();
+                            saveChecklistItem(contractId, id, e.target.checked, div);
+                        };
+                        container.appendChild(div);
                     });
                     
-                    // Recria histórico no destino
-                    const batch = db.batch();
-                    historySnap.forEach(h => {
-                         const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
-                         batch.set(ref, h.data());
-                    });
-                    // Adiciona registro de encerramento
-                    const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
-                    batch.set(finalRef, { date: date, type: 'Encerramento', description: notes, user: currentUserName });
-                    await batch.commit();
+                    const hasProgress = Object.values(saved).some(v => v === true);
+                    if(hasProgress) document.getElementById("renovacao-status-box").classList.remove("hidden");
+                    else document.getElementById("renovacao-status-box").classList.add("hidden");
 
-                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).delete();
-                    closeModal('terminate-modal');
-                } catch(e) { console.error(e); alert("Erro ao encerrar."); }
-            };
+                } catch (e) { console.error("Erro checklist", e); }
+            }
 
-            window.reactivateContract = async (id) => {
-                if(!confirm("Reativar este contrato para a lista principal?")) return;
-                try {
-                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).get();
-                    const data = doc.data();
-                    delete data.terminationDate;
-                    delete data.terminationNotes;
-                    delete data.status;
+            async function saveChecklistItem(contractId, itemId, isChecked, divElement) {
+                if(isChecked) divElement.classList.add('checked'); else divElement.classList.remove('checked');
+                await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").set({ [itemId]: isChecked }, { merge: true });
+                document.getElementById("renovacao-status-box").classList.remove("hidden");
+            }
 
-                    const historySnap = await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).get();
-                    
-                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).set(data);
-                    
-                    const batch = db.batch();
-                    historySnap.forEach(h => {
-                         const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
-                         batch.set(ref, h.data());
-                    });
-                     // Adiciona registro de reativação
-                    const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
-                    batch.set(finalRef, { date: new Date().toISOString().split('T')[0], type: 'Reativação', description: 'Contrato reativado.', user: currentUserName });
-                    await batch.commit();
-
-                    await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).delete();
-                } catch(e) { console.error(e); alert("Erro ao reativar."); }
-            };
-
-            // ADITIVO & APOSTILAMENTO (Lógica Restaurada + Histórico)
+            // MODAL ADITIVO HANDLERS
             window.openAddendumModal = (id) => {
                 document.getElementById('addendum-form').reset();
                 document.getElementById('addendum-contract-id').value = id;
                 document.getElementById('apostilamento-options').classList.add('hidden');
                 document.getElementById('aditivo-options').classList.add('hidden');
+                document.getElementById('btn-save-generic').classList.remove('hidden');
                 showModal('addendum-modal');
             };
 
@@ -1118,77 +729,144 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 if (e.target.value === 'Aditivo') document.getElementById('aditivo-options').classList.remove('hidden');
             };
 
+            document.getElementById('apostilamento-sub-type').onchange = (e) => {
+                document.getElementById('apostilamento-reajuste-section').classList.add('hidden');
+                document.getElementById('apostilamento-outros-section').classList.add('hidden');
+                if (e.target.value === 'Reajuste') document.getElementById('apostilamento-reajuste-section').classList.remove('hidden');
+                if (e.target.value === 'Outros') document.getElementById('apostilamento-outros-section').classList.remove('hidden');
+            };
+
+            document.getElementById('aditivo-sub-type').onchange = (e) => {
+                const val = e.target.value;
+                document.getElementById('aditivo-renovacao-section').classList.add('hidden');
+                document.getElementById('aditivo-acrescimo-section').classList.add('hidden');
+                document.getElementById('aditivo-renovacao-full').classList.add('hidden');
+                document.getElementById('btn-save-generic').classList.remove('hidden'); // Mostra botão genérico por padrão
+
+                if (val === 'Renovacao') {
+                    // Aqui ativamos o modo Renovação Completa
+                    document.getElementById('aditivo-renovacao-full').classList.remove('hidden');
+                    document.getElementById('btn-save-generic').classList.add('hidden'); // Esconde botão genérico, usa o "Efetivar"
+                    const contractId = document.getElementById('addendum-contract-id').value;
+                    loadChecklist(contractId);
+                }
+                else if (val === 'Acrescimo') document.getElementById('aditivo-acrescimo-section').classList.remove('hidden');
+                else if (val === 'Supressao') document.getElementById('aditivo-renovacao-section').classList.remove('hidden'); // Reutiliza campos simples
+            };
+
+            // EFETIVAR RENOVAÇÃO (BOTÃO VERDE)
+            document.getElementById("renovacao-efetivar").onclick = async () => {
+                const contractId = document.getElementById("addendum-contract-id").value;
+                const numero = document.getElementById("renovacao-numero").value;
+                
+                if(!numero) return alert("Informe o número do processo/aditivo.");
+
+                // Validar Checklist
+                const container = document.getElementById("renovacao-checklist");
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+                if(!allChecked) return alert("Complete todos os itens do checklist para efetivar a renovação.");
+
+                const meses = prompt("Informe a quantidade de meses para renovação:");
+                if(!meses || isNaN(meses)) return alert("Quantidade de meses inválida.");
+
+                try {
+                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+                    const dados = doc.data();
+                    const atual = new Date(dados.currentValidityDate);
+                    atual.setMonth(atual.getMonth() + parseInt(meses));
+                    const novaData = atual.toISOString().split("T")[0];
+
+                    // Atualiza data
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+                        currentValidityDate: novaData,
+                        renewalNumber: (dados.renewalNumber || 0) + 1,
+                        updatedAt: new Date().toISOString()
+                    });
+
+                    // Grava Histórico
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+                        date: new Date().toISOString().split("T")[0],
+                        type: "Renovação",
+                        description: `Renovação efetivada (Checklist completo). Aditivo nº ${numero}. Nova vigência: ${novaData}. Prazo: ${meses} meses.`,
+                        user: currentUserName,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Limpa Checklist
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").delete();
+
+                    alert("Renovação realizada com sucesso!");
+                    closeModal("addendum-modal");
+
+                } catch (e) { console.error(e); alert("Erro ao renovar: " + e.message); }
+            };
+
+            // SALVAR OUTROS TIPOS (GENÉRICO)
             document.getElementById('addendum-form').onsubmit = async (e) => {
                 e.preventDefault();
+                // Se for renovação, o submit é ignorado pois usa o botão Efetivar
+                if(document.getElementById('aditivo-sub-type').value === 'Renovacao' && document.getElementById('addendum-type').value === 'Aditivo') return;
+
                 const id = document.getElementById('addendum-contract-id').value;
                 const type = document.getElementById('addendum-type').value;
                 const today = new Date().toISOString().split('T')[0];
                 let desc = "";
                 let updates = {};
 
-                // Lógica de Atualização do Contrato
                 if (type === 'Aditivo') {
                     const sub = document.getElementById('aditivo-sub-type').value;
                     desc = `Aditivo (${sub}): ${document.getElementById('aditivo-number').value}. `;
-                    
-                    if(sub === 'Renovacao') {
-                        const newDate = document.getElementById('renewal-new-date-aditivo').value;
-                        const newVal = document.getElementById('renewal-updated-value-aditivo').value;
-                        if(newDate) updates.currentValidityDate = newDate;
-                        if(newVal) updates.contractValue = newVal;
-                        updates.renewalNumber = firebase.firestore.FieldValue.increment(1);
-                        desc += `Nova vigência: ${newDate}.`;
-                    } else if(sub === 'Acrescimo') {
-                        desc += `Valor Acrescido: ${document.getElementById('acrescimo-valor-total').value}`;
+                    if(sub === 'Acrescimo') desc += `Valor: ${document.getElementById('acrescimo-valor-total').value}. ${document.getElementById('acrescimo-detalhes').value}`;
+                    else if(sub === 'Supressao') {
+                         const nd = document.getElementById('renewal-new-date-aditivo').value;
+                         if(nd) updates.currentValidityDate = nd;
+                         desc += "Supressão/Alteração simples.";
                     }
                 } else {
                     const sub = document.getElementById('apostilamento-sub-type').value;
                     desc = `Apostilamento (${sub}): ${document.getElementById('apostilamento-number').value}. `;
                     if(sub === 'Reajuste') {
-                         const newVal = document.getElementById('apostilamento-novo-valor').value;
-                         if(newVal) updates.contractValue = newVal;
-                         desc += `Reajuste: ${document.getElementById('apostilamento-reajuste-percentage').value}%. Novo Valor: ${newVal}`;
-                    }
+                         const nv = document.getElementById('apostilamento-novo-valor').value;
+                         if(nv) updates.contractValue = nv;
+                         desc += `Reajuste: ${document.getElementById('apostilamento-reajuste-percentage').value}%. Novo Valor: ${nv}`;
+                    } else if(sub === 'Outros') desc += document.getElementById('apostilamento-others-notes').value;
                 }
 
                 try {
-                    // 1. Atualizar Contrato
-                    if(Object.keys(updates).length > 0) {
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).update(updates);
-                    }
-                    // 2. Gravar no Histórico (IMEDIATAMENTE)
+                    if(Object.keys(updates).length > 0) await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).update(updates);
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).add({
-                        date: today,
-                        type: type,
-                        description: desc,
-                        user: currentUserName,
+                        date: today, type: type, description: desc, user: currentUserName,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     closeModal('addendum-modal');
-                    alert("Salvo e registrado no Histórico!");
+                    alert("Salvo com sucesso!");
                 } catch(err) { console.error(err); alert("Erro ao salvar."); }
             };
 
-            // HISTÓRICO (Correção de Erro + Contexto)
+            // HISTÓRICO
             window.openHistoryModal = async (id, context) => {
                 const container = document.getElementById('history-content');
                 container.innerHTML = '<p class="text-gray-500">Carregando...</p>';
                 showModal('history-modal');
-                
-                // Determinar coleção baseada no contexto (active/terminated)
-                let collection = 'contracts';
-                if(context === 'terminated') collection = 'terminated_contracts';
+                let collection = context === 'terminated' ? 'terminated_contracts' : 'contracts';
 
                 try {
-                    const snap = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).orderBy('date', 'desc').get();
+                    const snap = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).orderBy('timestamp', 'desc').get();
                     container.innerHTML = '';
-                    if (snap.empty) { container.innerHTML = '<p class="text-gray-500">Sem histórico.</p>'; return; }
+                    if (snap.empty) { 
+                        // Tenta fallback sem ordenação se der erro de índice
+                        const snap2 = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).get();
+                         if (snap2.empty) { container.innerHTML = '<p class="text-gray-500">Sem histórico.</p>'; return; }
+                         snap = snap2;
+                    }
                     snap.forEach(doc => {
                         const h = doc.data();
                         const item = document.createElement('div');
                         item.className = "border-l-4 border-blue-500 pl-4 pb-4";
                         item.innerHTML = `
-                            <p class="font-bold text-sm text-gray-800">${h.type || 'Alteração'} <span class="text-xs font-normal text-gray-500 float-right">${h.date}</span></p>
+                            <p class="font-bold text-sm text-gray-800">${h.type || 'Ação'} <span class="text-xs font-normal text-gray-500 float-right">${h.date}</span></p>
                             <p class="text-xs text-blue-600 font-semibold mb-1">${h.user || 'Sistema'}</p>
                             <p class="text-sm text-gray-600">${h.description || ''}</p>
                         `;
@@ -1196,20 +874,73 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                     });
                 } catch(e) { 
                     console.error(e);
-                    container.innerHTML = `<p class="text-red-500">Erro ao carregar. Tente novamente.</p>`; 
+                    // Fallback visual
+                    container.innerHTML = `<p class="text-red-500">Erro. Verifique console. Pode ser falta de índice composto no Firebase.</p>`; 
                 }
             };
 
-            // EDITAR (Contexto Active/Terminated)
+            // CRUD & MODALS
+            window.openTerminateModal = (id) => {
+                document.getElementById('terminate-contract-id').value = id;
+                document.getElementById('termination-date').value = new Date().toISOString().split('T')[0];
+                showModal('terminate-modal');
+            };
+
+            window.confirmTermination = async () => {
+                const id = document.getElementById('terminate-contract-id').value;
+                const date = document.getElementById('termination-date').value;
+                const notes = document.getElementById('termination-notes').value;
+                try {
+                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).get();
+                    const data = doc.data();
+                    const historySnap = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).get();
+                    
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).set({
+                        ...data, terminationDate: date, terminationNotes: notes, status: 'terminated'
+                    });
+                    
+                    const batch = db.batch();
+                    historySnap.forEach(h => {
+                         const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
+                         batch.set(ref, h.data());
+                    });
+                    const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
+                    batch.set(finalRef, { date: date, type: 'Encerramento', description: notes, user: currentUserName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                    await batch.commit();
+
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).delete();
+                    closeModal('terminate-modal');
+                } catch(e) { console.error(e); alert("Erro ao encerrar."); }
+            };
+
+            window.reactivateContract = async (id) => {
+                if(!confirm("Reativar este contrato?")) return;
+                try {
+                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).get();
+                    const data = doc.data();
+                    delete data.terminationDate; delete data.terminationNotes; delete data.status;
+                    const historySnap = await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).get();
+                    
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).set(data);
+                    const batch = db.batch();
+                    historySnap.forEach(h => {
+                         const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
+                         batch.set(ref, h.data());
+                    });
+                    const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
+                    batch.set(finalRef, { date: new Date().toISOString().split('T')[0], type: 'Reativação', description: 'Reativado.', user: currentUserName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                    await batch.commit();
+
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).delete();
+                } catch(e) { console.error(e); alert("Erro ao reativar."); }
+            };
+
             window.openEditModal = async (id, context) => {
                 let collection = context === 'terminated' ? 'terminated_contracts' : 'contracts';
                 const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).get();
                 const contract = {id: doc.id, ...doc.data()};
-
                 document.getElementById('contract-id-hidden').value = contract.id;
-                document.getElementById('contract-status-hidden').value = context; // Salva contexto
-                
-                // Preenche campos
+                document.getElementById('contract-status-hidden').value = context;
                 document.getElementById('sei-number').value = contract.seiNumber || '';
                 document.getElementById('contract-number').value = contract.contractNumber || '';
                 document.getElementById('company-name').value = contract.companyName || '';
@@ -1221,18 +952,15 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 document.getElementById('contract-value').value = contract.contractValue || '';
                 document.getElementById('contract-observations').value = contract.observations || '';
                 renderUnitsCheckbox(contract.participatingUnits || []);
-                
                 document.getElementById('contract-form-title').textContent = context === 'terminated' ? "Editar Contrato (Encerrado)" : "Editar Contrato";
                 showModal('contract-form-modal');
             };
 
-            // SALVAR EDIÇÃO
             document.getElementById('contract-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const id = document.getElementById('contract-id-hidden').value;
                 const context = document.getElementById('contract-status-hidden').value;
                 const collection = context === 'terminated' ? 'terminated_contracts' : 'contracts';
-                
                 const units = JSON.parse(document.getElementById('contract-selected-units').value || '[]');
                 const data = {
                     seiNumber: document.getElementById('sei-number').value,
@@ -1250,17 +978,12 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 };
 
                 try {
-                    if (id) {
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).update(data);
-                    } else {
-                        data.createdAt = new Date().toISOString();
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).add(data); // Novo sempre vai para ativo
-                    }
+                    if (id) await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).update(data);
+                    else { data.createdAt = new Date().toISOString(); await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).add(data); }
                     closeModal('contract-form-modal');
                 } catch(err) { console.error(err); alert("Erro ao salvar."); }
             };
 
-            // ADD NOVO
             document.getElementById('add-contract-button').onclick = () => {
                 document.getElementById('contract-form').reset();
                 document.getElementById('contract-id-hidden').value = '';
@@ -1289,74 +1012,6 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
                 document.getElementById('contract-selected-units').value = JSON.stringify(selected);
             }
         });
-    
-// RENOVACAO JS
-const renovacaoItems = [
-    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
-    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
-];
-
-function loadChecklist(contractId){
-    const container=document.getElementById("renovacao-checklist");
-    container.innerHTML="";
-    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
-    .then(doc=>{
-        const saved=doc.exists?doc.data():{};
-        renovacaoItems.forEach(item=>{
-            const id=item.toLowerCase().replace(/\s+/g,"_");
-            const checked=saved[id]===true;
-            container.innerHTML+=`
-            <div class='flex items-center gap-2'>
-                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
-                <label class='text-sm'>${item}</label>
-            </div>`;
-        });
-    });
-}
-
-document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
-    const id=e.target.dataset.item; if(!id)return;
-    const contractId=document.getElementById("addendum-contract-id").value;
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
-        .set({[id]:e.target.checked},{merge:true});
-    document.getElementById("renovacao-status-box").classList.remove("hidden");
-});
-
-document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
-    if(e.target.value==="Renovacao"){
-        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
-        const contractId=document.getElementById("addendum-contract-id").value;
-        loadChecklist(contractId);
-        document.getElementById("renovacao-status-box").classList.remove("hidden");
-    }
-});
-
-document.getElementById("renovacao-efetivar").onclick=async()=>{
-    const contractId=document.getElementById("addendum-contract-id").value;
-    const numero=document.getElementById("renovacao-numero").value;
-    if(!numero){alert("Informe o número."); return;}
-    const meses=prompt("Meses a renovar:");
-    if(!meses||isNaN(meses)){alert("Inválido."); return;}
-    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
-    const dados=doc.data();
-    const atual=new Date(dados.currentValidityDate);
-    atual.setMonth(atual.getMonth()+parseInt(meses));
-    const novaData=atual.toISOString().split("T")[0];
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-        currentValidityDate:novaData,
-        renewalNumber:(dados.renewalNumber||0)+1
-    });
-    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-        date:new Date().toISOString().split("T")[0],
-        type:"Renovação",
-        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
-        user:currentUserName,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Renovação registrada.");
-    closeModal("addendum-modal");
-};
-
-</script>
+    </script>
 </body>
 </html>
