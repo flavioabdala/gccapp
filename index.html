@@ -22,6 +22,14 @@
             background-color: #f3f4f6;
         }
 
+        /* CORES SUAVES PASTEL */
+        .status-vigente { background-color: #B7E4C7; border-color: #95D5B2; }
+        .status-a-vencer { background-color: #FFE8A3; border-color: #FFD97D; }
+        .status-critico { background-color: #FFCC9C; border-color: #FFB570; }
+        .status-vencido { background-color: #F5A8A8; border-color: #F08080; }
+        .status-renovacao { background-color: #A7C7F2; border-color: #7FA8E8; }
+
+        /* Login Styles */
         #app.login-background {
             display: flex;
             align-items: center;
@@ -29,6 +37,7 @@
             background-color: #8B5CF6;
         }
 
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -40,6 +49,7 @@
             justify-content: center;
         }
 
+        /* Unit Buttons */
         .unit-button {
             padding: 0.5rem 0.75rem;
             border: 1px solid #d1d5db;
@@ -57,6 +67,7 @@
             border-color: #2563eb;
         }
 
+        /* Tabs */
         .tab-button.active-tab {
             border-bottom-color: #3b82f6;
             color: #2563eb;
@@ -70,17 +81,15 @@
             border-bottom-color: #d1d5db;
         }
 
-        /* Accordion Header - Colorido apenas quando fechado */
+        /* Accordion Header - MANTÉM COR SEMPRE */
         .sei-group-header { 
-            transition: background-color 0.2s; 
+            transition: all 0.2s; 
         }
-        .sei-group-header.closed {
-            /* Cor aplicada quando fechado - será definida dinamicamente */
-        }
-        .sei-group-header.open {
-            background-color: white !important;
+        .sei-group-header:hover { 
+            filter: brightness(0.95);
         }
 
+        /* Checklist Styles */
         .checklist-item {
             display: flex;
             align-items: center;
@@ -103,21 +112,6 @@
             accent-color: #2563eb;
             cursor: pointer;
         }
-
-        /* Badge de Status */
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        .status-vigente { background-color: #10b981; color: white; }
-        .status-a-vencer { background-color: #fbbf24; color: #78350f; }
-        .status-critico { background-color: #ef4444; color: white; }
-        .status-vencido { background-color: #7f1d1d; color: white; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -202,7 +196,6 @@
                     <div class="flex gap-2">
                     <button id="add-contract-button" class="h-10 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Novo</button>
                     <button id="export-excel-button" class="h-10 px-4 bg-green-600 text-white rounded hover:bg-green-700 font-medium shadow-sm"><i class="fas fa-file-excel mr-2"></i> Excel</button>
-                    <button id="remove-duplicates-button" class="h-10 px-4 bg-red-600 text-white rounded hover:bg-red-700 font-medium shadow-sm"><i class="fas fa-trash mr-2"></i> Remover Duplicados</button>
                     </div>
                     
                     <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto items-center">
@@ -433,85 +426,46 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function showModal(id) { document.getElementById(id).style.display = 'flex'; }
         function normalizeString(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : ""; }
-        
-        // Função para capitalizar apenas primeira letra
         function capitalizeFirst(str) {
             if (!str) return '';
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         }
 
-        // Função para calcular status do contrato
-        function getContractStatus(validityDate) {
-            const today = new Date(); 
-            today.setHours(0,0,0,0);
-            const validity = createLocalDate(validityDate);
-            const days = Math.ceil((validity - today) / 86400000);
-            
-            if (days < 0) return { label: 'Vencido', class: 'status-vencido', color: '#7f1d1d', days };
-            if (days <= 59) return { label: 'Crítico', class: 'status-critico', color: '#ef4444', days };
-            if (days <= 180) return { label: 'A Vencer', class: 'status-a-vencer', color: '#fbbf24', days };
-            return { label: 'Vigente', class: 'status-vigente', color: '#10b981', days };
+        // FUNÇÃO PARA DETERMINAR STATUS MAIS CRÍTICO
+        function getMostCriticalStatus(contracts) {
+            const today = new Date(); today.setHours(0,0,0,0);
+            let priority = 0; // 0=vigente, 1=a vencer, 2=crítico, 3=vencido
+            let statusClass = 'status-vigente';
+            let hasRenovacao = false;
+
+            contracts.forEach(c => {
+                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today)/86400000);
+                
+                // Verifica renovação
+                if(c.renovacaoIniciada) hasRenovacao = true;
+
+                if(days < 0 && priority < 3) { priority = 3; statusClass = 'status-vencido'; }
+                else if(days >= 0 && days <= 59 && priority < 2) { priority = 2; statusClass = 'status-critico'; }
+                else if(days >= 60 && days <= 180 && priority < 1) { priority = 1; statusClass = 'status-a-vencer'; }
+            });
+
+            // Renovação sobrescreve se houver
+            if(hasRenovacao) statusClass = 'status-renovacao';
+
+            return statusClass;
         }
 
         // EXCEL EXPORT
         document.getElementById('export-excel-button').addEventListener('click', () => {
             if (!allContractsData || allContractsData.length === 0) { alert("Sem dados."); return; }
-            const data = allContractsData.map(c => {
-                const status = getContractStatus(c.currentValidityDate);
-                return {
-                    'SEI': c.seiNumber, 
-                    'Contrato': c.contractNumber, 
-                    'Empresa': c.companyName,
-                    'Objeto': c.contractObject, 
-                    'Vigência': c.currentValidityDate, 
-                    'Valor': c.contractValue,
-                    'Status': status.label,
-                    'Dias Restantes': status.days
-                };
-            });
+            const data = allContractsData.map(c => ({
+                'SEI': c.seiNumber, 'Contrato': c.contractNumber, 'Empresa': c.companyName,
+                'Objeto': c.contractObject, 'Vigência': c.currentValidityDate, 'Valor': c.contractValue
+            }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Contratos");
-            XLSX.writeFile(wb, "Relatorio_Contratos.xlsx");
-        });
-
-        // REMOVER DUPLICADOS
-        document.getElementById('remove-duplicates-button').addEventListener('click', async () => {
-            if (!confirm('Deseja remover contratos duplicados? Esta ação não pode ser desfeita.')) return;
-            
-            try {
-                const snapshot = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).get();
-                const seen = new Map();
-                const duplicates = [];
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const key = `${data.seiNumber}-${data.contractNumber}`;
-                    
-                    if (seen.has(key)) {
-                        duplicates.push(doc.id);
-                    } else {
-                        seen.set(key, doc.id);
-                    }
-                });
-                
-                if (duplicates.length === 0) {
-                    alert('Nenhum duplicado encontrado!');
-                    return;
-                }
-                
-                const batch = db.batch();
-                duplicates.forEach(id => {
-                    batch.delete(db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id));
-                });
-                
-                await batch.commit();
-                alert(`${duplicates.length} contrato(s) duplicado(s) removido(s) com sucesso!`);
-                
-            } catch (error) {
-                console.error('Erro ao remover duplicados:', error);
-                alert('Erro ao remover duplicados: ' + error.message);
-            }
+            XLSX.writeFile(wb, "Relatorio.xlsx");
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -575,20 +529,19 @@
                 document.getElementById('active-filter-badge').classList.add('hidden'); applyFilters();
             };
 
-            // LOAD DATA COM BATCH LOADING
+            // LOAD DATA
             function loadContracts() {
                 db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).onSnapshot(snap => {
                     allContractsData = [];
                     let activeC = 0, expiringC = 0;
+                    const today = new Date(); today.setHours(0,0,0,0);
 
-                    // Carrega todos de uma vez
-                    const docs = snap.docs;
-                    docs.forEach(doc => {
-                        const d = {id: doc.id, ...doc.data()};
-                        allContractsData.push(d);
-                        const status = getContractStatus(d.currentValidityDate);
-                        if(status.days >= 0) activeC++;
-                        if(status.days >= 0 && status.days <= 180) expiringC++;
+                    snap.forEach(doc => {
+                    const d = {id: doc.id, ...doc.data()};
+                    allContractsData.push(d);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today)/86400000);
+                    if(days >= 0) activeC++;
+                    if(days >= 0 && days <= 180) expiringC++;
                     });
 
                     document.getElementById('active-contracts-count-value').textContent = activeC;
@@ -598,10 +551,11 @@
             }
 
             function applyFilters() {
+                const today = new Date(); today.setHours(0,0,0,0);
                 let res = allContractsData.filter(c => {
-                    const status = getContractStatus(c.currentValidityDate);
-                    if(currentFilter === 'active' && status.days < 0) return false;
-                    if(currentFilter === 'expiring' && (status.days < 0 || status.days > 180)) return false;
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today)/86400000);
+                    if(currentFilter === 'active' && days < 0) return false;
+                    if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     return true;
                 });
                 if(searchTerm.trim()) {
@@ -611,8 +565,8 @@
                 renderContractsList(res);
             }
 
-            // RENDERIZAÇÃO OTIMIZADA
-            function renderContractsList(contracts) {
+            // RENDERIZAÇÃO DOS CARDS COM CORES SUAVES E LÓGICA CRÍTICA
+            async function renderContractsList(contracts) {
                 const list = document.getElementById('contracts-list');
                 list.innerHTML = '';
                 if(!contracts.length) { document.getElementById('no-contracts-message').classList.remove('hidden'); return; }
@@ -624,107 +578,92 @@
                     if(!acc[s]) acc[s] = []; acc[s].push(c); return acc;
                 }, {});
 
-                // Criar fragment para melhor performance
-                const fragment = document.createDocumentFragment();
-
-                Object.keys(grouped).forEach(sei => {
+                // Verificar renovação para cada grupo
+                for(const sei of Object.keys(grouped)) {
                     const group = grouped[sei];
-                    
-                    // Pega o status mais crítico do grupo para colorir o header
-                    let worstStatus = { days: 999999, color: '#10b981' };
-                    group.forEach(c => {
-                        const st = getContractStatus(c.currentValidityDate);
-                        if (st.days < worstStatus.days) worstStatus = st;
-                    });
-                    
+                    let hasRenovacao = false;
+
+                    // Verifica se algum contrato do grupo tem renovação iniciada
+                    for(const c of group) {
+                        try {
+                            const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${c.id}/renovacao`).doc("progresso").get();
+                            if(doc.exists) {
+                                const saved = doc.data();
+                                const hasProgress = Object.values(saved).some(v => v === true);
+                                if(hasProgress) {
+                                    hasRenovacao = true;
+                                    c.renovacaoIniciada = true;
+                                }
+                            }
+                        } catch(e) { console.error("Erro ao verificar renovação", e); }
+                    }
+
                     const div = document.createElement('div');
                     div.className = "border rounded-lg bg-white mb-3 shadow-sm overflow-hidden";
                     
-                    // Cabeçalho com cor baseada no status mais crítico
+                    // Determina cor mais crítica
+                    const criticalClass = getMostCriticalStatus(group);
+                    
+                    // Cabeçalho Accordion COM COR PERSISTENTE
+                    const renovacaoBadge = hasRenovacao ? '<span class="ml-2 px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 font-bold border border-blue-300">RENOVAÇÃO INICIADA</span>' : '';
+                    
                     div.innerHTML = `
-                    <div class="sei-group-header closed flex justify-between items-center p-3 cursor-pointer border-b transition" 
-                         style="background-color: ${worstStatus.color}; color: white;"
-                         onclick="toggleAccordion(this)">
-                    <div class="flex items-center gap-3">
-                    <i class="fas fa-folder text-white text-lg"></i>
-                    <div>
-                    <span class="font-bold text-lg">${sei}</span>
-                    <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${group.length}</span>
+                    <div class="sei-group-header flex justify-between items-center p-3 cursor-pointer border-b ${criticalClass}" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                    <div class="flex items-center gap-3 flex-wrap">
+                    <i class="fas fa-folder text-gray-700 text-lg"></i>
+                    <div class="flex items-center flex-wrap gap-2">
+                    <span class="font-bold text-gray-800 text-lg">${sei}</span>
+                    <span class="text-xs bg-white bg-opacity-60 text-gray-700 px-2 py-0.5 rounded-full font-bold">(${group.length})</span>
+                    ${renovacaoBadge}
                     </div>
                     </div>
-                    <i class="fas fa-chevron-down"></i>
+                    <i class="fas fa-chevron-down text-gray-700"></i>
                     </div>
                     <div class="hidden bg-gray-50 p-3 space-y-3"></div>
                     `;
                     const container = div.querySelector('.space-y-3');
                     
                     group.forEach(d => {
-                        const status = getContractStatus(d.currentValidityDate);
-                        const objetoCapitalizado = capitalizeFirst(d.contractObject || 'Sem objeto');
-                        
-                        const card = document.createElement('div');
-                        card.className = "bg-white p-4 rounded border shadow-sm relative hover:shadow-md transition";
-                        
-                        card.innerHTML = `
-                        <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1">
-                        <div class="flex items-baseline gap-2 mb-1">
-                        <span class="text-lg font-bold text-blue-800">${d.contractNumber || 'S/N'}</span>
-                        <span class="text-sm text-gray-500 italic">- ${objetoCapitalizado}</span>
-                        </div>
-                        </div>
-                        <span class="status-badge ${status.class} ml-3">${status.label}</span>
-                        </div>
-                        
-                        <div class="font-bold text-gray-700 mb-3 flex items-center">
-                        <i class="fas fa-building text-gray-400 mr-2"></i> ${d.companyName}
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded mb-2">
-                        <div><strong>Vigência:</strong> ${d.currentValidityDate ? d.currentValidityDate.split('-').reverse().join('/') : '-'} <span class="${status.days < 0 ? 'text-red-600' : 'text-green-600'} font-bold">(${status.days} dias)</span></div>
-                        <div><strong>Valor:</strong> ${formatCurrency(d.contractValue)}</div>
-                        </div>
-                        
-                        <div class="text-xs text-gray-400 mb-1">Unidades: ${(d.participatingUnits||[]).join(', ') || '-'}</div>
-                        ${d.observations ? `<div class="text-xs text-gray-500 italic border-l-2 border-yellow-400 pl-2 mb-2">"${d.observations}"</div>` : ''}
-                        
-                        <div class="flex gap-2 pt-3 border-t justify-end">
-                        <button onclick="openHistoryModal('${d.id}', 'active')" class="text-blue-600 text-xs font-bold hover:underline mr-auto"><i class="fas fa-history"></i> Histórico</button>
-                        <button onclick="openAddendumModal('${d.id}')" class="px-3 py-1 text-xs bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 font-bold transition"><i class="fas fa-sync-alt"></i> Renovação/Aditivo</button>
-                        <button onclick="openEditModal('${d.id}', 'active')" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 font-bold transition"><i class="fas fa-edit"></i> Editar</button>
-                        <button onclick="openTerminateModal('${d.id}')" class="px-3 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 font-bold transition" title="Encerrar"><i class="fas fa-times"></i></button>
-                        </div>
-                        `;
-                        container.appendChild(card);
+                    const today = new Date(); today.setHours(0,0,0,0);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today)/86400000);
+                    
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded border-l-4 border-blue-400 shadow-sm relative hover:shadow-md transition";
+                    
+                    // EMPRESA VEM PRIMEIRO E MAIOR
+                    card.innerHTML = `
+                    <div class="mb-3">
+                    <h3 class="text-2xl font-bold text-gray-900">${d.companyName}</h3>
+                    </div>
+                    
+                    <div class="flex justify-between items-start mb-2">
+                    <div class="flex flex-col md:flex-row md:items-baseline gap-2">
+                    <span class="text-base font-semibold text-blue-700">Contrato: ${d.contractNumber || 'S/N'}</span>
+                    </div>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600 italic mb-3">${capitalizeFirst(d.contractObject) || 'Sem objeto'}</div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700 bg-gray-50 p-3 rounded mb-2">
+                    <div><strong>Vigência:</strong> ${d.currentValidityDate ? d.currentValidityDate.split('-').reverse().join('/') : '-'} <span class="${days < 0 ? 'text-red-600' : 'text-green-600'} font-bold">(${days} dias)</span></div>
+                    <div><strong>Valor:</strong> ${formatCurrency(d.contractValue)}</div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-1"><strong>Unidades:</strong> ${(d.participatingUnits||[]).join(', ') || '-'}</div>
+                    ${d.observations ? `<div class="mt-2 text-xs text-gray-600 italic border-l-2 border-yellow-400 pl-2 bg-yellow-50 p-2 rounded">"${d.observations}"</div>` : ''}
+                    
+                    <div class="mt-3 flex gap-2 pt-3 border-t justify-end flex-wrap">
+                    <button onclick="openHistoryModal('${d.id}', 'active')" class="text-blue-600 text-xs font-bold hover:underline mr-auto"><i class="fas fa-history"></i> Histórico</button>
+                    <button onclick="openAddendumModal('${d.id}')" class="px-3 py-1.5 text-xs bg-green-50 text-green-700 border border-green-300 rounded hover:bg-green-100 font-bold transition"><i class="fas fa-sync-alt"></i> Renovação</button>
+                    <button onclick="openEditModal('${d.id}', 'active')" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 font-bold transition"><i class="fas fa-edit"></i> Editar</button>
+                    <button onclick="openTerminateModal('${d.id}')" class="px-3 py-1.5 text-xs bg-red-50 text-red-700 border border-red-300 rounded hover:bg-red-100 font-bold transition" title="Encerrar"><i class="fas fa-times"></i></button>
+                    </div>
+                    `;
+                    container.appendChild(card);
                     });
-                    fragment.appendChild(div);
-                });
-                
-                list.appendChild(fragment);
-            }
-
-            // Toggle accordion com mudança de cor
-            window.toggleAccordion = function(header) {
-                const content = header.nextElementSibling;
-                const isHidden = content.classList.contains('hidden');
-                
-                content.classList.toggle('hidden');
-                
-                if (isHidden) {
-                    // Abrindo - remove cor
-                    header.classList.remove('closed');
-                    header.classList.add('open');
-                    header.style.backgroundColor = 'white';
-                    header.style.color = '#374151';
-                    header.querySelector('i.fa-chevron-down').style.transform = 'rotate(180deg)';
-                } else {
-                    // Fechando - restaura cor
-                    header.classList.remove('open');
-                    header.classList.add('closed');
-                    // A cor já está definida inline no HTML
-                    header.querySelector('i.fa-chevron-down').style.transform = 'rotate(0deg)';
+                    list.appendChild(div);
                 }
-            };
+            }
 
             function loadTerminated() {
                 db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).onSnapshot(snap => {
@@ -746,7 +685,7 @@
                     div.className = "border border-gray-300 rounded bg-gray-50 mb-2";
                     div.innerHTML = `
                     <div class="flex justify-between p-3 cursor-pointer hover:bg-gray-200" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                    <span class="font-bold text-gray-700">${sei} <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full ml-1">${group.length}</span></span>
+                    <span class="font-bold text-gray-700">${sei} <span class="text-xs">(${group.length})</span></span>
                     <i class="fas fa-chevron-down text-gray-500"></i>
                     </div>
                     <div class="hidden p-3 bg-white border-t space-y-2"></div>
@@ -756,11 +695,13 @@
                     const card = document.createElement('div');
                     card.className = "border p-3 rounded bg-gray-50 relative";
                     card.innerHTML = `
-                    <div class="flex justify-between items-start mb-1">
-                    <div><h4 class="font-bold text-gray-800">${d.companyName}</h4><p class="text-xs text-gray-500">Encerrado: ${d.terminationDate || '-'}</p></div>
-                    <span class="text-xs px-2 py-1 rounded bg-gray-200 text-gray-700 font-bold ml-2">Encerrado</span>
+                    <div class="mb-2">
+                    <h4 class="font-bold text-lg text-gray-800">${d.companyName}</h4>
+                    <p class="text-xs text-gray-500">Encerrado: ${d.terminationDate || '-'}</p>
                     </div>
-                    <div class="text-sm text-gray-600 mb-2"><p class="text-xs italic mt-1 bg-red-50 p-1 border-l-2 border-red-300">Obs: ${d.terminationNotes || 'Sem nota'}</p></div>
+                    <div class="text-sm text-gray-600 mb-2">
+                    <p class="text-xs italic mt-1 bg-red-50 p-2 border-l-2 border-red-300 rounded">Obs: ${d.terminationNotes || 'Sem nota'}</p>
+                    </div>
                     <div class="flex justify-end gap-2 border-t pt-2 mt-2">
                     <button onclick="openHistoryModal('${d.id}', 'terminated')" class="text-xs text-gray-500 hover:text-blue-600 underline">Histórico</button>
                     <button onclick="reactivateContract('${d.id}')" class="text-xs text-green-600 hover:text-green-800 font-bold border px-2 rounded">Reativar</button>
@@ -773,7 +714,7 @@
                 });
             }
 
-            // LÓGICA DE RENOVAÇÃO & CHECKLIST
+            // --- LÓGICA DE RENOVAÇÃO & CHECKLIST ---
             async function loadChecklist(contractId) {
                 const container = document.getElementById("renovacao-checklist");
                 container.innerHTML = '<div class="text-gray-400 text-sm">Carregando checklist...</div>';
@@ -973,7 +914,7 @@
                     });
                 } catch(e) { 
                     console.error(e);
-                    container.innerHTML = `<p class="text-red-500">Erro ao carregar histórico.</p>`; 
+                    container.innerHTML = `<p class="text-red-500">Erro. Verifique console.</p>`; 
                 }
             };
 
