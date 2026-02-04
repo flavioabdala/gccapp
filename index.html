@@ -4,10 +4,214 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Contratos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js">
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js">
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -276,7 +480,7 @@
                     </div>
                     <select id="aditivo-sub-type" class="w-full border p-2 rounded">
                         <option value="">Tipo...</option>
-                        <option value="Renovacao">Renovação Prazo</option>
+                        <option value="Renovacao">Renovação</option>
                         <option value="Acrescimo">Acréscimo</option>
                         <option value="Supressao">Supressão</option>
                     </select>
@@ -292,6 +496,20 @@
                          <input type="text" id="acrescimo-valor-total" placeholder="Valor Acrescido (R$)" class="w-full border p-2 rounded">
                          <textarea id="acrescimo-detalhes" placeholder="Detalhes" class="w-full border p-2 rounded mt-2"></textarea>
                     </div>
+    <div id="aditivo-renovacao-full" class="sub-option-section border border-purple-300 bg-purple-50 p-4 rounded mt-2">
+        <h4 class="font-bold text-purple-800 mb-2">Renovação (Com Checklist)</h4>
+        <label class="block text-xs font-bold mb-1">Número do Aditivo</label>
+        <input type="text" id="renovacao-numero" placeholder="Ex: 03/2025" class="border p-2 rounded w-full mb-3">
+        <div id="renovacao-status-box" class="bg-blue-100 text-blue-800 px-3 py-2 rounded text-sm font-semibold mb-3 hidden">
+            Renovação Iniciada
+        </div>
+        <h5 class="font-semibold mb-1">Checklist</h5>
+        <div id="renovacao-checklist" class="space-y-1"></div>
+        <button id="renovacao-efetivar" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">
+            Efetivar Renovação
+        </button>
+    </div>
+    
                 </div>
 
                 <div class="flex justify-end pt-4 gap-3">
@@ -326,9 +544,213 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js">
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
 
     <script>
         // CONFIGURAÇÃO
@@ -864,6 +1286,74 @@
                 document.getElementById('contract-selected-units').value = JSON.stringify(selected);
             }
         });
-    </script>
+    
+// RENOVACAO JS
+const renovacaoItems = [
+    "Ofício","Memorando-circular","Resposta da Empresa","Resposta das Unidades","Memória de Cálculo",
+    "Pesquisa de Preço","Ausência de ETP","Check List","Justificativa"
+];
+
+function loadChecklist(contractId){
+    const container=document.getElementById("renovacao-checklist");
+    container.innerHTML="";
+    db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get()
+    .then(doc=>{
+        const saved=doc.exists?doc.data():{};
+        renovacaoItems.forEach(item=>{
+            const id=item.toLowerCase().replace(/\s+/g,"_");
+            const checked=saved[id]===true;
+            container.innerHTML+=`
+            <div class='flex items-center gap-2'>
+                <input type='checkbox' data-item='${id}' ${checked?"checked":""} class='h-4 w-4'>
+                <label class='text-sm'>${item}</label>
+            </div>`;
+        });
+    });
+}
+
+document.getElementById("renovacao-checklist").addEventListener("change",async(e)=>{
+    const id=e.target.dataset.item; if(!id)return;
+    const contractId=document.getElementById("addendum-contract-id").value;
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+        .set({[id]:e.target.checked},{merge:true});
+    document.getElementById("renovacao-status-box").classList.remove("hidden");
+});
+
+document.getElementById("aditivo-sub-type").addEventListener("change",(e)=>{
+    if(e.target.value==="Renovacao"){
+        document.getElementById("aditivo-renovacao-full").classList.remove("hidden");
+        const contractId=document.getElementById("addendum-contract-id").value;
+        loadChecklist(contractId);
+        document.getElementById("renovacao-status-box").classList.remove("hidden");
+    }
+});
+
+document.getElementById("renovacao-efetivar").onclick=async()=>{
+    const contractId=document.getElementById("addendum-contract-id").value;
+    const numero=document.getElementById("renovacao-numero").value;
+    if(!numero){alert("Informe o número."); return;}
+    const meses=prompt("Meses a renovar:");
+    if(!meses||isNaN(meses)){alert("Inválido."); return;}
+    const doc=await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+    const dados=doc.data();
+    const atual=new Date(dados.currentValidityDate);
+    atual.setMonth(atual.getMonth()+parseInt(meses));
+    const novaData=atual.toISOString().split("T")[0];
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
+        currentValidityDate:novaData,
+        renewalNumber:(dados.renewalNumber||0)+1
+    });
+    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
+        date:new Date().toISOString().split("T")[0],
+        type:"Renovação",
+        description:`Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}.`,
+        user:currentUserName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Renovação registrada.");
+    closeModal("addendum-modal");
+};
+
+</script>
 </body>
 </html>
