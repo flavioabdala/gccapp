@@ -24,15 +24,41 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* Header do Card: Onde a mágica do alinhamento acontece */
-.card-header {
+.card-header-custom {
     display: flex;
-    justify-content: space-between; /* Separa Título dos Status */
+    justify-content: space-between;
     align-items: flex-start;
-    width: 100%;
-    margin-bottom: 8px;
-    flex-wrap: wrap; /* Garante responsividade */
     gap: 10px;
+    margin-bottom: 8px;
+}
+.sei-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1d4ed8; /* Azul escuro */
+}
+.obj-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-style: italic;
+}
+.status-badge-container {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+}
+/* Checklist */
+.checklist-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background: #f9fafb;
+    cursor: pointer;
+}
+.checklist-item:hover { background: #eff6ff; }
+.checklist-item input { margin-right: 10px; cursor: pointer; }
 }
 
 /* Grupo Esquerdo: Número e Objeto */
@@ -143,3 +169,4 @@ body {
     color: #334155;
     user-select: none;
 }
+
