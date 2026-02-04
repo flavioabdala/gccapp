@@ -220,6 +220,9 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
             background-color: #f3f4f6;
         }
         #app.login-background {
+    display: flex;
+    align-items: center;
+    justify-content: center;
             background-color: #8B5CF6;
         }
         .modal {
@@ -282,9 +285,9 @@ document.getElementById("renovacao-efetivar").onclick=async()=>{
 </head>
 <body class="text-gray-800">
 
-    <div id="app" class="min-h-screen flex flex-col">
+    <div id="app" class="min-h-screen">
 
-        <div id="login-page" class="hidden w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+        <div id="login-page" class="hidden w-full max-w-md p-8 bg-white rounded-lg shadow-lg mx-auto">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-800">Gestão de Contratos</h1>
                 <p class="text-gray-500">Faça login para acessar o sistema</p>
