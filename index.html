@@ -78,6 +78,13 @@
         .sei-group-header { transition: background-color 0.2s; }
         .sei-group-header:hover { background-color: #f9fafb; }
 
+        /* Status Badges Pastel */
+        .badge-vigente { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .badge-avencer { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .badge-critico { background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        .badge-vencido { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-base { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; }
+
         /* Checklist Styles */
         .checklist-item {
             display: flex;
@@ -420,14 +427,34 @@
         // EXCEL EXPORT
         document.getElementById('export-excel-button').addEventListener('click', () => {
             if (!allContractsData || allContractsData.length === 0) { alert("Sem dados."); return; }
-            const data = allContractsData.map(c => ({
-                'SEI': c.seiNumber, 'Contrato': c.contractNumber, 'Empresa': c.companyName,
-                'Objeto': c.contractObject, 'Vigência': c.currentValidityDate, 'Valor': c.contractValue
-            }));
+            const today = new Date(); today.setHours(0,0,0,0);
+            const data = allContractsData.map(c => {
+                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                let status = 'Vigente';
+                if (days < 0) status = 'Vencido';
+                else if (days <= 60) status = 'Crítico';
+                else if (days <= 180) status = 'A Vencer';
+
+                let renovacao = 'Inicial';
+                if (c.renewalNumber > 0) renovacao = `${c.renewalNumber}ª Renovação`;
+
+                return {
+                    'SEI': c.seiNumber, 
+                    'Contrato': c.contractNumber, 
+                    'Empresa': c.companyName,
+                    'Objeto': c.contractObject, 
+                    'Data Início': c.initialProcessDate || '-',
+                    'Vigência (Fim)': c.currentValidityDate, 
+                    'Status': status,
+                    'Dias Restantes': days,
+                    'Tipo/Renovação': renovacao,
+                    'Valor': c.contractValue
+                };
+            });
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Contratos");
-            XLSX.writeFile(wb, "Relatorio.xlsx");
+            XLSX.writeFile(wb, "Relatorio_Contratos.xlsx");
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -437,8 +464,8 @@
                     currentUserId = user.uid;
                     try {
                     const userDoc = await db.collection(USERS_COLLECTION_PATH).doc(user.uid).collection('profile').doc('data').get();
-                    currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : user.email;
-                    } catch(e) { currentUserName = user.email; }
+                    currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : (user.displayName || user.email);
+                    } catch(e) { currentUserName = user.displayName || user.email; }
                     
                     document.getElementById('user-id-display').textContent = currentUserName;
                     document.getElementById('main-page').classList.remove('hidden');
@@ -545,15 +572,32 @@
                     const div = document.createElement('div');
                     div.className = "border rounded-lg bg-white mb-3 shadow-sm overflow-hidden";
                     
+                    // Determinar status mais crítico do grupo para o balãozinho
+                    let groupStatus = 'vigente';
+                    let minDays = Infinity;
+                    const today = new Date(); today.setHours(0,0,0,0);
+
+                    group.forEach(c => {
+                        const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                        if (days < minDays) minDays = days;
+                        if (days < 0) groupStatus = 'vencido';
+                        else if (days <= 60 && groupStatus !== 'vencido') groupStatus = 'critico';
+                        else if (days <= 180 && groupStatus !== 'vencido' && groupStatus !== 'critico') groupStatus = 'avencer';
+                    });
+
+                    let groupLabel = 'Vigente';
+                    if (groupStatus === 'vencido') groupLabel = 'Vencido';
+                    else if (minDays <= 180) groupLabel = `${minDays} dias`;
+
                     // Tooltip com o objeto do primeiro contrato
                     const objetoTooltip = group[0]?.contractObject || 'Sem objeto';
                     
                     // Cabeçalho Accordion
                     div.innerHTML = `
                     <div 
-                        class="sei-group-header flex justify-between items-center p-3 cursor-pointer bg-white border-b hover:bg-gray-50 transition" 
-                        onclick="this.nextElementSibling.classList.toggle('hidden')"
-                        title="${objetoTooltip.replace(/"/g, '"')}"
+                    class="sei-group-header flex justify-between items-center p-3 cursor-pointer bg-white border-b hover:bg-gray-50 transition" 
+                    onclick="this.nextElementSibling.classList.toggle('hidden')"
+                    title="${objetoTooltip.replace(/"/g, '"')}"
                     >
                     <div class="flex items-center gap-3">
                     <i class="fas fa-folder text-blue-500 text-lg"></i>
@@ -562,29 +606,33 @@
                     <span class="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">${group.length}</span>
                     </div>
                     </div>
+                    <div class="flex items-center gap-2">
+                    <span class="badge-base badge-${groupStatus}">${groupLabel}</span>
                     <i class="fas fa-chevron-down text-gray-400"></i>
+                    </div>
                     </div>
                     <div class="hidden bg-gray-50 p-3 space-y-3"></div>
                     `;
                     const container = div.querySelector('.space-y-3');
                     
                     group.forEach(d => {
-                    const today = new Date(); today.setHours(0,0,0,0);
                     const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
                     
                     // Lógica de Múltiplos Status
                     let badgesHtml = '';
                     if(days < 0) {
-                    badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-red-600 text-white font-bold uppercase ml-1">Vencido</span>';
+                    badgesHtml += '<span class="badge-base badge-vencido ml-1">Vencido</span>';
+                    } else if(days <= 60) {
+                    badgesHtml += '<span class="badge-base badge-critico ml-1">Crítico</span>';
+                    } else if (days <= 180) {
+                    badgesHtml += '<span class="badge-base badge-avencer ml-1">A Vencer</span>';
                     } else {
-                    badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-green-600 text-white font-bold uppercase ml-1">Vigente</span>';
+                    badgesHtml += '<span class="badge-base badge-vigente ml-1">Vigente</span>';
                     }
-                    // Alertas adicionais
-                    if(days >= 0 && days <= 30) {
-                    badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800 font-bold border border-red-200 uppercase ml-1">Crítico</span>';
-                    } else if (days > 30 && days <= 90) {
-                    badgesHtml += '<span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800 font-bold border border-yellow-200 uppercase ml-1">A Vencer</span>';
-                    }
+
+                    // Tipo de contrato (Inicial ou Renovação)
+                    let renovacaoLabel = 'Contrato Inicial';
+                    if (d.renewalNumber > 0) renovacaoLabel = `${d.renewalNumber}ª Renovação`;
 
                     const card = document.createElement('div');
                     card.className = "bg-white p-4 rounded border-l-4 border-blue-500 shadow-sm relative hover:shadow-md transition";
@@ -597,6 +645,7 @@
                     <span class="text-sm text-gray-500 italic hidden md:inline">- ${d.contractObject || 'Sem objeto'}</span>
                     </div>
                     <div class="flex justify-end min-w-max">
+                    <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 uppercase mr-1">${renovacaoLabel}</span>
                     ${badgesHtml}
                     </div>
                     </div>
