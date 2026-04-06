@@ -167,9 +167,14 @@
 
                     <div class="h-8 w-px bg-purple-400 mx-2"></div>
 
-                    <div class="flex items-center space-x-3">
-                    <span id="user-id-display" class="text-sm font-semibold text-purple-100 hidden lg:inline"></span>
-                    <button id="logout-button" class="text-white hover:text-red-200 transition" title="Sair"><i class="fas fa-sign-out-alt text-lg"></i></button>
+                    <div class="flex items-center space-x-4">
+                        <button id="notification-btn" class="relative text-white hover:text-purple-200 transition" title="Notificações">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span id="notification-badge" class="hidden absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-[#8B5CF6]">0</span>
+                        </button>
+                        
+                        <span id="user-id-display" class="text-sm font-semibold text-purple-100 hidden lg:inline"></span>
+                        <button id="logout-button" class="text-white hover:text-red-200 transition" title="Sair"><i class="fas fa-sign-out-alt text-lg"></i></button>
                     </div>
                     </div>
                 </div>
@@ -227,6 +232,18 @@
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <div id="notifications-modal" class="modal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4 relative">
+            <button onclick="closeModal('notifications-modal')" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-4 border-b pb-2"><i class="fas fa-bell text-purple-600 mr-2"></i>Avisos e Lembretes</h2>
+            <div id="notifications-list" class="space-y-3 max-h-[60vh] overflow-y-auto">
+                </div>
+            <div class="flex justify-end pt-4 border-t mt-4">
+                <button onclick="closeModal('notifications-modal')" class="px-4 py-2 bg-gray-100 border rounded hover:bg-gray-200">Fechar</button>
+            </div>
         </div>
     </div>
 
@@ -430,6 +447,7 @@
         const db = firebase.firestore();
         const PUBLIC_COLLECTION_PATH = `artifacts/${firebaseConfig.projectId}/public/data`;
         const USERS_COLLECTION_PATH = `artifacts/${firebaseConfig.projectId}/users`;
+        
         let allContractsData = [];
         let allTasksData = []; // Armazena dados das tarefas
         let currentUserId = null;
@@ -509,7 +527,7 @@
                     
                     loadContracts();
                     loadTerminated();
-                    loadTasks(); // Carrega as tarefas
+                    loadTasks(); 
                 } else {
                     document.getElementById('main-page').classList.add('hidden');
                     document.getElementById('login-page').classList.remove('hidden');
@@ -572,6 +590,7 @@
                     document.getElementById('active-contracts-count-value').textContent = activeC;
                     document.getElementById('expiring-contracts-count-value').textContent = expiringC;
                     applyFilters();
+                    updateNotifications(); // Atualiza os avisos do sininho
                 });
             }
 
@@ -591,7 +610,54 @@
                 renderContractsList(res);
             }
 
-            // --- RENDERIZAÇÃO DOS CARDS (VISUAL NOVO) ---
+            // --- CENTRAL DE NOTIFICAÇÕES (SININHO) ---
+            document.getElementById('notification-btn').onclick = () => showModal('notifications-modal');
+
+            function updateNotifications() {
+                const today = new Date(); today.setHours(0,0,0,0);
+                const todayStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                let alerts = [];
+
+                // Verifica Contratos
+                allContractsData.forEach(c => {
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    if (days < 0) {
+                        alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: `Contrato da empresa <strong>${c.companyName}</strong> está <strong>VENCIDO</strong> há ${Math.abs(days)} dias!` });
+                    } else if (days <= 60) {
+                        alerts.push({ type: 'warning', icon: 'file-contract', text: `Atenção: Contrato da <strong>${c.companyName}</strong> vence em ${days} dias.` });
+                    }
+                });
+
+                // Verifica Tarefas
+                allTasksData.forEach(t => {
+                    if (!t.completed) {
+                        if (t.dueDate < todayStr) {
+                            alerts.push({ type: 'danger', icon: 'tasks', text: `Tarefa atrasada: <strong>${t.description}</strong>` });
+                        } else if (t.dueDate === todayStr) {
+                            alerts.push({ type: 'warning', icon: 'clock', text: `Para hoje: <strong>${t.description}</strong>` });
+                        }
+                    }
+                });
+
+                const badge = document.getElementById('notification-badge');
+                const list = document.getElementById('notifications-list');
+                list.innerHTML = '';
+
+                if (alerts.length > 0) {
+                    badge.textContent = alerts.length;
+                    badge.classList.remove('hidden');
+                    alerts.forEach(a => {
+                        const colorClasses = a.type === 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200';
+                        const iconColor = a.type === 'danger' ? 'text-red-500' : 'text-yellow-500';
+                        list.innerHTML += `<div class="p-3 border rounded text-sm ${colorClasses} shadow-sm"><i class="fas fa-${a.icon} ${iconColor} mr-2"></i> ${a.text}</div>`;
+                    });
+                } else {
+                    badge.classList.add('hidden');
+                    list.innerHTML = '<div class="text-center text-gray-500 py-4"><i class="fas fa-check-circle text-green-500 text-2xl mb-2 block"></i>Tudo em dia! Nenhuma notificação.</div>';
+                }
+            }
+
+            // --- RENDERIZAÇÃO DOS CARDS DE CONTRATOS ---
             function renderContractsList(contracts) {
                 const list = document.getElementById('contracts-list');
                 list.innerHTML = '';
@@ -694,8 +760,9 @@
                     <div class="mt-2 text-xs text-gray-400">Unidades: ${(d.participatingUnits||[]).join(', ') || '-'}</div>
                     ${d.observations ? `<div class="mt-1 text-xs text-gray-500 italic border-l-2 border-yellow-400 pl-2">"${d.observations}"</div>` : ''}
                     
-                    <div class="mt-3 flex gap-2 pt-2 border-t justify-end">
+                    <div class="mt-3 flex gap-2 pt-2 border-t justify-end flex-wrap">
                     <button onclick="openHistoryModal('${d.id}', 'active')" class="text-blue-600 text-xs font-bold hover:underline mr-auto"><i class="fas fa-history"></i> Histórico</button>
+                    <button onclick="openTaskModalWithSEI('${d.seiNumber || ''}')" class="px-3 py-1 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded hover:bg-purple-100 font-bold transition" title="Criar Tarefa para este Contrato"><i class="fas fa-tasks"></i> Tarefa</button>
                     <button onclick="openAddendumModal('${d.id}')" class="px-3 py-1 text-xs bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 font-bold transition"><i class="fas fa-sync-alt"></i> Renovação/Aditivo</button>
                     <button onclick="openEditModal('${d.id}', 'active')" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 font-bold transition"><i class="fas fa-edit"></i> Editar</button>
                     <button onclick="openTerminateModal('${d.id}')" class="px-3 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 font-bold transition" title="Encerrar"><i class="fas fa-times"></i></button>
@@ -1043,7 +1110,7 @@
                 };
 
                 try {
-                    // Usando merge para garantir 100% que nenhum dado externo do documento original seja perdido
+                    // Mantido merge: true para nunca sobrepor/apagar dados extras que não estão no form
                     if (id) await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).set(data, { merge: true });
                     else { 
                         data.createdAt = new Date().toISOString(); 
@@ -1087,6 +1154,7 @@
                     allTasksData = [];
                     snap.forEach(doc => allTasksData.push({id: doc.id, ...doc.data()}));
                     renderTasksList();
+                    updateNotifications(); // Atualiza os avisos do sininho
                 });
             }
 
@@ -1096,7 +1164,7 @@
                 if(!allTasksData.length) { document.getElementById('no-tasks-message').classList.remove('hidden'); return; }
                 document.getElementById('no-tasks-message').classList.add('hidden');
 
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
                 allTasksData.forEach(t => {
                     const isOverdue = t.dueDate < todayStr && !t.completed;
@@ -1144,6 +1212,14 @@
                 showModal('task-form-modal');
             };
 
+            // Função para abrir o modal de tarefa já com o SEI preenchido
+            window.openTaskModalWithSEI = (sei) => {
+                document.getElementById('task-form').reset();
+                document.getElementById('task-id-hidden').value = '';
+                document.getElementById('task-sei').value = sei;
+                showModal('task-form-modal');
+            };
+
             document.getElementById('task-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const id = document.getElementById('task-id-hidden').value;
@@ -1157,7 +1233,7 @@
 
                 try {
                     if (id) {
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).update(data);
+                        await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).set(data, { merge: true });
                     } else {
                         data.createdAt = new Date().toISOString();
                         await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).add(data);
