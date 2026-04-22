@@ -168,13 +168,13 @@
                     <div class="h-8 w-px bg-purple-400 mx-2"></div>
 
                     <div class="flex items-center space-x-4">
-                        <button id="notification-btn" class="relative text-white hover:text-purple-200 transition" title="Notificações">
-                            <i class="fas fa-bell text-xl"></i>
-                            <span id="notification-badge" class="hidden absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-[#8B5CF6]">0</span>
-                        </button>
-                        
-                        <span id="user-id-display" class="text-sm font-semibold text-purple-100 hidden lg:inline"></span>
-                        <button id="logout-button" class="text-white hover:text-red-200 transition" title="Sair"><i class="fas fa-sign-out-alt text-lg"></i></button>
+                    <button id="notification-btn" class="relative text-white hover:text-purple-200 transition" title="Notificações">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="notification-badge" class="hidden absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-[#8B5CF6]">0</span>
+                    </button>
+                    
+                    <span id="user-id-display" class="text-sm font-semibold text-purple-100 hidden lg:inline"></span>
+                    <button id="logout-button" class="text-white hover:text-red-200 transition" title="Sair"><i class="fas fa-sign-out-alt text-lg"></i></button>
                     </div>
                     </div>
                 </div>
@@ -195,9 +195,22 @@
                     
                     <div id="contracts-tab" class="tab-content">
                     <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
                     <button id="add-contract-button" class="h-10 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Novo</button>
                     <button id="export-excel-button" class="h-10 px-4 bg-green-600 text-white rounded hover:bg-green-700 font-medium shadow-sm"><i class="fas fa-file-excel mr-2"></i> Excel</button>
+
+                    <!-- (2) Abrir/Fechar todos os processos -->
+                    <button onclick="toggleAllAccordions(true)" class="h-10 px-4 bg-gray-700 text-white rounded hover:bg-gray-800 font-medium shadow-sm" title="Abrir todos os processos (SEI)">
+                        <i class="fas fa-folder-open mr-2"></i> Abrir todos
+                    </button>
+                    <button onclick="toggleAllAccordions(false)" class="h-10 px-4 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium shadow-sm" title="Fechar todos os processos (SEI)">
+                        <i class="fas fa-folder mr-2"></i> Fechar todos
+                    </button>
+
+                    <!-- (3) Copiar lista de contratos (visíveis/filtrados) -->
+                    <button onclick="copyContractNumbers()" class="h-10 px-4 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium shadow-sm" title="Copia os números de contrato listados (filtrados) separados por ;">
+                        <i class="fas fa-copy mr-2"></i> Copiar contratos
+                    </button>
                     </div>
                     
                     <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto items-center">
@@ -206,7 +219,7 @@
                     <button onclick="clearFilters()" class="ml-2 text-purple-600 hover:text-purple-900"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="relative w-full md:w-96"> 
-                    <input type="text" id="search-input" placeholder="Buscar (nome, sei, objeto)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
+                    <input type="text" id="search-input" placeholder="Buscar (nome, contrato, sei, objeto)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     </div>
                     </div>
@@ -224,7 +237,7 @@
 
                     <div id="tasks-tab" class="tab-content hidden">
                     <div class="mb-6 flex gap-2">
-                        <button id="add-task-button" class="h-10 px-4 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Nova Tarefa</button>
+                    <button id="add-task-button" class="h-10 px-4 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Nova Tarefa</button>
                     </div>
                     <h2 class="text-xl font-bold text-gray-800 mb-4 pl-1 border-l-4 border-purple-500">Lista de Tarefas</h2>
                     <div id="tasks-list" class="space-y-3"></div>
@@ -450,6 +463,10 @@
         
         let allContractsData = [];
         let allTasksData = []; // Armazena dados das tarefas
+
+        // (3) Mantém a última lista realmente "listada"/renderizada após filtros/busca
+        let lastRenderedContracts = [];
+
         let currentUserId = null;
         let currentUserName = "Usuário";
         let currentFilter = 'all';
@@ -482,7 +499,7 @@
             if (!allContractsData || allContractsData.length === 0) { alert("Sem dados."); return; }
             const today = new Date(); today.setHours(0,0,0,0);
             const data = allContractsData.map(c => {
-                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                 let status = 'Vigente';
                 if (days < 0) status = 'Vencido';
                 else if (days <= 60) status = 'Crítico';
@@ -516,8 +533,8 @@
                 if (user) {
                     currentUserId = user.uid;
                     try {
-                        const userDoc = await db.collection(USERS_COLLECTION_PATH).doc(user.uid).collection('profile').doc('data').get();
-                        currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : (user.displayName || user.email);
+                    const userDoc = await db.collection(USERS_COLLECTION_PATH).doc(user.uid).collection('profile').doc('data').get();
+                    currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : (user.displayName || user.email);
                     } catch(e) { currentUserName = user.displayName || user.email; }
                     
                     document.getElementById('user-id-display').textContent = currentUserName;
@@ -548,7 +565,7 @@
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-button').forEach(b => {
-                        b.classList.remove('active-tab'); b.classList.add('inactive-tab');
+                    b.classList.remove('active-tab'); b.classList.add('inactive-tab');
                     });
                     btn.classList.add('active-tab'); btn.classList.remove('inactive-tab');
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -572,6 +589,51 @@
                 document.getElementById('active-filter-badge').classList.add('hidden'); applyFilters();
             };
 
+            // (2) Abrir/Fechar todos os processos (somente na aba/lista de contratos ativos)
+            window.toggleAllAccordions = (open) => {
+                document.querySelectorAll('#contracts-list .sei-group-header').forEach(header => {
+                    const content = header.nextElementSibling;
+                    if (!content) return;
+                    if (open) content.classList.remove('hidden');
+                    else content.classList.add('hidden');
+                });
+            };
+
+            // (3) Copiar contratos "listados" (após filtros/busca) separado por ';' sem espaço
+            window.copyContractNumbers = async () => {
+  const unique = [];
+  const seen = new Set();
+
+  (allContractsData || []).forEach(c => {
+    const n = (c && c.contractNumber) ? String(c.contractNumber).trim() : '';
+    if (!n) return;
+    if (seen.has(n)) return;
+    seen.add(n);
+    unique.push(n);
+  });
+
+  const result = unique.join(';'); // <-- sem espaço
+
+  if (!result) {
+    alert("Nenhum número de contrato para copiar.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(result);
+    alert("Todos os números de contrato foram copiados!");
+  } catch (e) {
+    // fallback simples se clipboard falhar
+    const ta = document.createElement('textarea');
+    ta.value = result;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert("Todos os números de contrato foram copiados!");
+  }
+};
+
             // LOAD DATA
             function loadContracts() {
                 db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).onSnapshot(snap => {
@@ -580,11 +642,11 @@
                     const today = new Date(); today.setHours(0,0,0,0);
 
                     snap.forEach(doc => {
-                        const d = {id: doc.id, ...doc.data()};
-                        allContractsData.push(d);
-                        const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
-                        if(days >= 0) activeC++;
-                        if(days >= 0 && days <= 180) expiringC++;
+                    const d = {id: doc.id, ...doc.data()};
+                    allContractsData.push(d);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 8640000);
+                    if(days >= 0) activeC++;
+                    if(days >= 0 && days <= 180) expiringC++;
                     });
 
                     document.getElementById('active-contracts-count-value').textContent = activeC;
@@ -598,15 +660,27 @@
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 let res = allContractsData.filter(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     return true;
                 });
+
                 if(searchTerm.trim()) {
                     const t = normalizeString(searchTerm);
-                    res = res.filter(c => normalizeString(c.companyName).includes(t) || normalizeString(c.seiNumber).includes(t) || normalizeString(c.contractObject).includes(t));
+
+                    // (1) Inclui busca por Nº do contrato
+                    res = res.filter(c => 
+                        normalizeString(c.companyName).includes(t) || 
+                        normalizeString(c.seiNumber).includes(t) || 
+                        normalizeString(c.contractObject).includes(t) ||
+                        normalizeString(c.contractNumber).includes(t)
+                    );
                 }
+
+                // (3) guarda o que está "listado" (renderizado)
+                lastRenderedContracts = res;
+
                 renderContractsList(res);
             }
 
@@ -620,22 +694,22 @@
 
                 // Verifica Contratos
                 allContractsData.forEach(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                     if (days < 0) {
-                        alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: `Contrato da empresa <strong>${c.companyName}</strong> está <strong>VENCIDO</strong> há ${Math.abs(days)} dias!` });
+                    alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: `Contrato da empresa <strong>${c.companyName}</strong> está <strong>VENCIDO</strong> há ${Math.abs(days)} dias!` });
                     } else if (days <= 60) {
-                        alerts.push({ type: 'warning', icon: 'file-contract', text: `Atenção: Contrato da <strong>${c.companyName}</strong> vence em ${days} dias.` });
+                    alerts.push({ type: 'warning', icon: 'file-contract', text: `Atenção: Contrato da <strong>${c.companyName}</strong> vence em ${days} dias.` });
                     }
                 });
 
                 // Verifica Tarefas
                 allTasksData.forEach(t => {
                     if (!t.completed) {
-                        if (t.dueDate < todayStr) {
-                            alerts.push({ type: 'danger', icon: 'tasks', text: `Tarefa atrasada: <strong>${t.description}</strong>` });
-                        } else if (t.dueDate === todayStr) {
-                            alerts.push({ type: 'warning', icon: 'clock', text: `Para hoje: <strong>${t.description}</strong>` });
-                        }
+                    if (t.dueDate < todayStr) {
+                    alerts.push({ type: 'danger', icon: 'tasks', text: `Tarefa atrasada: <strong>${t.description}</strong>` });
+                    } else if (t.dueDate === todayStr) {
+                    alerts.push({ type: 'warning', icon: 'clock', text: `Para hoje: <strong>${t.description}</strong>` });
+                    }
                     }
                 });
 
@@ -647,9 +721,9 @@
                     badge.textContent = alerts.length;
                     badge.classList.remove('hidden');
                     alerts.forEach(a => {
-                        const colorClasses = a.type === 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200';
-                        const iconColor = a.type === 'danger' ? 'text-red-500' : 'text-yellow-500';
-                        list.innerHTML += `<div class="p-3 border rounded text-sm ${colorClasses} shadow-sm"><i class="fas fa-${a.icon} ${iconColor} mr-2"></i> ${a.text}</div>`;
+                    const colorClasses = a.type === 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200';
+                    const iconColor = a.type === 'danger' ? 'text-red-500' : 'text-yellow-500';
+                    list.innerHTML += `<div class="p-3 border rounded text-sm ${colorClasses} shadow-sm"><i class="fas fa-${a.icon} ${iconColor} mr-2"></i> ${a.text}</div>`;
                     });
                 } else {
                     badge.classList.add('hidden');
@@ -680,11 +754,11 @@
                     const today = new Date(); today.setHours(0,0,0,0);
 
                     group.forEach(c => {
-                        const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
-                        if (days < minDays) minDays = days;
-                        if (days < 0) groupStatus = 'vencido';
-                        else if (days <= 60 && groupStatus !== 'vencido') groupStatus = 'critico';
-                        else if (days <= 180 && groupStatus !== 'vencido' && groupStatus !== 'critico') groupStatus = 'avencer';
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
+                    if (days < minDays) minDays = days;
+                    if (days < 0) groupStatus = 'vencido';
+                    else if (days <= 60 && groupStatus !== 'vencido') groupStatus = 'critico';
+                    else if (days <= 180 && groupStatus !== 'vencido' && groupStatus !== 'critico') groupStatus = 'avencer';
                     });
 
                     let groupLabel = 'Vigente';
@@ -716,17 +790,17 @@
                     const container = div.querySelector('.space-y-3');
                     
                     group.forEach(d => {
-                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 8640000);
                     
                     let badgesHtml = '';
                     if(days < 0) {
-                        badgesHtml += '<span class="badge-base badge-vencido ml-1">Vencido</span>';
+                    badgesHtml += '<span class="badge-base badge-vencido ml-1">Vencido</span>';
                     } else if(days <= 60) {
-                        badgesHtml += '<span class="badge-base badge-critico ml-1">Crítico</span>';
+                    badgesHtml += '<span class="badge-base badge-critico ml-1">Crítico</span>';
                     } else if (days <= 180) {
-                        badgesHtml += '<span class="badge-base badge-avencer ml-1">A Vencer</span>';
+                    badgesHtml += '<span class="badge-base badge-avencer ml-1">A Vencer</span>';
                     } else {
-                        badgesHtml += '<span class="badge-base badge-vigente ml-1">Vigente</span>';
+                    badgesHtml += '<span class="badge-base badge-vigente ml-1">Vigente</span>';
                     }
 
                     let renovacaoLabel = 'Contrato Inicial';
@@ -840,15 +914,15 @@
                     div.innerHTML = `<input type="checkbox" data-item="${id}" ${checked ? "checked" : ""}> <span class="text-sm select-none">${item}</span>`;
                     
                     div.onclick = (e) => {
-                        if(e.target.type !== 'checkbox') {
-                            const cb = div.querySelector('input');
-                            cb.checked = !cb.checked;
-                            saveChecklistItem(contractId, id, cb.checked, div);
-                        }
+                    if(e.target.type !== 'checkbox') {
+                    const cb = div.querySelector('input');
+                    cb.checked = !cb.checked;
+                    saveChecklistItem(contractId, id, cb.checked, div);
+                    }
                     };
                     div.querySelector('input').onclick = (e) => {
-                        e.stopPropagation();
-                        saveChecklistItem(contractId, id, e.target.checked, div);
+                    e.stopPropagation();
+                    saveChecklistItem(contractId, id, e.target.checked, div);
                     };
                     container.appendChild(div);
                     });
@@ -924,16 +998,16 @@
                     atual.setMonth(atual.getMonth() + parseInt(meses));
                     const novaData = atual.toISOString().split("T")[0];
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
-                        currentValidityDate: novaData,
-                        renewalNumber: (dados.renewalNumber || 0) + 1,
-                        updatedAt: new Date().toISOString()
+                    currentValidityDate: novaData,
+                    renewalNumber: (dados.renewalNumber || 0) + 1,
+                    updatedAt: new Date().toISOString()
                     });
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
-                        date: new Date().toISOString().split("T")[0],
-                        type: "Renovação",
-                        description: `Renovação efetivada (Checklist completo). Aditivo nº ${numero}. Nova vigência: ${novaData}. Prazo: ${meses} meses.`,
-                        user: currentUserName,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    date: new Date().toISOString().split("T")[0],
+                    type: "Renovação",
+                    description: `Renovação efetivada (Checklist completo). Aditivo nº ${numero}. Nova vigência: ${novaData}. Prazo: ${meses} meses.`,
+                    user: currentUserName,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").delete();
                     alert("Renovação realizada com sucesso!");
@@ -957,25 +1031,25 @@
                     desc = `Aditivo (${sub}): ${document.getElementById('aditivo-number').value}. `;
                     if(sub === 'Acrescimo') desc += `Valor: ${document.getElementById('acrescimo-valor-total').value}. ${document.getElementById('acrescimo-detalhes').value}`;
                     else if(sub === 'Supressao') {
-                        const nd = document.getElementById('renewal-new-date-aditivo').value;
-                        if(nd) updates.currentValidityDate = nd;
-                        desc += "Supressão/Alteração simples.";
+                    const nd = document.getElementById('renewal-new-date-aditivo').value;
+                    if(nd) updates.currentValidityDate = nd;
+                    desc += "Supressão/Alteração simples.";
                     }
                 } else {
                     const sub = document.getElementById('apostilamento-sub-type').value;
                     desc = `Apostilamento (${sub}): ${document.getElementById('apostilamento-number').value}. `;
                     if(sub === 'Reajuste') {
-                        const nv = document.getElementById('apostilamento-novo-valor').value;
-                        if(nv) updates.contractValue = nv;
-                        desc += `Reajuste: ${document.getElementById('apostilamento-reajuste-percentage').value}%. Novo Valor: ${nv}`;
+                    const nv = document.getElementById('apostilamento-novo-valor').value;
+                    if(nv) updates.contractValue = nv;
+                    desc += `Reajuste: ${document.getElementById('apostilamento-reajuste-percentage').value}%. Novo Valor: ${nv}`;
                     } else if(sub === 'Outros') desc += document.getElementById('apostilamento-others-notes').value;
                 }
 
                 try {
                     if(Object.keys(updates).length > 0) await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).update(updates);
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).add({
-                        date: today, type: type, description: desc, user: currentUserName,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    date: today, type: type, description: desc, user: currentUserName,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     closeModal('addendum-modal');
                     alert("Salvo com sucesso!");
@@ -992,20 +1066,20 @@
                     let snap = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).orderBy('timestamp', 'desc').get();
                     container.innerHTML = '';
                     if (snap.empty) { 
-                        const snap2 = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).get();
-                        if (snap2.empty) { container.innerHTML = '<p class="text-gray-500">Sem histórico.</p>'; return; }
-                        snap = snap2;
+                    const snap2 = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).get();
+                    if (snap2.empty) { container.innerHTML = '<p class="text-gray-500">Sem histórico.</p>'; return; }
+                    snap = snap2;
                     }
                     snap.forEach(doc => {
-                        const h = doc.data();
-                        const item = document.createElement('div');
-                        item.className = "border-l-4 border-blue-500 pl-4 pb-4";
-                        item.innerHTML = `
-                        <p class="font-bold text-sm text-gray-800">${h.type || 'Ação'} <span class="text-xs font-normal text-gray-500 float-right">${h.date}</span></p>
-                        <p class="text-xs text-blue-600 font-semibold mb-1">${h.user || 'Sistema'}</p>
-                        <p class="text-sm text-gray-600">${h.description || ''}</p>
-                        `;
-                        container.appendChild(item);
+                    const h = doc.data();
+                    const item = document.createElement('div');
+                    item.className = "border-l-4 border-blue-500 pl-4 pb-4";
+                    item.innerHTML = `
+                    <p class="font-bold text-sm text-gray-800">${h.type || 'Ação'} <span class="text-xs font-normal text-gray-500 float-right">${h.date}</span></p>
+                    <p class="text-xs text-blue-600 font-semibold mb-1">${h.user || 'Sistema'}</p>
+                    <p class="text-sm text-gray-600">${h.description || ''}</p>
+                    `;
+                    container.appendChild(item);
                     });
                 } catch(e) { 
                     console.error(e);
@@ -1030,12 +1104,12 @@
                     const historySnap = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).get();
                     
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).set({
-                        ...data, terminationDate: date, terminationNotes: notes, status: 'terminated'
+                    ...data, terminationDate: date, terminationNotes: notes, status: 'terminated'
                     });
                     const batch = db.batch();
                     historySnap.forEach(h => {
-                        const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
-                        batch.set(ref, h.data());
+                    const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
+                    batch.set(ref, h.data());
                     });
                     const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
                     batch.set(finalRef, { date: date, type: 'Encerramento', description: notes, user: currentUserName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
@@ -1056,8 +1130,8 @@
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).set(data);
                     const batch = db.batch();
                     historySnap.forEach(h => {
-                        const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
-                        batch.set(ref, h.data());
+                    const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
+                    batch.set(ref, h.data());
                     });
                     const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
                     batch.set(finalRef, { date: new Date().toISOString().split('T')[0], type: 'Reativação', description: 'Reativado.', user: currentUserName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
@@ -1113,8 +1187,8 @@
                     // Mantido merge: true para nunca sobrepor/apagar dados extras que não estão no form
                     if (id) await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).set(data, { merge: true });
                     else { 
-                        data.createdAt = new Date().toISOString(); 
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).add(data); 
+                    data.createdAt = new Date().toISOString(); 
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).add(data); 
                     }
                     closeModal('contract-form-modal');
                 } catch(err) { console.error(err); alert("Erro ao salvar."); }
@@ -1137,11 +1211,11 @@
                     div.className = `unit-button ${selected.includes(u) ? 'selected' : ''}`;
                     div.textContent = u;
                     div.onclick = () => {
-                        let current = JSON.parse(document.getElementById('contract-selected-units').value || '[]');
-                        if(current.includes(u)) current = current.filter(x => x !== u);
-                        else current.push(u);
-                        document.getElementById('contract-selected-units').value = JSON.stringify(current);
-                        renderUnitsCheckbox(current);
+                    let current = JSON.parse(document.getElementById('contract-selected-units').value || '[]');
+                    if(current.includes(u)) current = current.filter(x => x !== u);
+                    else current.push(u);
+                    document.getElementById('contract-selected-units').value = JSON.stringify(current);
+                    renderUnitsCheckbox(current);
                     };
                     container.appendChild(div);
                 });
@@ -1172,21 +1246,21 @@
                     card.className = `p-4 rounded border-l-4 shadow-sm bg-white flex justify-between items-center transition-all ${isOverdue ? 'border-red-500' : 'border-purple-500'} ${t.completed ? 'opacity-60 bg-gray-50' : ''}`;
                     
                     card.innerHTML = `
-                        <div class="flex items-start gap-3 w-full">
-                            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskComplete('${t.id}', this.checked)" class="mt-1 w-5 h-5 cursor-pointer accent-purple-600 rounded">
-                            <div class="flex-1">
-                                <div class="font-bold text-gray-800 ${t.completed ? 'line-through text-gray-500' : ''}">${t.description}</div>
-                                <div class="text-sm text-gray-500 mt-1 flex flex-wrap gap-2 items-center">
-                                    ${t.seiNumber ? `<span class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs border border-purple-200 font-medium"><i class="fas fa-folder mr-1"></i>${t.seiNumber}</span>` : ''}
-                                    <span class="${isOverdue ? 'text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200' : 'text-gray-500'} text-xs">
-                                        <i class="far fa-calendar-alt mr-1"></i>Vence em: ${t.dueDate.split('-').reverse().join('/')}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="deleteTask('${t.id}')" class="text-gray-400 hover:text-red-600 p-2 transition"><i class="fas fa-trash"></i></button>
-                        </div>
+                    <div class="flex items-start gap-3 w-full">
+                    <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskComplete('${t.id}', this.checked)" class="mt-1 w-5 h-5 cursor-pointer accent-purple-600 rounded">
+                    <div class="flex-1">
+                    <div class="font-bold text-gray-800 ${t.completed ? 'line-through text-gray-500' : ''}">${t.description}</div>
+                    <div class="text-sm text-gray-500 mt-1 flex flex-wrap gap-2 items-center">
+                    ${t.seiNumber ? `<span class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs border border-purple-200 font-medium"><i class="fas fa-folder mr-1"></i>${t.seiNumber}</span>` : ''}
+                    <span class="${isOverdue ? 'text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200' : 'text-gray-500'} text-xs">
+                    <i class="far fa-calendar-alt mr-1"></i>Vence em: ${t.dueDate.split('-').reverse().join('/')}
+                    </span>
+                    </div>
+                    </div>
+                    </div>
+                    <div class="flex gap-2">
+                    <button onclick="deleteTask('${t.id}')" class="text-gray-400 hover:text-red-600 p-2 transition"><i class="fas fa-trash"></i></button>
+                    </div>
                     `;
                     list.appendChild(card);
                 });
@@ -1201,7 +1275,7 @@
             window.deleteTask = async (id) => {
                 if(confirm("Tem certeza que deseja excluir esta tarefa?")) {
                     try {
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).delete();
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).delete();
                     } catch(e) { console.error("Erro ao deletar tarefa", e); }
                 }
             };
@@ -1233,10 +1307,10 @@
 
                 try {
                     if (id) {
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).set(data, { merge: true });
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).set(data, { merge: true });
                     } else {
-                        data.createdAt = new Date().toISOString();
-                        await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).add(data);
+                    data.createdAt = new Date().toISOString();
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).add(data);
                     }
                     closeModal('task-form-modal');
                 } catch(err) { console.error(err); alert("Erro ao salvar a tarefa."); }
