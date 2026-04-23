@@ -496,7 +496,7 @@
             if (!allContractsData || allContractsData.length === 0) { alert("Sem dados."); return; }
             const today = new Date(); today.setHours(0,0,0,0);
             const data = allContractsData.map(c => {
-                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
+                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                 let status = 'Vigente';
                 if (days < 0) status = 'Vencido';
                 else if (days <= 60) status = 'Crítico';
@@ -652,7 +652,7 @@
                     snap.forEach(doc => {
                     const d = {id: doc.id, ...doc.data()};
                     allContractsData.push(d);
-                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 8640000);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
                     if(days >= 0) activeC++;
                     if(days >= 0 && days <= 180) expiringC++;
                     });
@@ -668,7 +668,7 @@
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 let res = allContractsData.filter(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     return true;
@@ -702,7 +702,7 @@
 
                 // Verifica Contratos
                 allContractsData.forEach(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if (days < 0) {
                     alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: `Contrato da empresa <strong>${c.companyName}</strong> está <strong>VENCIDO</strong> há ${Math.abs(days)} dias!` });
                     } else if (days <= 60) {
@@ -762,7 +762,7 @@
                     const today = new Date(); today.setHours(0,0,0,0);
 
                     group.forEach(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if (days < minDays) minDays = days;
                     if (days < 0) groupStatus = 'vencido';
                     else if (days <= 60 && groupStatus !== 'vencido') groupStatus = 'critico';
@@ -798,7 +798,7 @@
                     const container = div.querySelector('.space-y-3');
 
                     group.forEach(d => {
-                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 8640000);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
 
                     let badgesHtml = '';
                     if(days < 0) {
