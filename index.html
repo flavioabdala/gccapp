@@ -1002,9 +1002,19 @@
                 try {
                     const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
                     const dados = doc.data();
-                    const atual = new Date(dados.currentValidityDate);
+
+                    // ✅ Usa createLocalDate para evitar drift de timezone
+                    const atual = createLocalDate(dados.currentValidityDate);
                     atual.setMonth(atual.getMonth() + parseInt(meses));
-                    const novaData = atual.toISOString().split("T")[0];
+                    // ✅ Regra jurídica: vigência termina no dia anterior ao aniversário
+                    atual.setDate(atual.getDate() - 1);
+
+                    // ✅ Formata como YYYY-MM-DD sem usar toISOString (evita UTC offset)
+                    const y = atual.getFullYear();
+                    const m = String(atual.getMonth() + 1).padStart(2, '0');
+                    const d = String(atual.getDate()).padStart(2, '0');
+                    const novaData = `${y}-${m}-${d}`;
+
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
                     currentValidityDate: novaData,
                     renewalNumber: (dados.renewalNumber || 0) + 1,
