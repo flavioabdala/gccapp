@@ -199,12 +199,10 @@
                     <button id="add-contract-button" class="h-10 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow-sm"><i class="fas fa-plus mr-2"></i> Novo</button>
                     <button id="export-excel-button" class="h-10 px-4 bg-green-600 text-white rounded hover:bg-green-700 font-medium shadow-sm"><i class="fas fa-file-excel mr-2"></i> Excel</button>
 
-                    <!-- (2) Abrir/Fechar todos os processos (toggle) -->
                     <button id="toggle-accordions-btn" onclick="toggleAllAccordions()" class="h-10 px-4 bg-gray-700 text-white rounded hover:bg-gray-800 font-medium shadow-sm" title="Abrir/Fechar todos os processos (SEI)">
                         <i class="fas fa-folder-open mr-2"></i> Abrir todos
                     </button>
 
-                    <!-- (3) Copiar lista de contratos (visíveis/filtrados) -->
                     <button onclick="copyContractNumbers()" class="h-10 px-4 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium shadow-sm" title="Copia os números de contrato listados (filtrados) separados por ;">
                         <i class="fas fa-copy mr-2"></i> Copiar contratos
                     </button>
@@ -215,6 +213,23 @@
                     <span id="filter-name-display">Filtrado</span>
                     <button onclick="clearFilters()" class="ml-2 text-purple-600 hover:text-purple-900"><i class="fas fa-times"></i></button>
                     </div>
+                    
+                    <select id="month-filter" class="w-full md:w-auto px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm bg-white">
+                        <option value="">Todos os meses</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+
                     <div class="relative w-full md:w-96">
                     <input type="text" id="search-input" placeholder="Buscar (nome, contrato, sei, objeto)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -459,10 +474,9 @@
         const USERS_COLLECTION_PATH = `artifacts/${firebaseConfig.projectId}/users`;
 
         let allContractsData = [];
-        let allTasksData = []; // Armazena dados das tarefas
-
-        // (3) Mantém a última lista realmente "listada"/renderizada após filtros/busca
+        let allTasksData = []; 
         let lastRenderedContracts = [];
+        let filterMonth = ''; // Variável para armazenar o mês selecionado
 
         let currentUserId = null;
         let currentUserName = "Usuário";
@@ -574,6 +588,8 @@
             document.getElementById('filter-active-contracts').onclick = () => setFilter('active', 'Ativos');
             document.getElementById('filter-expiring-contracts').onclick = () => setFilter('expiring', 'Vencendo');
             document.getElementById('search-input').oninput = e => { searchTerm = e.target.value; applyFilters(); };
+            document.getElementById('month-filter').onchange = e => { filterMonth = e.target.value; applyFilters(); }; // Event listener pro mês
+
             window.setFilter = (type, label) => {
                 currentFilter = type;
                 document.getElementById('active-filter-badge').classList.toggle('hidden', type === 'all');
@@ -583,10 +599,12 @@
             window.clearFilters = () => {
                 currentFilter = 'all';
                 searchTerm = ''; document.getElementById('search-input').value = '';
-                document.getElementById('active-filter-badge').classList.add('hidden'); applyFilters();
+                filterMonth = ''; document.getElementById('month-filter').value = '';
+                document.getElementById('active-filter-badge').classList.add('hidden'); 
+                applyFilters();
             };
 
-            // (2) Toggle abrir/fechar todos os processos com um único botão
+            // Toggle abrir/fechar todos os processos com um único botão
             let allAccordionsOpen = false;
             window.toggleAllAccordions = () => {
                 allAccordionsOpen = !allAccordionsOpen;
@@ -608,7 +626,7 @@
                 }
             };
 
-            // (3) Copiar contratos "listados" (após filtros/busca) separado por ';' sem espaço
+            // Copiar contratos listados
             window.copyContractNumbers = async () => {
                 const unique = [];
                 const seen = new Set();
@@ -631,7 +649,6 @@
                     await navigator.clipboard.writeText(result);
                     alert("Números de contrato copiados!");
                 } catch (e) {
-                    // fallback simples se clipboard falhar
                     const ta = document.createElement('textarea');
                     ta.value = result;
                     document.body.appendChild(ta);
@@ -660,24 +677,30 @@
                     document.getElementById('active-contracts-count-value').textContent = activeC;
                     document.getElementById('expiring-contracts-count-value').textContent = expiringC;
                     applyFilters();
-                    updateNotifications(); // Atualiza os avisos do sininho
+                    updateNotifications(); 
                 });
             }
 
             function applyFilters() {
                 const today = new Date();
                 today.setHours(0,0,0,0);
+                
                 let res = allContractsData.filter(c => {
                     const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
+                    
+                    // Lógica do Filtro por Mês
+                    if(filterMonth && c.currentValidityDate) {
+                        const month = c.currentValidityDate.split('-')[1];
+                        if (month !== filterMonth) return false;
+                    }
+                    
                     return true;
                 });
 
                 if(searchTerm.trim()) {
                     const t = normalizeString(searchTerm);
-
-                    // (1) Inclui busca por Nº do contrato
                     res = res.filter(c =>
                         normalizeString(c.companyName).includes(t) ||
                         normalizeString(c.seiNumber).includes(t) ||
@@ -686,9 +709,7 @@
                     );
                 }
 
-                // (3) guarda o que está "listado" (renderizado)
                 lastRenderedContracts = res;
-
                 renderContractsList(res);
             }
 
@@ -700,7 +721,6 @@
                 const todayStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 let alerts = [];
 
-                // Verifica Contratos
                 allContractsData.forEach(c => {
                     const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if (days < 0) {
@@ -710,7 +730,6 @@
                     }
                 });
 
-                // Verifica Tarefas
                 allTasksData.forEach(t => {
                     if (!t.completed) {
                     if (t.dueDate < todayStr) {
@@ -746,7 +765,6 @@
                 if(!contracts.length) { document.getElementById('no-contracts-message').classList.remove('hidden'); return; }
                 document.getElementById('no-contracts-message').classList.add('hidden');
 
-                // Agrupar por Processo
                 const grouped = contracts.reduce((acc, c) => {
                     const s = c.seiNumber || 'Sem Processo';
                     if(!acc[s]) acc[s] = []; acc[s].push(c); return acc;
@@ -1003,13 +1021,10 @@
                     const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
                     const dados = doc.data();
 
-                    // ✅ Usa createLocalDate para evitar drift de timezone
                     const atual = createLocalDate(dados.currentValidityDate);
                     atual.setMonth(atual.getMonth() + parseInt(meses));
-                    // ✅ Regra jurídica: vigência termina no dia anterior ao aniversário
                     atual.setDate(atual.getDate() - 1);
 
-                    // ✅ Formata como YYYY-MM-DD sem usar toISOString (evita UTC offset)
                     const y = atual.getFullYear();
                     const m = String(atual.getMonth() + 1).padStart(2, '0');
                     const d = String(atual.getDate()).padStart(2, '0');
@@ -1202,7 +1217,6 @@
                 };
 
                 try {
-                    // Mantido merge: true para nunca sobrepor/apagar dados extras que não estão no form
                     if (id) await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).set(data, { merge: true });
                     else {
                     data.createdAt = new Date().toISOString();
@@ -1246,7 +1260,7 @@
                     allTasksData = [];
                     snap.forEach(doc => allTasksData.push({id: doc.id, ...doc.data()}));
                     renderTasksList();
-                    updateNotifications(); // Atualiza os avisos do sininho
+                    updateNotifications(); 
                 });
             }
 
@@ -1304,7 +1318,6 @@
                 showModal('task-form-modal');
             };
 
-            // Função para abrir o modal de tarefa já com o SEI preenchido
             window.openTaskModalWithSEI = (sei) => {
                 document.getElementById('task-form').reset();
                 document.getElementById('task-id-hidden').value = '';
