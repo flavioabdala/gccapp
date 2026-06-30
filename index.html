@@ -200,11 +200,11 @@
                     <button id="export-excel-button" class="h-10 px-4 bg-green-600 text-white rounded hover:bg-green-700 font-medium shadow-sm"><i class="fas fa-file-excel mr-2"></i> Excel</button>
 
                     <button id="toggle-accordions-btn" onclick="toggleAllAccordions()" class="h-10 px-4 bg-gray-700 text-white rounded hover:bg-gray-800 font-medium shadow-sm" title="Abrir/Fechar todos os processos (SEI)">
-                        <i class="fas fa-folder-open mr-2"></i> Abrir todos
+                    <i class="fas fa-folder-open mr-2"></i> Abrir todos
                     </button>
 
                     <button onclick="copyContractNumbers()" class="h-10 px-4 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium shadow-sm" title="Copia os números de contrato listados (filtrados) separados por ;">
-                        <i class="fas fa-copy mr-2"></i> Copiar contratos
+                    <i class="fas fa-copy mr-2"></i> Copiar contratos
                     </button>
                     </div>
 
@@ -215,23 +215,23 @@
                     </div>
                     
                     <select id="month-filter" class="w-full md:w-auto px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm bg-white">
-                        <option value="">Todos os meses</option>
-                        <option value="01">Janeiro</option>
-                        <option value="02">Fevereiro</option>
-                        <option value="03">Março</option>
-                        <option value="04">Abril</option>
-                        <option value="05">Maio</option>
-                        <option value="06">Junho</option>
-                        <option value="07">Julho</option>
-                        <option value="08">Agosto</option>
-                        <option value="09">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
+                    <option value="">Todos os meses</option>
+                    <option value="01">Janeiro</option>
+                    <option value="02">Fevereiro</option>
+                    <option value="03">Março</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Maio</option>
+                    <option value="06">Junho</option>
+                    <option value="07">Julho</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
                     </select>
 
                     <div class="relative w-full md:w-96">
-                    <input type="text" id="search-input" placeholder="Buscar (nome, contrato, sei, objeto)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
+                    <input type="text" id="search-input" placeholder="Buscar (nome, contrato, sei, objeto, unidade)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     </div>
                     </div>
@@ -510,7 +510,7 @@
             if (!allContractsData || allContractsData.length === 0) { alert("Sem dados."); return; }
             const today = new Date(); today.setHours(0,0,0,0);
             const data = allContractsData.map(c => {
-                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                 let status = 'Vigente';
                 if (days < 0) status = 'Vencido';
                 else if (days <= 60) status = 'Crítico';
@@ -669,7 +669,7 @@
                     snap.forEach(doc => {
                     const d = {id: doc.id, ...doc.data()};
                     allContractsData.push(d);
-                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 8640000);
                     if(days >= 0) activeC++;
                     if(days >= 0 && days <= 180) expiringC++;
                     });
@@ -686,27 +686,39 @@
                 today.setHours(0,0,0,0);
                 
                 let res = allContractsData.filter(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     
                     // Lógica do Filtro por Mês
                     if(filterMonth && c.currentValidityDate) {
-                        const month = c.currentValidityDate.split('-')[1];
-                        if (month !== filterMonth) return false;
+                    const month = c.currentValidityDate.split('-')[1];
+                    if (month !== filterMonth) return false;
                     }
                     
                     return true;
                 });
 
                 if(searchTerm.trim()) {
-                    const t = normalizeString(searchTerm);
-                    res = res.filter(c =>
-                        normalizeString(c.companyName).includes(t) ||
-                        normalizeString(c.seiNumber).includes(t) ||
-                        normalizeString(c.contractObject).includes(t) ||
-                        normalizeString(c.contractNumber).includes(t)
-                    );
+                    const rawTerms = searchTerm.split(';').map(s => s.trim()).filter(s => s.length > 0);
+                    
+                    res = res.filter(c => {
+                        return rawTerms.some(term => {
+                            const t = normalizeString(term);
+                            // Busca nos campos textuais existentes
+                            if (
+                                normalizeString(c.companyName).includes(t) ||
+                                normalizeString(c.seiNumber).includes(t) ||
+                                normalizeString(c.contractObject).includes(t) ||
+                                normalizeString(c.contractNumber).includes(t)
+                            ) return true;
+                            // Busca nas unidades participantes
+                            if (Array.isArray(c.participatingUnits)) {
+                                return c.participatingUnits.some(u => normalizeString(u).includes(t));
+                            }
+                            return false;
+                        });
+                    });
                 }
 
                 lastRenderedContracts = res;
@@ -722,7 +734,7 @@
                 let alerts = [];
 
                 allContractsData.forEach(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                     if (days < 0) {
                     alerts.push({ type: 'danger', icon: 'exclamation-triangle', text: `Contrato da empresa <strong>${c.companyName}</strong> está <strong>VENCIDO</strong> há ${Math.abs(days)} dias!` });
                     } else if (days <= 60) {
@@ -780,7 +792,7 @@
                     const today = new Date(); today.setHours(0,0,0,0);
 
                     group.forEach(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                     if (days < minDays) minDays = days;
                     if (days < 0) groupStatus = 'vencido';
                     else if (days <= 60 && groupStatus !== 'vencido') groupStatus = 'critico';
@@ -816,7 +828,7 @@
                     const container = div.querySelector('.space-y-3');
 
                     group.forEach(d => {
-                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 8640000);
 
                     let badgesHtml = '';
                     if(days < 0) {
