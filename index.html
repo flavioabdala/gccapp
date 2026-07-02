@@ -231,8 +231,7 @@
                     </select>
 
                     <div class="relative w-full md:w-96">
-                    <input type="text" id="search-input" placeholder="Buscar (nome, contrato, sei, objeto)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                  <input type="text" id="search-input" placeholder="Buscar (nome, contrato, sei, objeto, unidade)..." class="w-full pl-10 pr-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 text-sm">
                     </div>
                     </div>
                     </div>
@@ -686,33 +685,42 @@
                 today.setHours(0,0,0,0);
                 
                 let res = allContractsData.filter(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     
-                    // Lógica do Filtro por Mês
                     if(filterMonth && c.currentValidityDate) {
                         const month = c.currentValidityDate.split('-')[1];
                         if (month !== filterMonth) return false;
                     }
-                    
                     return true;
                 });
 
                 if(searchTerm.trim()) {
-                    const t = normalizeString(searchTerm);
-                    res = res.filter(c =>
-                        normalizeString(c.companyName).includes(t) ||
-                        normalizeString(c.seiNumber).includes(t) ||
-                        normalizeString(c.contractObject).includes(t) ||
-                        normalizeString(c.contractNumber).includes(t)
-                    );
+                    const terms = searchTerm.split(';').map(t => normalizeString(t.trim())).filter(t => t !== "");
+                    
+                    if (searchTerm.includes(';')) {
+                        // Lógica de INTERSEÇÃO: O contrato deve conter TODAS as unidades citadas
+                        res = res.filter(c => {
+                            const units = (c.participatingUnits || []).map(u => normalizeString(u));
+                            return terms.every(term => units.some(u => u.includes(term)));
+                        });
+                    } else {
+                        // Busca comum para termo único
+                        const t = terms[0];
+                        res = res.filter(c =>
+                            normalizeString(c.companyName).includes(t) ||
+                            normalizeString(c.seiNumber).includes(t) ||
+                            normalizeString(c.contractObject).includes(t) ||
+                            normalizeString(c.contractNumber).includes(t) ||
+                            (c.participatingUnits || []).some(u => normalizeString(u).includes(t))
+                        );
+                    }
                 }
 
                 lastRenderedContracts = res;
                 renderContractsList(res);
             }
-
             // --- CENTRAL DE NOTIFICAÇÕES (SININHO) ---
             document.getElementById('notification-btn').onclick = () => showModal('notifications-modal');
 
