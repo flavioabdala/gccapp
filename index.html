@@ -418,6 +418,9 @@
                     <div id="renovacao-checklist" class="space-y-1 mb-4">
                     </div>
 
+                    <button id="btn-salvar-progresso" type="button" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded shadow transition mb-2">
+                    <i class="fas fa-save mr-2"></i> Salvar Progresso
+                    </button>
                     <button id="renovacao-efetivar" type="button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow transition transform hover:scale-[1.01]">
                     <i class="fas fa-check-circle mr-2"></i> Efetivar Renovação
                     </button>
@@ -986,8 +989,9 @@
             }
 
             // Nova função para salvar o progresso das unidades
-          async function saveChecklistItem(contractId, itemId, isChecked, divElement) {
-                await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").set({ [itemId]: isChecked }, { merge: true });
+          async function saveUnitProgress(contractId, unit, isChecked) {
+                const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso");
+                await ref.set({ respostasUnidades: { [unit]: isChecked } }, { merge: true });
                 loadChecklist(contractId);
             }
             // MODAL ADITIVO HANDLERS
@@ -1030,7 +1034,19 @@
             };
 
             // EFETIVAR RENOVAÇÃO (BOTÃO VERDE)
-            document.getElementById("renovacao-efetivar").onclick = async () => {
+            document.getElementById("btn-salvar-progresso").onclick = async () => {
+                const contractId = document.getElementById("addendum-contract-id").value;
+                const numero = document.getElementById("renovacao-numero").value;
+                try {
+                    if (numero) {
+                        await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso")
+                            .set({ numeroAditivo: numero }, { merge: true });
+                    }
+                    alert("Progresso salvo com sucesso!");
+                } catch(e) {
+                    alert("Erro ao salvar progresso: " + e.message);
+                }
+            };
                 const contractId = document.getElementById("addendum-contract-id").value;
                 const numero = document.getElementById("renovacao-numero").value;
 
