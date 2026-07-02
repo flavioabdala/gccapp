@@ -681,7 +681,7 @@
                 });
             }
 
-            function applyFilters() {
+           function applyFilters() {
                 const today = new Date();
                 today.setHours(0,0,0,0);
                 
@@ -690,49 +690,38 @@
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     
-                    // Lógica do Filtro por Mês
                     if(filterMonth && c.currentValidityDate) {
-                    const month = c.currentValidityDate.split('-')[1];
-                    if (month !== filterMonth) return false;
+                        const month = c.currentValidityDate.split('-')[1];
+                        if (month !== filterMonth) return false;
                     }
-                    
                     return true;
                 });
 
                 if(searchTerm.trim()) {
-                    // ALTERAÇÃO: suporte a múltiplas unidades separadas por ";"
-                    // Se houver ";", trata como busca por interseção de unidades.
-                    // Caso contrário, mantém a busca original nos campos textuais + unidade.
-                    const rawTerms = searchTerm.split(';').map(s => s.trim()).filter(s => s.length > 0);
-
-                    if (rawTerms.length > 1) {
-                        // Interseção: o contrato deve conter TODAS as unidades digitadas
+                    const terms = searchTerm.split(';').map(t => normalizeString(t.trim())).filter(t => t !== "");
+                    
+                    if (searchTerm.includes(';')) {
+                        // Lógica de INTERSEÇÃO: O contrato deve conter TODAS as unidades citadas
                         res = res.filter(c => {
-                            const units = Array.isArray(c.participatingUnits)
-                                ? c.participatingUnits.map(u => normalizeString(u))
-                                : [];
-                            return rawTerms.every(term => units.some(u => u.includes(normalizeString(term))));
+                            const units = (c.participatingUnits || []).map(u => normalizeString(u));
+                            return terms.every(term => units.some(u => u.includes(term)));
                         });
                     } else {
-                        // Busca simples: um único termo nos campos textuais e também nas unidades
-                        const t = normalizeString(rawTerms[0]);
-                        res = res.filter(c => {
-                            if (
-                                normalizeString(c.companyName).includes(t) ||
-                                normalizeString(c.seiNumber).includes(t) ||
-                                normalizeString(c.contractObject).includes(t) ||
-                                normalizeString(c.contractNumber).includes(t)
-                            ) return true;
-                            if (Array.isArray(c.participatingUnits)) {
-                                return c.participatingUnits.some(u => normalizeString(u).includes(t));
-                            }
-                            return false;
-                        });
+                        // Busca comum para termo único
+                        const t = terms[0];
+                        res = res.filter(c =>
+                            normalizeString(c.companyName).includes(t) ||
+                            normalizeString(c.seiNumber).includes(t) ||
+                            normalizeString(c.contractObject).includes(t) ||
+                            normalizeString(c.contractNumber).includes(t) ||
+                            (c.participatingUnits || []).some(u => normalizeString(u).includes(t))
+                        );
                     }
                 }
 
                 lastRenderedContracts = res;
                 renderContractsList(res);
+            }
             }
 
             // --- CENTRAL DE NOTIFICAÇÕES (SININHO) ---
