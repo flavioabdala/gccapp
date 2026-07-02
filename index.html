@@ -930,50 +930,66 @@
             }
 
             // --- LÓGICA DE RENOVAÇÃO & CHECKLIST ---
-            async function loadChecklist(contractId) {
+           async function loadChecklist(contractId) {
                 const container = document.getElementById("renovacao-checklist");
                 container.innerHTML = '<div class="text-gray-400 text-sm">Carregando checklist...</div>';
 
                 try {
-                    const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get();
-                    const saved = doc.exists ? doc.data() : {};
+                    // Busca dados do contrato para saber quais unidades participam
+                    const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+                    const participatingUnits = contractDoc.data().participatingUnits || [];
+                    
+                    const progDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get();
+                    const saved = progDoc.exists ? progDoc.data() : {};
+                    const unitResponses = saved.respostasUnidades || {};
 
                     container.innerHTML = "";
+                    
+                    // Renderiza os itens principais do checklist
                     renovacaoItems.forEach(item => {
-                    const id = item.toLowerCase().replace(/\s+/g, "_");
-                    const checked = saved[id] === true;
-
-                    const div = document.createElement('div');
-                    div.className = `checklist-item ${checked ? 'checked' : ''}`;
-                    div.innerHTML = `<input type="checkbox" data-item="${id}" ${checked ? "checked" : ""}> <span class="text-sm select-none">${item}</span>`;
-
-                    div.onclick = (e) => {
-                    if(e.target.type !== 'checkbox') {
-                    const cb = div.querySelector('input');
-                    cb.checked = !cb.checked;
-                    saveChecklistItem(contractId, id, cb.checked, div);
-                    }
-                    };
-                    div.querySelector('input').onclick = (e) => {
-                    e.stopPropagation();
-                    saveChecklistItem(contractId, id, e.target.checked, div);
-                    };
-                    container.appendChild(div);
+                        const id = item.toLowerCase().replace(/\s+/g, "_");
+                        if (item === "Resposta das Unidades") {
+                            // Container especial para as unidades
+                            const unitSection = document.createElement('div');
+                            unitSection.className = "mt-4 mb-4 p-3 bg-gray-50 border rounded-lg";
+                            unitSection.innerHTML = `<h5 class="text-xs font-bold text-gray-500 uppercase mb-2">Unidades que já responderam (${participatingUnits.length})</h5>`;
+                            
+                            const unitsGrid = document.createElement('div');
+                            unitsGrid.className = "flex flex-wrap gap-1";
+                            
+                            participatingUnits.forEach(unit => {
+                                const isChecked = unitResponses[unit] === true;
+                                const uBtn = document.createElement('button');
+                                uBtn.type = "button";
+                                uBtn.className = `unit-button ${isChecked ? 'selected' : ''}`;
+                                uBtn.style.fontSize = "10px";
+                                uBtn.textContent = unit;
+                                uBtn.onclick = () => saveUnitProgress(contractId, unit, !isChecked);
+                                unitsGrid.appendChild(uBtn);
+                            });
+                            
+                            unitSection.appendChild(unitsGrid);
+                            container.appendChild(unitSection);
+                        } else {
+                            // Itens normais
+                            const checked = saved[id] === true;
+                            const div = document.createElement('div');
+                            div.className = `checklist-item ${checked ? 'checked' : ''}`;
+                            div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}> <span class="text-sm select-none">${item}</span>`;
+                            div.onclick = () => saveChecklistItem(contractId, id, !checked, div);
+                            container.appendChild(div);
+                        }
                     });
 
-                    const hasProgress = Object.values(saved).some(v => v === true);
-                    if(hasProgress) document.getElementById("renovacao-status-box").classList.remove("hidden");
-                    else document.getElementById("renovacao-status-box").classList.add("hidden");
+                    document.getElementById("renovacao-status-box").classList.toggle("hidden", Object.keys(saved).length === 0);
                 } catch (e) { console.error("Erro checklist", e); }
             }
 
-            async function saveChecklistItem(contractId, itemId, isChecked, divElement) {
-                if(isChecked) divElement.classList.add('checked');
-                else divElement.classList.remove('checked');
+            // Nova função para salvar o progresso das unidades
+          async function saveChecklistItem(contractId, itemId, isChecked, divElement) {
                 await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").set({ [itemId]: isChecked }, { merge: true });
-                document.getElementById("renovacao-status-box").classList.remove("hidden");
+                loadChecklist(contractId);
             }
-
             // MODAL ADITIVO HANDLERS
             window.openAddendumModal = (id) => {
                 document.getElementById('addendum-form').reset();
@@ -1019,10 +1035,21 @@
                 const numero = document.getElementById("renovacao-numero").value;
 
                 if(!numero) return alert("Informe o número do processo/aditivo.");
-                const container = document.getElementById("renovacao-checklist");
-                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                if(!allChecked) return alert("Complete todos os itens do checklist para efetivar a renovação.");
+                const progDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get();
+                const progressData = progDoc.data() || {};
+                
+                const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
+                const pUnits = contractDoc.data().participatingUnits || [];
+                const responses = progressData.respostasUnidades || {};
+
+                const checklistValido = renovacaoItems.every(item => {
+                    if (item === "Resposta das Unidades") {
+                        return pUnits.every(u => responses[u] === true);
+                    }
+                    return progressData[item.toLowerCase().replace(/\s+/g, "_")] === true;
+                });
+
+                if(!checklistValido) return alert("Atenção: A renovação só pode ser efetivada após o preenchimento de TODOS os documentos e TODAS as respostas das unidades.");
                 const meses = prompt("Informe a quantidade de meses para renovação:");
                 if(!meses || isNaN(meses)) return alert("Quantidade de meses inválida.");
                 try {
@@ -1098,7 +1125,7 @@
             };
 
             // HISTÓRICO
-            window.openHistoryModal = async (id, context) => {
+           window.openHistoryModal = async (id, context) => {
                 const container = document.getElementById('history-content');
                 container.innerHTML = '<p class="text-gray-500">Carregando...</p>';
                 showModal('history-modal');
@@ -1106,25 +1133,45 @@
                 try {
                     let snap = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).orderBy('timestamp', 'desc').get();
                     container.innerHTML = '';
-                    if (snap.empty) {
-                    const snap2 = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${id}/history`).get();
-                    if (snap2.empty) { container.innerHTML = '<p class="text-gray-500">Sem histórico.</p>'; return; }
-                    snap = snap2;
-                    }
+                    if (snap.empty) { container.innerHTML = '<p class="text-gray-500">Sem histórico.</p>'; return; }
+                    
                     snap.forEach(doc => {
-                    const h = doc.data();
-                    const item = document.createElement('div');
-                    item.className = "border-l-4 border-blue-500 pl-4 pb-4";
-                    item.innerHTML = `
-                    <p class="font-bold text-sm text-gray-800">${h.type || 'Ação'} <span class="text-xs font-normal text-gray-500 float-right">${h.date}</span></p>
-                    <p class="text-xs text-blue-600 font-semibold mb-1">${h.user || 'Sistema'}</p>
-                    <p class="text-sm text-gray-600">${h.description || ''}</p>
-                    `;
-                    container.appendChild(item);
+                        const h = doc.data();
+                        const hid = doc.id;
+                        const item = document.createElement('div');
+                        item.className = "border-l-4 border-blue-500 pl-4 pb-4 mb-4 relative group";
+                        item.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <p class="font-bold text-sm text-gray-800">${h.type || 'Ação'}</p>
+                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                    <button onclick="editHistoryItem('${id}', '${hid}', '${collection}')" class="text-blue-500 hover:text-blue-700 text-xs"><i class="fas fa-edit"></i> Editar</button>
+                                    <button onclick="deleteHistoryItem('${id}', '${hid}', '${collection}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400">${h.date} | Por: ${h.user || 'Sistema'}</p>
+                            <p class="text-sm text-gray-600 mt-1" id="text-hist-${hid}">${h.description || ''}</p>
+                        `;
+                        container.appendChild(item);
                     });
-                } catch(e) {
-                    console.error(e);
-                    container.innerHTML = `<p class="text-red-500">Erro. Verifique console. Pode ser falta de índice composto no Firebase.</p>`;
+                } catch(e) { container.innerHTML = `<p class="text-red-500">Erro ao carregar histórico.</p>`; }
+            };
+
+            window.editHistoryItem = async (contractId, historyId, collection) => {
+                const newText = prompt("Edite a descrição do histórico:", document.getElementById(`text-hist-${historyId}`).innerText);
+                if (newText !== null) {
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${contractId}/history`).doc(historyId).update({
+                        description: newText,
+                        editedBy: currentUserName,
+                        editedAt: new Date().toISOString()
+                    });
+                    openHistoryModal(contractId, collection === 'contracts' ? 'active' : 'terminated');
+                }
+            };
+
+            window.deleteHistoryItem = async (contractId, historyId, collection) => {
+                if (confirm("Excluir este registro permanentemente?")) {
+                    await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${contractId}/history`).doc(historyId).delete();
+                    openHistoryModal(contractId, collection === 'contracts' ? 'active' : 'terminated');
                 }
             };
 
