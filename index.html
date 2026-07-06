@@ -112,9 +112,9 @@
 </head>
 <body class="text-gray-800">
 
-    <div id="app" class="min-h-screen">
+    <div id="app" class="min-h-screen login-background">
 
-        <div id="login-page" class="hidden w-full max-w-md p-8 bg-white rounded-lg shadow-lg mx-auto">
+        <div id="login-page" class="w-full max-w-md p-8 bg-white rounded-lg shadow-lg mx-auto">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-800">Gestão de Contratos</h1>
                 <p class="text-gray-500">Faça login para acessar o sistema</p>
@@ -474,24 +474,23 @@
         const db = firebase.firestore();
         const PUBLIC_COLLECTION_PATH = `artifacts/${firebaseConfig.projectId}/public/data`;
         const USERS_COLLECTION_PATH = `artifacts/${firebaseConfig.projectId}/users`;
-
         let allContractsData = [];
         let allTasksData = []; 
         let lastRenderedContracts = [];
-        let filterMonth = ''; // Variável para armazenar o mês selecionado
+        let filterMonth = '';
 
         let currentUserId = null;
         let currentUserName = "Usuário";
         let currentFilter = 'all';
         let searchTerm = '';
         const allUnits = ['CHB', 'CHPB', 'CSPD', 'CSSFA', 'CSSFE', 'CSSI', 'HAC', 'HCM', 'HEM', 'HIJPII', 'HJXXIII', 'HMAL', 'HRAD', 'HRBJA', 'HRJP', 'IRS', 'MOV', 'HJK'].sort();
-
+        
         // --- Lógica de Renovação e Aditivos ---
         const renovacaoItems = [
             "Ofício", "Memorando-circular", "Resposta da Empresa", "Resposta das Unidades",
             "Memória de Cálculo", "Pesquisa de Preço", "Ausência de ETP", "Check List", "Justificativa"
         ];
-
+        
         // UTILITÁRIOS
         function createLocalDate(dateString) {
             if (!dateString) return new Date();
@@ -539,15 +538,15 @@
             XLSX.utils.book_append_sheet(wb, ws, "Contratos");
             XLSX.writeFile(wb, "Relatorio_Contratos.xlsx");
         });
-
+        
         document.addEventListener('DOMContentLoaded', () => {
             // AUTH & USER NAME
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUserId = user.uid;
                     try {
-                    const userDoc = await db.collection(USERS_COLLECTION_PATH).doc(user.uid).collection('profile').doc('data').get();
-                    currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : (user.displayName || user.email);
+                        const userDoc = await db.collection(USERS_COLLECTION_PATH).doc(user.uid).collection('profile').doc('data').get();
+                        currentUserName = userDoc.exists && userDoc.data().name ? userDoc.data().name : (user.displayName || user.email);
                     } catch(e) { currentUserName = user.displayName || user.email; }
 
                     document.getElementById('user-id-display').textContent = currentUserName;
@@ -564,12 +563,23 @@
                     document.getElementById('app').classList.add('login-background');
                 }
             });
-
-            // LOGIN
+            
+            // LOGIN & REGISTER
             document.getElementById('login-form').onsubmit = e => {
                 e.preventDefault();
                 auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('password').value).catch(err => alert(err.message));
             };
+            
+            document.getElementById('register-form').onsubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    await auth.createUserWithEmailAndPassword(document.getElementById('reg-email').value, document.getElementById('reg-password').value);
+                    alert("Conta criada com sucesso!");
+                } catch(err) {
+                    alert(err.message);
+                }
+            };
+            
             document.getElementById('logout-button').onclick = () => auth.signOut();
             document.getElementById('show-register-link').onclick = () => { document.getElementById('login-page').classList.add('hidden'); document.getElementById('register-page').classList.remove('hidden'); };
             document.getElementById('show-login-link').onclick = () => { document.getElementById('register-page').classList.add('hidden'); document.getElementById('login-page').classList.remove('hidden'); };
@@ -585,12 +595,12 @@
                     document.getElementById(btn.dataset.tab + '-tab').classList.remove('hidden');
                 }
             });
-
+            
             // FILTROS
             document.getElementById('filter-active-contracts').onclick = () => setFilter('active', 'Ativos');
             document.getElementById('filter-expiring-contracts').onclick = () => setFilter('expiring', 'Vencendo');
             document.getElementById('search-input').oninput = e => { searchTerm = e.target.value; applyFilters(); };
-            document.getElementById('month-filter').onchange = e => { filterMonth = e.target.value; applyFilters(); }; // Event listener pro mês
+            document.getElementById('month-filter').onchange = e => { filterMonth = e.target.value; applyFilters(); };
 
             window.setFilter = (type, label) => {
                 currentFilter = type;
@@ -598,6 +608,7 @@
                 document.getElementById('filter-name-display').textContent = label;
                 applyFilters();
             };
+            
             window.clearFilters = () => {
                 currentFilter = 'all';
                 searchTerm = ''; document.getElementById('search-input').value = '';
@@ -605,7 +616,7 @@
                 document.getElementById('active-filter-badge').classList.add('hidden'); 
                 applyFilters();
             };
-
+            
             // Toggle abrir/fechar todos os processos com um único botão
             let allAccordionsOpen = false;
             window.toggleAllAccordions = () => {
@@ -627,7 +638,7 @@
                     btn.classList.replace('hover:bg-gray-600', 'hover:bg-gray-800');
                 }
             };
-
+            
             // Copiar contratos listados
             window.copyContractNumbers = async () => {
                 const unique = [];
@@ -639,7 +650,6 @@
                     seen.add(n);
                     unique.push(n);
                 });
-
                 const result = unique.join(';');
 
                 if (!result) {
@@ -660,7 +670,7 @@
                     alert("Números de contrato copiados!");
                 }
             };
-
+            
             // LOAD DATA
             function loadContracts() {
                 db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).onSnapshot(snap => {
@@ -672,7 +682,6 @@
                         const d = {id: doc.id, ...doc.data()};
                         allContractsData.push(d);
                         
-                        // Cálculo corrigido com 86400000
                         const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
                         if(days >= 0) activeC++;
                         if(days >= 0 && days <= 180) expiringC++;
@@ -682,6 +691,9 @@
                     document.getElementById('expiring-contracts-count-value').textContent = expiringC;
                     applyFilters();
                     updateNotifications(); 
+                }, error => {
+                    alert("Erro ao carregar contratos. Verifique as permissões de acesso ao banco (Firebase Rules): " + error.message);
+                    console.error("Erro Firebase contratos:", error);
                 });
             }
 
@@ -693,25 +705,21 @@
                     const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
-                    
+                     
                     if(filterMonth && c.currentValidityDate) {
                         const month = c.currentValidityDate.split('-')[1];
                         if (month !== filterMonth) return false;
                     }
                     return true;
                 });
-
                 if(searchTerm.trim()) {
                     const terms = searchTerm.split(';').map(t => normalizeString(t.trim())).filter(t => t !== "");
-                    
                     if (searchTerm.includes(';')) {
-                        // Lógica de INTERSEÇÃO: O contrato deve conter TODAS as unidades citadas
                         res = res.filter(c => {
                             const units = (c.participatingUnits || []).map(u => normalizeString(u));
                             return terms.every(term => units.some(u => u.includes(term)));
                         });
                     } else {
-                        // Busca comum para termo único
                         const t = terms[0];
                         res = res.filter(c =>
                             normalizeString(c.companyName).includes(t) ||
@@ -726,14 +734,14 @@
                 lastRenderedContracts = res;
                 renderContractsList(res);
             }
+            
             // --- CENTRAL DE NOTIFICAÇÕES (SININHO) ---
             document.getElementById('notification-btn').onclick = () => showModal('notifications-modal');
-
             function updateNotifications() {
-                const today = new Date(); today.setHours(0,0,0,0);
+                const today = new Date();
+                today.setHours(0,0,0,0);
                 const todayStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 let alerts = [];
-
                 allContractsData.forEach(c => {
                     const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if (days < 0) {
@@ -742,7 +750,6 @@
                     alerts.push({ type: 'warning', icon: 'file-contract', text: `Atenção: Contrato da <strong>${c.companyName}</strong> vence em ${days} dias.` });
                     }
                 });
-
                 allTasksData.forEach(t => {
                     if (!t.completed) {
                     if (t.dueDate < todayStr) {
@@ -752,11 +759,9 @@
                     }
                     }
                 });
-
                 const badge = document.getElementById('notification-badge');
                 const list = document.getElementById('notifications-list');
                 list.innerHTML = '';
-
                 if (alerts.length > 0) {
                     badge.textContent = alerts.length;
                     badge.classList.remove('hidden');
@@ -777,12 +782,10 @@
                 list.innerHTML = '';
                 if(!contracts.length) { document.getElementById('no-contracts-message').classList.remove('hidden'); return; }
                 document.getElementById('no-contracts-message').classList.add('hidden');
-
                 const grouped = contracts.reduce((acc, c) => {
                     const s = c.seiNumber || 'Sem Processo';
                     if(!acc[s]) acc[s] = []; acc[s].push(c); return acc;
                 }, {});
-
                 Object.keys(grouped).forEach(sei => {
                     const group = grouped[sei];
                     const div = document.createElement('div');
@@ -805,12 +808,11 @@
                     else if (minDays <= 180) groupLabel = `${minDays} dias`;
 
                     const objetoTooltip = group[0]?.contractObject || 'Sem objeto';
-
                     div.innerHTML = `
                     <div
                     class="sei-group-header flex justify-between items-center p-3 cursor-pointer bg-white border-b hover:bg-gray-50 transition"
                     onclick="this.nextElementSibling.classList.toggle('hidden')"
-                    title="${objetoTooltip.replace(/"/g, '"')}"
+                    title="${objetoTooltip.replace(/"/g, '&quot;')}"
                     >
                     <div class="flex items-center gap-3">
                     <i class="fas fa-folder text-blue-500 text-lg"></i>
@@ -931,6 +933,8 @@
                     });
                     list.appendChild(div);
                     });
+                }, error => {
+                    console.error("Erro Firebase contratos encerrados:", error);
                 });
             }
 
@@ -940,7 +944,6 @@
                 container.innerHTML = '<div class="text-gray-400 text-sm">Carregando checklist...</div>';
 
                 try {
-                    // Busca dados do contrato para saber quais unidades participam
                     const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
                     const participatingUnits = contractDoc.data().participatingUnits || [];
                     
@@ -951,12 +954,9 @@
                     document.getElementById("renovacao-numero").value = saved.numeroAditivo || "";
 
                     container.innerHTML = "";
-                    
-                    // Renderiza os itens principais do checklist
                     renovacaoItems.forEach(item => {
                         const id = item.toLowerCase().replace(/\s+/g, "_");
                         if (item === "Resposta das Unidades") {
-                            // Container especial para as unidades
                             const unitSection = document.createElement('div');
                             unitSection.className = "mt-4 mb-4 p-3 bg-gray-50 border rounded-lg";
                             unitSection.innerHTML = `<h5 class="text-xs font-bold text-gray-500 uppercase mb-2">Unidades que já responderam (${participatingUnits.length})</h5>`;
@@ -965,23 +965,22 @@
                             unitsGrid.className = "flex flex-wrap gap-1";
                             
                             participatingUnits.forEach(unit => {
-                        const isChecked = unitResponses[unit] === true;
-                        const uBtn = document.createElement('button');
-                        uBtn.type = "button";
-                        uBtn.className = `unit-button ${isChecked ? 'selected' : ''}`;
-                        uBtn.style.fontSize = "10px";
-                        uBtn.textContent = unit;
-                        uBtn.onclick = async () => {
-                            uBtn.style.opacity = "0.5";
-                            await saveUnitProgress(contractId, unit, !isChecked);
-                        };
-                        unitsGrid.appendChild(uBtn);
-                    });
+                                const isChecked = unitResponses[unit] === true;
+                                const uBtn = document.createElement('button');
+                                uBtn.type = "button";
+                                uBtn.className = `unit-button ${isChecked ? 'selected' : ''}`;
+                                uBtn.style.fontSize = "10px";
+                                uBtn.textContent = unit;
+                                uBtn.onclick = async () => {
+                                    uBtn.style.opacity = "0.5";
+                                    await saveUnitProgress(contractId, unit, !isChecked);
+                                };
+                                unitsGrid.appendChild(uBtn);
+                            });
                             
                             unitSection.appendChild(unitsGrid);
                             container.appendChild(unitSection);
                         } else {
-                            // Itens normais
                             const checked = saved[id] === true;
                             const div = document.createElement('div');
                             div.className = `checklist-item ${checked ? 'checked' : ''}`;
@@ -990,16 +989,13 @@
                             container.appendChild(div);
                         }
                     });
-
                     document.getElementById("renovacao-status-box").classList.toggle("hidden", Object.keys(saved).length === 0);
                 } catch (e) { console.error("Erro checklist", e); }
             }
 
-           // Função para salvar os itens principais do checklist
             async function saveChecklistItem(contractId, itemId, isChecked, divElement) {
                 try {
                     const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso");
-
                     await ref.set({
                         [itemId]: isChecked,
                         updatedAt: new Date().toISOString(),
@@ -1014,11 +1010,9 @@
                 }
             }
 
-            // Função para salvar o progresso das respostas das unidades
             async function saveUnitProgress(contractId, unit, isChecked) {
                 try {
                     const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso");
-
                     await ref.set({
                         respostasUnidades: {
                             [unit]: isChecked
@@ -1026,7 +1020,6 @@
                         updatedAt: new Date().toISOString(),
                         updatedBy: currentUserName
                     }, { merge: true });
-
                     document.getElementById("renovacao-status-box").classList.remove("hidden");
                     loadChecklist(contractId);
                 } catch (e) {
@@ -1051,12 +1044,14 @@
                 if (e.target.value === 'Apostilamento') document.getElementById('apostilamento-options').classList.remove('hidden');
                 if (e.target.value === 'Aditivo') document.getElementById('aditivo-options').classList.remove('hidden');
             };
+            
             document.getElementById('apostilamento-sub-type').onchange = (e) => {
                 document.getElementById('apostilamento-reajuste-section').classList.add('hidden');
                 document.getElementById('apostilamento-outros-section').classList.add('hidden');
                 if (e.target.value === 'Reajuste') document.getElementById('apostilamento-reajuste-section').classList.remove('hidden');
                 if (e.target.value === 'Outros') document.getElementById('apostilamento-outros-section').classList.remove('hidden');
             };
+            
             document.getElementById('aditivo-sub-type').onchange = (e) => {
                 const val = e.target.value;
                 document.getElementById('aditivo-renovacao-section').classList.add('hidden');
@@ -1090,7 +1085,6 @@
                         updatedAt: new Date().toISOString(),
                         updatedBy: currentUserName
                     }, { merge: true });
-
                     document.getElementById("renovacao-status-box").classList.remove("hidden");
                     alert("Progresso salvo com sucesso!");
                 } catch(e) {
@@ -1099,28 +1093,11 @@
                 }
             };
 
-        // SALVAR PROGRESSO DA RENOVAÇÃO
-            document.getElementById("btn-salvar-progresso").onclick = async () => {
-                const contractId = document.getElementById("addendum-contract-id").value;
-                const numero = document.getElementById("renovacao-numero").value;
-                if (!contractId) return alert("Nenhum contrato selecionado.");
-                try {
-                    await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").set({
-                        numeroAditivo: numero || '',
-                        updatedAt: new Date().toISOString(),
-                        updatedBy: currentUserName
-                    }, { merge: true });
-                    document.getElementById("renovacao-status-box").classList.remove("hidden");
-                    alert("Progresso salvo com sucesso!");
-                } catch(e) { console.error(e); alert("Erro ao salvar."); }
-            };
-
             // EFETIVAR RENOVAÇÃO (BOTÃO VERDE)
             document.getElementById("renovacao-efetivar").onclick = async () => {
                 const contractId = document.getElementById("addendum-contract-id").value;
                 const numero = document.getElementById("renovacao-numero").value;
                 if (!contractId || !numero) return alert("Informe o número do processo/aditivo.");
-
                 try {
                     const progDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get();
                     const progressData = progDoc.exists ? progDoc.data() : {};
@@ -1128,12 +1105,11 @@
                     const contractData = contractDoc.data() || {};
                     const pUnits = contractData.participatingUnits || [];
                     const responses = progressData.respostasUnidades || {};
-
                     const checklistValido = renovacaoItems.every(item => {
                         if (item === "Resposta das Unidades") return pUnits.every(u => responses[u] === true);
                         return progressData[item.toLowerCase().replace(/\s+/g, "_")] === true;
                     });
-
+                    
                     if(!checklistValido) return alert("Atenção: Checklist incompleto (itens ou unidades).");
 
                     const meses = prompt("Informe a quantidade de meses para renovação:");
@@ -1142,7 +1118,6 @@
                     const atual = createLocalDate(contractData.currentValidityDate);
                     atual.setMonth(atual.getMonth() + parseInt(meses));
                     atual.setDate(atual.getDate() - 1);
-
                     const novaData = `${atual.getFullYear()}-${String(atual.getMonth() + 1).padStart(2, '0')}-${String(atual.getDate()).padStart(2, '0')}`;
 
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
@@ -1150,7 +1125,7 @@
                         renewalNumber: (contractData.renewalNumber || 0) + 1,
                         updatedAt: new Date().toISOString()
                     });
-
+                    
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
                         date: new Date().toISOString().split("T")[0],
                         type: "Renovação",
@@ -1158,12 +1133,13 @@
                         user: currentUserName,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
-
+                    
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").delete();
                     alert("Renovação realizada!");
                     closeModal("addendum-modal");
                 } catch (e) { console.error(e); alert("Erro ao renovar: " + e.message); }
             };
+            
             // SALVAR OUTROS TIPOS (GENÉRICO)
             document.getElementById('addendum-form').onsubmit = async (e) => {
                 e.preventDefault();
@@ -1174,6 +1150,7 @@
                 const today = new Date().toISOString().split('T')[0];
                 let desc = "";
                 let updates = {};
+                
                 if (type === 'Aditivo') {
                     const sub = document.getElementById('aditivo-sub-type').value;
                     desc = `Aditivo (${sub}): ${document.getElementById('aditivo-number').value}. `;
@@ -1203,7 +1180,7 @@
                     alert("Salvo com sucesso!");
                 } catch(err) { console.error(err); alert("Erro ao salvar."); }
             };
-
+            
             // HISTÓRICO
            window.openHistoryModal = async (id, context) => {
                 const container = document.getElementById('history-content');
@@ -1235,7 +1212,7 @@
                     });
                 } catch(e) { container.innerHTML = `<p class="text-red-500">Erro ao carregar histórico.</p>`; }
             };
-
+            
             window.editHistoryItem = async (contractId, historyId, collection) => {
                 const newText = prompt("Edite a descrição do histórico:", document.getElementById(`text-hist-${historyId}`).innerText);
                 if (newText !== null) {
@@ -1247,14 +1224,14 @@
                     openHistoryModal(contractId, collection === 'contracts' ? 'active' : 'terminated');
                 }
             };
-
+            
             window.deleteHistoryItem = async (contractId, historyId, collection) => {
                 if (confirm("Excluir este registro permanentemente?")) {
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}/${contractId}/history`).doc(historyId).delete();
                     openHistoryModal(contractId, collection === 'contracts' ? 'active' : 'terminated');
                 }
             };
-
+            
             // CRUD & MODALS CONTRATOS
             window.openTerminateModal = (id) => {
                 document.getElementById('terminate-contract-id').value = id;
@@ -1274,19 +1251,22 @@
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).set({
                     ...data, terminationDate: date, terminationNotes: notes, status: 'terminated'
                     });
+                    
                     const batch = db.batch();
                     historySnap.forEach(h => {
                     const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
                     batch.set(ref, h.data());
                     });
+                    
                     const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).doc();
                     batch.set(finalRef, { date: date, type: 'Encerramento', description: notes, user: currentUserName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
                     await batch.commit();
+                    
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).delete();
                     closeModal('terminate-modal');
                 } catch(e) { console.error(e); alert("Erro ao encerrar."); }
             };
-
+            
             window.reactivateContract = async (id) => {
                 if(!confirm("Reativar este contrato?")) return;
                 try {
@@ -1296,18 +1276,21 @@
                     const historySnap = await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts/${id}/history`).get();
 
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(id).set(data);
+                    
                     const batch = db.batch();
                     historySnap.forEach(h => {
                     const ref = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
                     batch.set(ref, h.data());
                     });
+                    
                     const finalRef = db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${id}/history`).doc();
                     batch.set(finalRef, { date: new Date().toISOString().split('T')[0], type: 'Reativação', description: 'Reativado.', user: currentUserName, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
                     await batch.commit();
+                    
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/terminated_contracts`).doc(id).delete();
                 } catch(e) { console.error(e); alert("Erro ao reativar."); }
             };
-
+            
             window.openEditModal = async (id, context) => {
                 let collection = context === 'terminated' ? 'terminated_contracts' : 'contracts';
                 const doc = await db.collection(`${PUBLIC_COLLECTION_PATH}/${collection}`).doc(id).get();
@@ -1360,7 +1343,7 @@
                     closeModal('contract-form-modal');
                 } catch(err) { console.error(err); alert("Erro ao salvar."); }
             };
-
+            
             document.getElementById('add-contract-button').onclick = () => {
                 document.getElementById('contract-form').reset();
                 document.getElementById('contract-id-hidden').value = '';
@@ -1369,7 +1352,7 @@
                 renderUnitsCheckbox([]);
                 showModal('contract-form-modal');
             };
-
+            
             function renderUnitsCheckbox(selected) {
                 const container = document.getElementById('units-checkbox-container');
                 container.innerHTML = '';
@@ -1396,6 +1379,8 @@
                     snap.forEach(doc => allTasksData.push({id: doc.id, ...doc.data()}));
                     renderTasksList();
                     updateNotifications(); 
+                }, error => {
+                    console.error("Erro Firebase tarefas:", error);
                 });
             }
 
@@ -1404,9 +1389,8 @@
                 list.innerHTML = '';
                 if(!allTasksData.length) { document.getElementById('no-tasks-message').classList.remove('hidden'); return; }
                 document.getElementById('no-tasks-message').classList.add('hidden');
-
                 const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-
+                
                 allTasksData.forEach(t => {
                     const isOverdue = t.dueDate < todayStr && !t.completed;
                     const card = document.createElement('div');
@@ -1438,7 +1422,7 @@
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).update({ completed });
                 } catch(e) { console.error("Erro ao atualizar tarefa", e); }
             };
-
+            
             window.deleteTask = async (id) => {
                 if(confirm("Tem certeza que deseja excluir esta tarefa?")) {
                     try {
@@ -1446,7 +1430,7 @@
                     } catch(e) { console.error("Erro ao deletar tarefa", e); }
                 }
             };
-
+            
             document.getElementById('add-task-button').onclick = () => {
                 document.getElementById('task-form').reset();
                 document.getElementById('task-id-hidden').value = '';
@@ -1470,7 +1454,7 @@
                     completed: false,
                     updatedAt: new Date().toISOString()
                 };
-
+                
                 try {
                     if (id) {
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/tasks`).doc(id).set(data, { merge: true });
@@ -1481,7 +1465,6 @@
                     closeModal('task-form-modal');
                 } catch(err) { console.error(err); alert("Erro ao salvar a tarefa."); }
             };
-
         });
     </script>
 </body>
