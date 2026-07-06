@@ -688,7 +688,7 @@
                 today.setHours(0,0,0,0);
                 
                 let res = allContractsData.filter(c => {
-                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 8640000);
+                    const days = Math.ceil((createLocalDate(c.currentValidityDate) - today) / 86400000);
                     if(currentFilter === 'active' && days < 0) return false;
                     if(currentFilter === 'expiring' && (days < 0 || days > 180)) return false;
                     
