@@ -968,12 +968,10 @@
                         uBtn.className = `unit-button ${isChecked ? 'selected' : ''}`;
                         uBtn.style.fontSize = "10px";
                         uBtn.textContent = unit;
-
                         uBtn.onclick = async () => {
-                            uBtn.disabled = true;
+                            uBtn.style.opacity = "0.5";
                             await saveUnitProgress(contractId, unit, !isChecked);
                         };
-
                         unitsGrid.appendChild(uBtn);
                     });
                             
@@ -1098,107 +1096,70 @@
                 }
             };
 
-           // SALVAR PROGRESSO DA RENOVAÇÃO
+        // SALVAR PROGRESSO DA RENOVAÇÃO
             document.getElementById("btn-salvar-progresso").onclick = async () => {
                 const contractId = document.getElementById("addendum-contract-id").value;
                 const numero = document.getElementById("renovacao-numero").value;
-
-                if (!contractId) {
-                    alert("Nenhum contrato selecionado.");
-                    return;
-                }
-
+                if (!contractId) return alert("Nenhum contrato selecionado.");
                 try {
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").set({
                         numeroAditivo: numero || '',
                         updatedAt: new Date().toISOString(),
                         updatedBy: currentUserName
                     }, { merge: true });
-
                     document.getElementById("renovacao-status-box").classList.remove("hidden");
                     alert("Progresso salvo com sucesso!");
-                } catch(e) {
-                    console.error(e);
-                    alert("Erro ao salvar progresso: " + e.message);
-                }
+                } catch(e) { console.error(e); alert("Erro ao salvar."); }
             };
 
             // EFETIVAR RENOVAÇÃO (BOTÃO VERDE)
             document.getElementById("renovacao-efetivar").onclick = async () => {
                 const contractId = document.getElementById("addendum-contract-id").value;
                 const numero = document.getElementById("renovacao-numero").value;
-
-                if (!contractId) {
-                    alert("Nenhum contrato selecionado.");
-                    return;
-                }
-
-                if(!numero) {
-                    alert("Informe o número do processo/aditivo.");
-                    return;
-                }
+                if (!contractId || !numero) return alert("Informe o número do processo/aditivo.");
 
                 try {
                     const progDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").get();
                     const progressData = progDoc.exists ? progDoc.data() : {};
-                    
                     const contractDoc = await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).get();
                     const contractData = contractDoc.data() || {};
                     const pUnits = contractData.participatingUnits || [];
                     const responses = progressData.respostasUnidades || {};
 
                     const checklistValido = renovacaoItems.every(item => {
-                        if (item === "Resposta das Unidades") {
-                            return pUnits.every(u => responses[u] === true);
-                        }
+                        if (item === "Resposta das Unidades") return pUnits.every(u => responses[u] === true);
                         return progressData[item.toLowerCase().replace(/\s+/g, "_")] === true;
                     });
 
-                    if(!checklistValido) {
-                        alert("Atenção: A renovação só pode ser efetivada após o preenchimento de TODOS os documentos e TODAS as respostas das unidades.");
-                        return;
-                    }
+                    if(!checklistValido) return alert("Atenção: Checklist incompleto (itens ou unidades).");
 
                     const meses = prompt("Informe a quantidade de meses para renovação:");
-                    if(!meses || isNaN(meses)) {
-                        alert("Quantidade de meses inválida.");
-                        return;
-                    }
+                    if(!meses || isNaN(meses)) return alert("Quantidade inválida.");
 
-                    const dados = contractData;
-
-                    const atual = createLocalDate(dados.currentValidityDate);
+                    const atual = createLocalDate(contractData.currentValidityDate);
                     atual.setMonth(atual.getMonth() + parseInt(meses));
                     atual.setDate(atual.getDate() - 1);
 
-                    const y = atual.getFullYear();
-                    const m = String(atual.getMonth() + 1).padStart(2, '0');
-                    const d = String(atual.getDate()).padStart(2, '0');
-                    const novaData = `${y}-${m}-${d}`;
+                    const novaData = `${atual.getFullYear()}-${String(atual.getMonth() + 1).padStart(2, '0')}-${String(atual.getDate()).padStart(2, '0')}`;
 
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts`).doc(contractId).update({
                         currentValidityDate: novaData,
-                        renewalNumber: (dados.renewalNumber || 0) + 1,
+                        renewalNumber: (contractData.renewalNumber || 0) + 1,
                         updatedAt: new Date().toISOString()
                     });
 
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/history`).add({
                         date: new Date().toISOString().split("T")[0],
                         type: "Renovação",
-                        description: `Renovação efetivada (Checklist completo). Aditivo nº ${numero}. Nova vigência: ${novaData}. Prazo: ${meses} meses.`,
+                        description: `Renovação efetivada. Aditivo nº ${numero}. Nova vigência: ${novaData}. Prazo: ${meses} meses.`,
                         user: currentUserName,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
                     await db.collection(`${PUBLIC_COLLECTION_PATH}/contracts/${contractId}/renovacao`).doc("progresso").delete();
-
-                    alert("Renovação realizada com sucesso!");
+                    alert("Renovação realizada!");
                     closeModal("addendum-modal");
-
-                } catch (e) {
-                    console.error(e);
-                    alert("Erro ao renovar: " + e.message);
-                }
+                } catch (e) { console.error(e); alert("Erro ao renovar: " + e.message); }
             };
             // SALVAR OUTROS TIPOS (GENÉRICO)
             document.getElementById('addendum-form').onsubmit = async (e) => {
