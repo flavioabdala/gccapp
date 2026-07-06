@@ -674,7 +674,6 @@
                     const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
                     if(days >= 0) activeC++;
                     if(days >= 0 && days <= 180) expiringC++;
-                    });
 
                     document.getElementById('active-contracts-count-value').textContent = activeC;
                     document.getElementById('expiring-contracts-count-value').textContent = expiringC;
