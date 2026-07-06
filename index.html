@@ -669,11 +669,14 @@
                     const today = new Date(); today.setHours(0,0,0,0);
 
                     snap.forEach(doc => {
-                    const d = {id: doc.id, ...doc.data()};
-                    allContractsData.push(d);
-                    const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
-                    if(days >= 0) activeC++;
-                    if(days >= 0 && days <= 180) expiringC++;
+                        const d = {id: doc.id, ...doc.data()};
+                        allContractsData.push(d);
+                        
+                        // Cálculo corrigido com 86400000
+                        const days = Math.ceil((createLocalDate(d.currentValidityDate) - today) / 86400000);
+                        if(days >= 0) activeC++;
+                        if(days >= 0 && days <= 180) expiringC++;
+                    });
 
                     document.getElementById('active-contracts-count-value').textContent = activeC;
                     document.getElementById('expiring-contracts-count-value').textContent = expiringC;
